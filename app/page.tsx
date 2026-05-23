@@ -588,20 +588,28 @@ export default function Home() {
             ) : (
               <>
                 <section className="relative mt-3 flex h-[155px] shrink-0 items-center justify-center rounded-[22px] border border-[#dce2ee] bg-white">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleMemorized(wordIndex);
-                    }}
-                    className={`absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border text-[14px] font-bold ${
-                      currentWord.memorized
-                        ? "border-[#0f2a5f] bg-[#0f2a5f] text-white"
-                        : "border-[#dce2ee] bg-white text-[#b0b7c3]"
-                    }`}
-                    aria-label="암기완료"
-                  >
-                    ✓
-                  </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleMemorized(wordIndex);
+                  }}
+                  className={`absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
+                    currentWord.memorized
+                      ? "border-[#0f2a5f] bg-[#0f2a5f] shadow-[0_6px_14px_rgba(15,42,95,0.22)]"
+                      : "border-[#dce2ee] bg-[#f8fafc]"
+                  }`}
+                  aria-label="암기완료"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M5.5 12.5L10 17L18.8 7.5"
+                      stroke={currentWord.memorized ? "white" : "#9aa3b2"}
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
 
                   <h2
                     className={`text-[44px] font-bold tracking-tight ${
