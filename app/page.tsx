@@ -26,6 +26,7 @@ type Word = {
   antonyms: string[];
   studyPoints?: StudyPoint[];
   memorized?: boolean;
+  highlightColor?: "red" | "blue" | "yellow" | "green" | "purple" | "";
 };
 
 type Day = {
@@ -34,12 +35,15 @@ type Day = {
   words: Word[];
 };
 
-type Book = {
+type Folder = {
   id: string;
   title: string;
-  desc: string;
+  desc?: string;
+  folders: Folder[];
   days: Day[];
 };
+
+type Book = Folder;
 
 export default function Home() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -50,12 +54,16 @@ export default function Home() {
     | "study"
     | "addBook"
     | "editBook"
+    | "addFolder"
     | "addDay"
     | "addWord"
     | "editWord"
+    | "editFolder"
+    | "moveFolder"
   >("book");
 
   const [selectedBookId, setSelectedBookId] = useState("");
+  const [folderPath, setFolderPath] = useState<string[]>([]);
   const [selectedDayId, setSelectedDayId] = useState("");
   const [wordIndex, setWordIndex] = useState(0);
   const [showMeaning, setShowMeaning] = useState(false);
@@ -63,13 +71,48 @@ export default function Home() {
   const [bookDropdownOpen, setBookDropdownOpen] = useState(false);
   const [actionWordIndex, setActionWordIndex] = useState<number | null>(null);
   const [actionDayId, setActionDayId] = useState<string | null>(null);
+  const [actionFolderId, setActionFolderId] = useState<string | null>(null);
+  const [moveTargetFolderId, setMoveTargetFolderId] = useState("");
   const [isStandalone, setIsStandalone] = useState(false);
+
+  const [swipedIndex, setSwipedIndex] = useState<number | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [dragX, setDragX] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+  const folderLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didLongPressFolder = useRef(false);
+  const [expandedFolderIds, setExpandedFolderIds] = useState<string[]>([]);
+
+  const SWIPE_WIDTH = 145;
+
+  const getSwipeX = (index: number) => {
+    if (draggingIndex === index) return Math.max(0, Math.min(dragX, SWIPE_WIDTH));
+    return swipedIndex === index ? SWIPE_WIDTH : 0;
+  };
 
   const isHistoryMoving = useRef(false);
   const isFirstHistoryState = useRef(true);
 
+  const getCurrentFolder = (
+    folders: Folder[],
+    path: string[]
+  ): Folder | undefined => {
+    let current: Folder | undefined;
+  
+    for (const id of path) {
+      const list = current ? current.folders : folders;
+      current = list.find((folder) => folder.id === id);
+  
+      if (!current) return undefined;
+    }
+  
+    return current;
+  };
+  
+  const activeFolder = getCurrentFolder(books, folderPath);
   const selectedBook = books.find((book) => book.id === selectedBookId);
-  const selectedDay = selectedBook?.days.find((day) => day.id === selectedDayId);
+  const currentFolderTitle = activeFolder?.title || selectedBook?.title || "";
+  const selectedDay = activeFolder?.days.find((day) => day.id === selectedDayId);
   const words = selectedDay?.words ?? [];
   const currentWord = words[wordIndex];
 
@@ -77,6 +120,7 @@ export default function Home() {
     const state = {
       step,
       selectedBookId,
+      folderPath,
       selectedDayId,
       wordIndex,
     };
@@ -93,7 +137,7 @@ export default function Home() {
     }
   
     window.history.pushState(state, "", window.location.href);
-  }, [step, selectedBookId, selectedDayId, wordIndex]);
+  }, [step, selectedBookId, folderPath, selectedDayId, wordIndex]);
   
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
@@ -105,6 +149,7 @@ export default function Home() {
   
       setStep(state.step);
       setSelectedBookId(state.selectedBookId || "");
+      setFolderPath(state.folderPath || []);
       setSelectedDayId(state.selectedDayId || "");
       setWordIndex(state.wordIndex || 0);
       setShowMeaning(false);
@@ -129,24 +174,26 @@ export default function Home() {
   
       setStep(parsed.step || "book");
       setSelectedBookId(parsed.selectedBookId || "");
+      setFolderPath(parsed.folderPath || []);
       setSelectedDayId(parsed.selectedDayId || "");
       setWordIndex(parsed.wordIndex || 0);
     }
   
     fetchBooks();
   }, []);
-
+  
   useEffect(() => {
     sessionStorage.setItem(
       "vocab-flow-state",
       JSON.stringify({
         step,
         selectedBookId,
+        folderPath,
         selectedDayId,
         wordIndex,
       })
     );
-  }, [step, selectedBookId, selectedDayId, wordIndex]);
+  }, [step, selectedBookId, folderPath, selectedDayId, wordIndex]);
 
   useEffect(() => {
     const standalone =
@@ -156,6 +203,16 @@ export default function Home() {
     setIsStandalone(standalone);
   }, []);
   
+  function normalizeFolders(folders: any[]): Folder[] {
+    return (folders || []).map((folder) => ({
+      id: folder.id || crypto.randomUUID(),
+      title: folder.title || "",
+      desc: folder.desc || "",
+      folders: normalizeFolders(folder.folders || []),
+      days: folder.days || [],
+    }));
+  }
+
   async function fetchBooks() {
     const { data, error } = await supabase
       .from("vocab_data")
@@ -169,7 +226,7 @@ export default function Home() {
     }
   
     if (data?.data) {
-      setBooks(data.data as Book[]);
+      setBooks(normalizeFolders(data.data));
     }
   }
   
@@ -210,6 +267,7 @@ export default function Home() {
 
   const goHome = () => {
     setSelectedBookId("");
+    setFolderPath([]);
     setSelectedDayId("");
     setWordIndex(0);
     setShowMeaning(false);
@@ -222,13 +280,12 @@ export default function Home() {
 
   const goDay = (book: Book) => {
     setSelectedBookId(book.id);
+    setFolderPath([book.id]);
     setSelectedDayId("");
     setWordIndex(0);
     setShowMeaning(false);
-    setMenuOpen(false);
     setBookDropdownOpen(false);
-    setActionWordIndex(null);
-    setActionDayId(null);
+    setMenuOpen(false);
     setStep("day");
   };
 
@@ -260,22 +317,11 @@ export default function Home() {
 
   const deleteWord = (targetIndex: number) => {
     if (!confirm("이 단어를 삭제할까?")) return;
-
+  
     saveBooks((prev) =>
-      prev.map((book) =>
-        book.id === selectedBookId
-          ? {
-              ...book,
-              days: book.days.map((day) =>
-                day.id === selectedDayId
-                  ? { ...day, words: day.words.filter((_, i) => i !== targetIndex) }
-                  : day
-              ),
-            }
-          : book
-      )
+      deleteWordFromPath(prev, folderPath, selectedDayId, targetIndex)
     );
-
+  
     setWordIndex(0);
     setShowMeaning(false);
     setActionWordIndex(null);
@@ -284,51 +330,357 @@ export default function Home() {
 
   const toggleMemorized = (targetIndex: number) => {
     saveBooks((prev) =>
-      prev.map((book) =>
-        book.id === selectedBookId
-          ? {
-              ...book,
-              days: book.days.map((day) =>
-                day.id === selectedDayId
-                  ? {
-                      ...day,
-                      words: day.words.map((word, i) =>
-                        i === targetIndex
-                          ? { ...word, memorized: !word.memorized }
-                          : word
-                      ),
-                    }
-                  : day
-              ),
-            }
-          : book
-      )
+      updateWordInPath(prev, folderPath, selectedDayId, targetIndex, (word) => ({
+        ...word,
+        memorized: !word.memorized,
+      }))
     );
+  };
+
+  const changeWordColor = (
+    targetIndex: number,
+    color: Word["highlightColor"]
+  ) => {
+    saveBooks((prev) =>
+      updateWordInPath(prev, folderPath, selectedDayId, targetIndex, (word) => ({
+        ...word,
+        highlightColor: word.highlightColor === color ? "" : color,
+      }))
+    );
+  
+    setSwipedIndex(null);
   };
 
   const deleteDay = (targetDayId: string) => {
     if (!confirm("이 Day를 삭제할까? 안에 있는 단어도 같이 삭제돼.")) return;
-
+  
     saveBooks((prev) =>
-      prev.map((book) =>
-        book.id === selectedBookId
-          ? { ...book, days: book.days.filter((day) => day.id !== targetDayId) }
-          : book
-      )
+      deleteDayFromPath(prev, folderPath, targetDayId)
     );
-
+  
     if (selectedDayId === targetDayId) {
       setSelectedDayId("");
       setWordIndex(0);
       setShowMeaning(false);
       setStep("day");
     }
-
+  
     setActionDayId(null);
   };
 
+  const addFolderToPath = (
+    folders: Folder[],
+    path: string[],
+    newFolder: Folder
+  ): Folder[] => {
+    if (path.length === 0) return [...folders, newFolder];
   
+    return folders.map((folder) =>
+      folder.id === path[0]
+        ? {
+            ...folder,
+            folders: addFolderToPath(
+              folder.folders,
+              path.slice(1),
+              newFolder
+            ),
+          }
+        : folder
+    );
+  };
+  
+  const addDayToPath = (
+    folders: Folder[],
+    path: string[],
+    newDay: Day
+  ): Folder[] => {
+    return folders.map((folder) =>
+      folder.id === path[0]
+        ? path.length === 1
+          ? {
+              ...folder,
+              days: [...folder.days, newDay],
+            }
+          : {
+              ...folder,
+              folders: addDayToPath(
+                folder.folders,
+                path.slice(1),
+                newDay
+              ),
+            }
+        : folder
+    );
+  };
 
+  const addWordToPath = (
+    folders: Folder[],
+    path: string[],
+    dayId: string,
+    newWord: Word
+  ): Folder[] => {
+    return folders.map((folder) =>
+      folder.id === path[0]
+        ? path.length === 1
+          ? {
+              ...folder,
+              days: folder.days.map((day) =>
+                day.id === dayId
+                  ? { ...day, words: [...day.words, newWord] }
+                  : day
+              ),
+            }
+          : {
+              ...folder,
+              folders: addWordToPath(
+                folder.folders,
+                path.slice(1),
+                dayId,
+                newWord
+              ),
+            }
+        : folder
+    );
+  };
+
+  const deleteWordFromPath = (
+    folders: Folder[],
+    path: string[],
+    dayId: string,
+    targetIndex: number
+  ): Folder[] => {
+    return folders.map((folder) =>
+      folder.id === path[0]
+        ? path.length === 1
+          ? {
+              ...folder,
+              days: folder.days.map((day) =>
+                day.id === dayId
+                  ? { ...day, words: day.words.filter((_, i) => i !== targetIndex) }
+                  : day
+              ),
+            }
+          : {
+              ...folder,
+              folders: deleteWordFromPath(folder.folders, path.slice(1), dayId, targetIndex),
+            }
+        : folder
+    );
+  };
+
+  const updateWordInPath = (
+    folders: Folder[],
+    path: string[],
+    dayId: string,
+    targetIndex: number,
+    updater: (word: Word) => Word
+  ): Folder[] => {
+    return folders.map((folder) =>
+      folder.id === path[0]
+        ? path.length === 1
+          ? {
+              ...folder,
+              days: folder.days.map((day) =>
+                day.id === dayId
+                  ? {
+                      ...day,
+                      words: day.words.map((word, i) =>
+                        i === targetIndex ? updater(word) : word
+                      ),
+                    }
+                  : day
+              ),
+            }
+          : {
+              ...folder,
+              folders: updateWordInPath(folder.folders, path.slice(1), dayId, targetIndex, updater),
+            }
+        : folder
+    );
+  };
+
+  const deleteDayFromPath = (
+    folders: Folder[],
+    path: string[],
+    targetDayId: string
+  ): Folder[] => {
+    return folders.map((folder) =>
+      folder.id === path[0]
+        ? path.length === 1
+          ? {
+              ...folder,
+              days: folder.days.filter((day) => day.id !== targetDayId),
+            }
+          : {
+              ...folder,
+              folders: deleteDayFromPath(folder.folders, path.slice(1), targetDayId),
+            }
+        : folder
+    );
+  };
+
+  const deleteFolderFromPath = (
+    folders: Folder[],
+    targetFolderId: string
+  ): Folder[] => {
+    return folders
+      .filter((folder) => folder.id !== targetFolderId)
+      .map((folder) => ({
+        ...folder,
+        folders: deleteFolderFromPath(
+          folder.folders,
+          targetFolderId
+        ),
+      }));
+  };
+
+  const editFolderInPath = (
+    folders: Folder[],
+    targetFolderId: string,
+    updater: (folder: Folder) => Folder
+  ): Folder[] => {
+    return folders.map((folder) =>
+      folder.id === targetFolderId
+        ? updater(folder)
+        : {
+            ...folder,
+            folders: editFolderInPath(folder.folders, targetFolderId, updater),
+          }
+    );
+  };
+  
+  const findFolderById = (
+    folders: Folder[],
+    targetFolderId: string
+  ): Folder | undefined => {
+    for (const folder of folders) {
+      if (folder.id === targetFolderId) return folder;
+  
+      const found = findFolderById(folder.folders, targetFolderId);
+      if (found) return found;
+    }
+  
+    return undefined;
+  };
+
+  const moveFolderToFolder = (
+    folders: Folder[],
+    movingFolderId: string,
+    targetFolderId: string
+  ): Folder[] => {
+    let movingFolder: Folder | null = null;
+  
+    const removeFolder = (list: Folder[]): Folder[] => {
+      return list
+        .filter((folder) => {
+          if (folder.id === movingFolderId) {
+            movingFolder = folder;
+            return false;
+          }
+          return true;
+        })
+        .map((folder) => ({
+          ...folder,
+          folders: removeFolder(folder.folders),
+        }));
+    };
+
+    const removed = removeFolder(folders);
+  
+    if (!movingFolder) return folders;
+  
+    const insertFolder = (list: Folder[]): Folder[] => {
+      return list.map((folder) =>
+        folder.id === targetFolderId
+          ? {
+              ...folder,
+              folders: [...folder.folders, movingFolder!],
+            }
+          : {
+              ...folder,
+              folders: insertFolder(folder.folders),
+            }
+      );
+    };
+  
+    return insertFolder(removed);
+  };
+
+  const editWordInPath = (
+    folders: Folder[],
+    path: string[],
+    fromDayId: string,
+    toDayId: string,
+    targetIndex: number,
+    editedWord: Word
+  ): Folder[] => {
+    return folders.map((folder) =>
+      folder.id === path[0]
+        ? path.length === 1
+          ? {
+              ...folder,
+              days: folder.days.map((day) => {
+                if (day.id === fromDayId && day.id === toDayId) {
+                  return {
+                    ...day,
+                    words: day.words.map((word, i) =>
+                      i === targetIndex ? editedWord : word
+                    ),
+                  };
+                }
+  
+                if (day.id === fromDayId) {
+                  return {
+                    ...day,
+                    words: day.words.filter((_, i) => i !== targetIndex),
+                  };
+                }
+  
+                if (day.id === toDayId) {
+                  return {
+                    ...day,
+                    words: [...day.words, editedWord],
+                  };
+                }
+  
+                return day;
+              }),
+            }
+          : {
+              ...folder,
+              folders: editWordInPath(
+                folder.folders,
+                path.slice(1),
+                fromDayId,
+                toDayId,
+                targetIndex,
+                editedWord
+              ),
+            }
+        : folder
+    );
+  };
+
+  const toggleFolderOpen = (folderId: string) => {
+    setExpandedFolderIds((prev) =>
+      prev.includes(folderId)
+        ? prev.filter((id) => id !== folderId)
+        : [...prev, folderId]
+    );
+  };
+
+  const FolderIcon = () => (
+    <svg width="18" height="15" viewBox="0 0 24 20" fill="none">
+      <path
+        d="M2.5 5.2C2.5 3.98 3.48 3 4.7 3H9.2L11.1 5.1H19.3C20.52 5.1 21.5 6.08 21.5 7.3V15.3C21.5 16.52 20.52 17.5 19.3 17.5H4.7C3.48 17.5 2.5 16.52 2.5 15.3V5.2Z"
+        fill="#eef2f8"
+        stroke="#0f2a5f"
+        strokeWidth="1.7"
+      />
+    </svg>
+  );
+
+  
   return (
     <main className="min-h-[100svh] bg-white text-[#111827]">
       <section className="mx-auto min-h-[100svh] w-full max-w-[430px] bg-white">
@@ -358,100 +710,293 @@ export default function Home() {
 
         {step === "book" && (
           <div className="min-h-dvh px-5 pt-8 pb-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-[12px] font-semibold text-[#8a94a6]">VOCAB FLOW</p>
-                <h1 className="mt-2 text-[28px] font-bold tracking-tight text-[#0f2a5f]">
+            <div>
+              <p className="text-[12px] font-semibold text-[#8a94a6]">
+                VOCAB FLOW
+              </p>
+
+              <div className="mt-2 flex items-center justify-between">
+                <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                   단어장
                 </h1>
-              </div>
 
-              <button
-                onClick={() => setStep("addBook")}
-                className="rounded-full bg-[#0f2a5f] px-4 py-2 text-[12px] font-bold text-white"
-              >
-                + 추가
-              </button>
+                <button
+                  onClick={() => setStep("addBook")}
+                  className="h-[38px] rounded-full bg-[#0f2a5f] px-5 text-[12px] font-bold text-white"
+                >
+                  + 추가
+                </button>
+              </div>
             </div>
 
             <div className="mt-7 space-y-3">
               {books.length === 0 ? (
                 <Empty text="아직 단어장이 없어. 먼저 단어장을 추가해줘." />
               ) : (
-                books.map((book) => (
-                  <button
-                    key={book.id}
-                    onClick={() => goDay(book)}
-                    className="w-full rounded-[22px] border border-[#e4e8f0] bg-[#fbfcfe] p-4 text-left active:scale-[0.99]"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-[18px] font-bold">{book.title}</p>
-                        {book.desc && (
-                          <p className="mt-1 truncate text-[12px] text-[#8a94a6]">
-                            {book.desc}
-                          </p>
-                        )}
-                      </div>
+                books.map((book) => {
+                  const isOpen = expandedFolderIds.includes(book.id);
 
-                      <span
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedBookId(book.id);
-                          setStep("editBook");
+                  return (
+                    <div
+                      key={book.id}
+                      className="rounded-[22px] border border-[#e4e8f0] bg-[#fbfcfe] p-4"
+                    >
+                      <button
+                        onClick={() => {
+                          if (didLongPressFolder.current) {
+                            didLongPressFolder.current = false;
+                            return;
+                          }
+
+                          toggleFolderOpen(book.id);
                         }}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f5f6fa] text-[#8a94a6]"
-                      >
-                        ⋯
-                      </span>
-                    </div>
+                        onPointerDown={() => {
+                          didLongPressFolder.current = false;
 
-                    <div className="mt-4 flex gap-2">
-                      <span className="rounded-full bg-[#eef2f8] px-3 py-1 text-[11px] text-[#0f2a5f]">
-                        {book.days.length} Days
-                      </span>
-                      <span className="rounded-full bg-[#eef2f8] px-3 py-1 text-[11px] text-[#0f2a5f]">
-                        {book.days.reduce((sum, day) => sum + day.words.length, 0)} words
-                      </span>
+                          folderLongPressTimer.current = setTimeout(() => {
+                            didLongPressFolder.current = true;
+                            setSelectedBookId(book.id);
+                            setActionFolderId(book.id);
+                          }, 450);
+                        }}
+                        onPointerUp={() => {
+                          if (folderLongPressTimer.current) {
+                            clearTimeout(folderLongPressTimer.current);
+                            folderLongPressTimer.current = null;
+                          }
+                        }}
+                        onPointerCancel={() => {
+                          if (folderLongPressTimer.current) {
+                            clearTimeout(folderLongPressTimer.current);
+                            folderLongPressTimer.current = null;
+                          }
+                        }}
+                        onPointerLeave={() => {
+                          if (folderLongPressTimer.current) {
+                            clearTimeout(folderLongPressTimer.current);
+                            folderLongPressTimer.current = null;
+                          }
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          setSelectedBookId(book.id);
+                          setActionFolderId(book.id);
+                        }}
+                        className="w-full touch-none select-none text-left"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-[18px] font-bold">{book.title}</p>
+
+                            {book.desc && (
+                              <p className="mt-1 text-[12px] text-[#8a94a6]">
+                                {book.desc}
+                              </p>
+                            )}
+                          </div>
+
+                          <span className="text-[#8a94a6]">
+                            {isOpen ? "⌃" : "⌄"}
+                          </span>
+                        </div>
+
+                        {(book.folders.length > 0 || book.days.length > 0) && (
+                          <div className="mt-4 flex gap-2">
+                            {book.folders.length > 0 && (
+                              <span className="rounded-full bg-[#eef2f8] px-3 py-1 text-[11px] text-[#0f2a5f]">
+                                하위 폴더 {book.folders.length}개
+                              </span>
+                            )}
+
+                            {book.days.length > 0 && (
+                              <span className="rounded-full bg-[#eef2f8] px-3 py-1 text-[11px] text-[#0f2a5f]">
+                                Day {book.days.length}개
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </button>
+
+                      {isOpen && book.folders.length > 0 && (
+                        <div className="mt-3">
+                          {book.folders.map((folder) => (
+                            <button
+                              key={folder.id}
+                              onClick={() => {
+                                if (didLongPressFolder.current) {
+                                  didLongPressFolder.current = false;
+                                  return;
+                                }
+                            
+                                setSelectedBookId(book.id);
+                                setFolderPath([book.id, folder.id]);
+                                setSelectedDayId("");
+                                setWordIndex(0);
+                                setShowMeaning(false);
+                                setStep("day");
+                              }}
+                              onPointerDown={() => {
+                                didLongPressFolder.current = false;
+                            
+                                folderLongPressTimer.current = setTimeout(() => {
+                                  didLongPressFolder.current = true;
+                                  setSelectedBookId(book.id);
+                                  setActionFolderId(folder.id);
+                                }, 450);
+                              }}
+                              onPointerUp={() => {
+                                if (folderLongPressTimer.current) {
+                                  clearTimeout(folderLongPressTimer.current);
+                                  folderLongPressTimer.current = null;
+                                }
+                              }}
+                              onPointerCancel={() => {
+                                if (folderLongPressTimer.current) {
+                                  clearTimeout(folderLongPressTimer.current);
+                                  folderLongPressTimer.current = null;
+                                }
+                              }}
+                              onPointerLeave={() => {
+                                if (folderLongPressTimer.current) {
+                                  clearTimeout(folderLongPressTimer.current);
+                                  folderLongPressTimer.current = null;
+                                }
+                              }}
+                              onContextMenu={(e) => {
+                                e.preventDefault();
+                                setSelectedBookId(book.id);
+                                setActionFolderId(folder.id);
+                              }}
+                              className="flex w-full touch-none select-none items-center gap-3 border-t border-[#edf1f7] px-1 py-3.5 text-left first:border-t-0 active:bg-[#f8fafc]"
+                            >
+                              <FolderIcon />
+
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-[15px] font-bold text-[#111827]">
+                                  {folder.title}
+                                </p>
+
+                                {folder.days.length > 0 && (
+                                  <p className="mt-0.5 text-[10px] font-medium text-[#a3abb8]">
+                                    Day {folder.days.length}개
+                                  </p>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </button>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
         )}
 
-        {step === "day" && selectedBook && (
+        {step === "day" && activeFolder && (
           <div className="min-h-dvh px-5 pt-7 pb-6">
             <div className="flex items-center justify-between">
-              <BackButton onClick={() => setStep("book")} label="단어장" />
+            <BackButton
+              onClick={() => {
+                setStep("book");
+                setFolderPath([]);
+                setSelectedBookId("");
+              }}
+              label="뒤로"
+            />
 
-              <button
-                onClick={goHome}
-                className="mr-1.5 text-[#8a94a6]"
-                aria-label="홈"
-              >
+              <button onClick={goHome} className="mr-1.5 text-[#8a94a6]" aria-label="홈">
                 <HomeIcon />
               </button>
             </div>
 
             <div className="mt-5 flex items-start justify-between">
-              <div>
-                <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
-                  {selectedBook.title}
-                </h1>
-              </div>
+              <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
+                {activeFolder.title}
+              </h1>
 
-              <button
-                onClick={() => setStep("addDay")}
-                className="rounded-full bg-[#0f2a5f] px-4 py-2 text-[12px] font-bold text-white"
-              >
-                + Day
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setStep("addFolder")}
+                  className="rounded-full bg-[#eef2f8] px-4 py-2 text-[12px] font-bold text-[#0f2a5f]"
+                >
+                  + Folder
+                </button>
+
+                <button
+                  onClick={() => setStep("addDay")}
+                  className="rounded-full bg-[#0f2a5f] px-4 py-2 text-[12px] font-bold text-white"
+                >
+                  + Day
+                </button>
+              </div>
             </div>
 
-            <div className="mt-7 grid grid-cols-2 gap-3">
-              {selectedBook.days.map((day) => (
+            <div className="mt-7 space-y-2">
+              {activeFolder.folders.map((folder) => (
+                <button
+                  key={folder.id}
+                  onClick={() => {
+                    if (didLongPressFolder.current) {
+                      didLongPressFolder.current = false;
+                      return;
+                    }
+                
+                    setFolderPath((prev) => [...prev, folder.id]);
+                  }}
+                  onPointerDown={(e) => {
+                    didLongPressFolder.current = false;
+                
+                    folderLongPressTimer.current = setTimeout(() => {
+                      didLongPressFolder.current = true;
+                      setActionFolderId(folder.id);
+                    }, 450);
+                  }}
+                  onPointerUp={() => {
+                    if (folderLongPressTimer.current) {
+                      clearTimeout(folderLongPressTimer.current);
+                      folderLongPressTimer.current = null;
+                    }
+                  }}
+                  onPointerCancel={() => {
+                    if (folderLongPressTimer.current) {
+                      clearTimeout(folderLongPressTimer.current);
+                      folderLongPressTimer.current = null;
+                    }
+                  }}
+                  onPointerLeave={() => {
+                    if (folderLongPressTimer.current) {
+                      clearTimeout(folderLongPressTimer.current);
+                      folderLongPressTimer.current = null;
+                    }
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setActionFolderId(folder.id);
+                  }}
+                  className="w-full touch-none select-none rounded-[18px] border border-[#e4e8f0] bg-[#f8fafc] px-4 py-4 text-left active:scale-[0.99]"
+                >
+                  <p className="text-[17px] font-bold text-[#111827]">
+                    {folder.title}
+                  </p>
+                  <div className="mt-1 flex gap-1.5">
+                    {folder.folders.length > 0 && (
+                      <span className="text-[10px] text-[#a3abb8]">
+                        하위 폴더 {folder.folders.length}개
+                      </span>
+                    )}
+
+                    {folder.days.length > 0 && (
+                      <span className="text-[10px] text-[#a3abb8]">
+                        Day {folder.days.length}개
+                      </span>
+                    )}
+                  </div>
+                </button>
+              ))}
+
+              {activeFolder.days.map((day) => (
                 <button
                   key={day.id}
                   onClick={() => goWordList(day.id)}
@@ -459,12 +1004,13 @@ export default function Home() {
                     e.preventDefault();
                     setActionDayId(day.id);
                   }}
-                  className="rounded-[20px] border border-[#dce2ee] bg-white p-4 text-left active:scale-[0.99]"
+                  className="w-full rounded-[16px] px-3 py-3 text-left active:scale-[0.99]"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-[16px] font-bold">{day.title}</p>
-                      <p className="mt-2 text-[11px] text-[#8a94a6]">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[17px] font-bold text-[#111827]">{day.title}</p>
+
+                      <p className="mt-0.5 text-[10px] font-medium text-[#a3abb8]">
                         {day.words.length} 단어
                       </p>
                     </div>
@@ -474,7 +1020,7 @@ export default function Home() {
                         e.stopPropagation();
                         setActionDayId(day.id);
                       }}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-[#f5f6fa] text-[#8a94a6]"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f5f6fa] text-[#8a94a6]"
                     >
                       ⋯
                     </span>
@@ -490,11 +1036,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <BackButton onClick={() => setStep("day")} label="Day 목록" />
 
-              <button
-                onClick={goHome}
-                className="mr-1.5 text-[#8a94a6]"
-                aria-label="홈"
-              >
+              <button onClick={goHome} className="mr-1.5 text-[#8a94a6]" aria-label="홈">
                 <HomeIcon />
               </button>
             </div>
@@ -522,46 +1064,89 @@ export default function Home() {
                 <Empty text="이 Day에는 아직 단어가 없어." />
               ) : (
                 selectedDay.words.map((item, index) => (
-                  <button
-                    key={item.id}
-                    onClick={() => startStudy(index)}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      setActionWordIndex(index);
-                    }}
-                    className="w-full rounded-[18px] border border-[#e4e8f0] bg-white px-4 py-4 text-left active:scale-[0.99]"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p
-                          className={`truncate text-[17px] font-bold ${
-                            item.memorized
-                              ? "text-[#b0b7c3] line-through decoration-[#b0b7c3]"
-                              : "text-[#0f2a5f]"
-                          }`}
-                        >
-                          {item.word}
-                        </p>
-                        <p
-                          className={`mt-1 truncate text-[12px] ${
-                            item.memorized ? "text-[#c3c8d0] line-through" : "text-[#8a94a6]"
-                          }`}
-                        >
-                          {item.meanings[0]?.items?.join(", ") || "뜻 없음"}
-                        </p>
-                      </div>
-
-                      <span
+                  <div key={item.id} className="relative overflow-hidden rounded-[18px] bg-[#f1f3f6]">
+                    <div className="absolute inset-y-0 left-0 flex w-[145px] items-center justify-center gap-10 bg-[#eef0f3]">
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setActionWordIndex(index);
+                          changeWordColor(index, "blue");
                         }}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f5f6fa] text-[#8a94a6]"
-                      >
-                        ⋯
-                      </span>
+                        className="h-[11px] w-[11px] rounded-full border border-white bg-[#3b82f6] shadow-[0_1px_3px_rgba(15,23,42,0.18)]"
+                        aria-label="파란색 표시"
+                      />
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          changeWordColor(index, "red");
+                        }}
+                        className="h-[11px] w-[11px] rounded-full border border-white bg-[#ef4444] shadow-[0_1px_3px_rgba(15,23,42,0.18)]"
+                        aria-label="빨간색 표시"
+                      />
                     </div>
-                  </button>
+                
+                    <button
+                      onClick={() => startStudy(index)}
+                      onTouchStart={(e) => {
+                        touchStartX.current = e.touches[0].clientX;
+                        setDraggingIndex(index);
+                
+                        const base = swipedIndex === index ? SWIPE_WIDTH : 0;
+                        setDragX(base);
+                      }}
+                      onTouchMove={(e) => {
+                        if (touchStartX.current === null) return;
+                
+                        const diff = e.touches[0].clientX - touchStartX.current;
+                        const base = swipedIndex === index ? SWIPE_WIDTH : 0;
+                
+                        setDragX(Math.max(0, Math.min(base + diff, SWIPE_WIDTH)));
+                      }}
+                      onTouchEnd={() => {
+                        if (dragX > SWIPE_WIDTH / 2) {
+                          setSwipedIndex(index);
+                        } else {
+                          setSwipedIndex(null);
+                        }
+                
+                        setDraggingIndex(null);
+                        setDragX(0);
+                        touchStartX.current = null;
+                      }}
+                      className="relative z-10 w-full rounded-[18px] border border-[#e4e8f0] bg-white px-4 py-4 text-left shadow-[0_3px_10px_rgba(15,23,42,0.04)] transition-transform active:scale-[0.99]"
+                      style={{ transform: `translateX(${getSwipeX(index)}px)` }}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p
+                            className={`truncate text-[17px] font-bold ${
+                              item.highlightColor === "red"
+                                ? "text-[#ef4444]"
+                                : item.highlightColor === "blue"
+                                ? "text-[#2563eb]"
+                                : "text-[#0f2a5f]"
+                            }`}
+                          >
+                            {item.word}
+                          </p>
+                
+                          <p className="mt-1 truncate text-[12px] text-[#8a94a6]">
+                            {item.meanings[0]?.items?.join(", ") || "뜻 없음"}
+                          </p>
+                        </div>
+                
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActionWordIndex(index);
+                          }}
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f5f6fa] text-[#8a94a6]"
+                        >
+                          ⋯
+                        </span>
+                      </div>
+                    </button>
+                  </div>
                 ))
               )}
             </div>
@@ -593,7 +1178,7 @@ export default function Home() {
               </div>
 
               <p className="max-w-[160px] truncate text-center text-[11px] text-[#596275]">
-                {selectedBook.title} 〉 {selectedDay.title} 〉{" "}
+                {currentFolderTitle} 〉 {selectedDay.title} 〉{" "}
                 {words.length ? wordIndex + 1 : 0} / {words.length}
               </p>
 
@@ -801,11 +1386,24 @@ export default function Home() {
           </div>
         )}
 
+        {step === "addFolder" && activeFolder && (
+          <AddFolder
+            onBack={() => setStep("day")}
+            onSave={(folder) => {
+              saveBooks((prev) => addFolderToPath(prev, folderPath, folder));
+              setStep("day");
+            }}
+          />
+        )}
+
         {step === "addBook" && (
-          <AddBook
+          <AddFolder
+            titleText="추가"
+            labelText="이름"
+            placeholder="TOEIC / START TOEIC"
             onBack={() => setStep("book")}
-            onSave={(book) => {
-              saveBooks((prev) => [...prev, book]);
+            onSave={(folder) => {
+              saveBooks((prev) => [...prev, folder]);
               setStep("book");
             }}
           />
@@ -834,43 +1432,32 @@ export default function Home() {
           />
         )}
 
-        {step === "addDay" && selectedBook && (
+        {step === "addDay" && activeFolder && (
           <AddDay
-            defaultTitle={`Day ${selectedBook.days.length + 1}`}
+            defaultTitle={`Day ${activeFolder.days.length + 1}`}
             onBack={() => setStep("day")}
             onSave={(title) => {
               saveBooks((prev) =>
-                prev.map((book) =>
-                  book.id === selectedBook.id
-                    ? {
-                        ...book,
-                        days: [...book.days, { id: crypto.randomUUID(), title, words: [] }],
-                      }
-                    : book
-                )
+                addDayToPath(prev, folderPath, {
+                  id: crypto.randomUUID(),
+                  title,
+                  words: [],
+                })
               );
+
               setStep("day");
             }}
           />
         )}
 
-        {step === "addWord" && selectedBook && (
+        {step === "addWord" && activeFolder && (
           <AddWord
-            book={selectedBook}
-            defaultDayId={selectedDayId || selectedBook.days[0]?.id || ""}
+            book={activeFolder}
+            defaultDayId={selectedDayId || activeFolder.days[0]?.id || ""}
             onBack={() => setStep(selectedDayId ? "wordList" : "day")}
             onSave={(dayId, word) => {
               saveBooks((prev) =>
-                prev.map((book) =>
-                  book.id === selectedBook.id
-                    ? {
-                        ...book,
-                        days: book.days.map((day) =>
-                          day.id === dayId ? { ...day, words: [...day.words, word] } : day
-                        ),
-                      }
-                    : book
-                )
+                addWordToPath(prev, folderPath, dayId, word)
               );
 
               setSelectedDayId(dayId);
@@ -881,9 +1468,9 @@ export default function Home() {
           />
         )}
 
-        {step === "editWord" && selectedBook && currentWord && (
+        {step === "editWord" && activeFolder && currentWord && (
           <AddWord
-            book={selectedBook}
+            book={activeFolder}
             defaultDayId={selectedDayId}
             initialWord={currentWord}
             onBack={() => setStep("study")}
@@ -891,46 +1478,81 @@ export default function Home() {
               const movedToOtherDay = dayId !== selectedDayId;
 
               saveBooks((prev) =>
-                prev.map((book) =>
-                  book.id === selectedBook.id
-                    ? {
-                        ...book,
-                        days: book.days.map((day) => {
-                          if (day.id === selectedDayId && day.id === dayId) {
-                            return {
-                              ...day,
-                              words: day.words.map((word, i) =>
-                                i === wordIndex ? editedWord : word
-                              ),
-                            };
-                          }
-
-                          if (day.id === selectedDayId) {
-                            return {
-                              ...day,
-                              words: day.words.filter((_, i) => i !== wordIndex),
-                            };
-                          }
-
-                          if (day.id === dayId) {
-                            return { ...day, words: [...day.words, editedWord] };
-                          }
-
-                          return day;
-                        }),
-                      }
-                    : book
+                editWordInPath(
+                  prev,
+                  folderPath,
+                  selectedDayId,
+                  dayId,
+                  wordIndex,
+                  editedWord
                 )
               );
 
               setSelectedDayId(dayId);
+              setWordIndex(0);
               setShowMeaning(false);
               setStep(movedToOtherDay ? "wordList" : "study");
             }}
           />
         )}
 
-        {menuOpen && selectedBook && (
+        {step === "editFolder" && actionFolderId && (
+          <AddFolder
+            titleText="폴더 수정"
+            labelText="폴더 이름"
+            placeholder="폴더 이름"
+            initialFolder={findFolderById(books, actionFolderId)}
+            onBack={() => setStep(folderPath.length ? "day" : "book")}
+            onSave={(editedFolder) => {
+              saveBooks((prev) =>
+                editFolderInPath(prev, actionFolderId, (folder) => ({
+                  ...folder,
+                  title: editedFolder.title,
+                  days: editedFolder.days.length ? editedFolder.days : folder.days,
+                }))
+              );
+
+              setActionFolderId(null);
+              setStep(folderPath.length ? "day" : "book");
+            }}
+          />
+        )}
+
+        {step === "moveFolder" && actionFolderId && (
+          <div className="min-h-dvh px-5 pt-7 pb-6">
+            <BackButton
+              onClick={() => setStep("day")}
+              label="뒤로"
+            />
+
+            <h1 className="mt-5 text-[28px] font-bold text-[#0f2a5f]">
+              폴더 이동
+            </h1>
+
+            <div className="mt-7 space-y-2">
+              {books.map((book) => (
+                <MoveFolderList
+                  key={book.id}
+                  folder={book}
+                  currentId={actionFolderId}
+                  onSelect={(targetId) => {
+                    saveBooks((prev) =>
+                      moveFolderToFolder(
+                        prev,
+                        actionFolderId,
+                        targetId
+                      )
+                    );
+
+                    setStep("day");
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {menuOpen && selectedBook && activeFolder && (
           <div className="fixed inset-0 z-20 bg-black/25">
             <aside className="h-full w-[82%] max-w-[340px] overflow-y-auto bg-white px-5 pt-6 pb-6 shadow-2xl">
               <div className="mb-6 flex items-center justify-between">
@@ -966,6 +1588,7 @@ export default function Home() {
                           key={book.id}
                           onClick={() => {
                             setSelectedBookId(book.id);
+                            setFolderPath([book.id]);
                             setSelectedDayId("");
                             setWordIndex(0);
                             setShowMeaning(false);
@@ -990,7 +1613,27 @@ export default function Home() {
                 <p className="mb-3 text-[11px] font-bold text-[#8a94a6]">Day 변경</p>
 
                 <div className="space-y-2">
-                  {selectedBook.days.map((day) => (
+                  {activeFolder.folders.map((folder) => (
+                    <button
+                      key={folder.id}
+                      onClick={() => {
+                        setFolderPath((prev) => [...prev, folder.id]);
+                      }}
+                      className="w-full rounded-[16px] border border-[#e4e8f0] bg-[#f8fafc] px-3 py-4 text-left"
+                    >
+                      <p className="text-[17px] font-bold text-[#111827]">
+                        {folder.title}
+                      </p>
+
+                      <p className="mt-1 text-[10px] text-[#a3abb8]">
+                        {folder.folders.length > 0 && `하위 폴더 ${folder.folders.length}개`}
+                        {folder.folders.length > 0 && folder.days.length > 0 && " · "}
+                        {folder.days.length > 0 && `Day ${folder.days.length}개`}
+                      </p>
+                    </button>
+                  ))}
+
+                  {activeFolder.days.map((day) => (
                     <button
                       key={day.id}
                       onClick={() => {
@@ -1059,7 +1702,7 @@ export default function Home() {
           </div>
         )}
 
-        {actionDayId !== null && selectedBook && (
+        {actionDayId !== null && activeFolder && (
           <div
             onClick={() => setActionDayId(null)}
             className="fixed inset-0 z-30 flex items-end bg-black/25"
@@ -1069,7 +1712,7 @@ export default function Home() {
               className="mx-auto w-full max-w-[430px] rounded-t-[24px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
             >
               <p className="text-[16px] font-bold text-[#111827]">
-                {selectedBook.days.find((day) => day.id === actionDayId)?.title}
+                {activeFolder?.days.find((day) => day.id === actionDayId)?.title}
               </p>
 
               <div className="mt-5 space-y-2">
@@ -1090,10 +1733,67 @@ export default function Home() {
             </div>
           </div>
         )}
+        {actionFolderId !== null && (activeFolder || step === "book") && (
+          <div
+            onClick={() => setActionFolderId(null)}
+            className="fixed inset-0 z-30 flex items-end bg-black/25"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="mx-auto w-full max-w-[430px] rounded-t-[24px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
+            >
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    setStep("editFolder");
+                  }}
+                  className="h-12 w-full rounded-2xl bg-[#eef2f8] text-[13px] font-bold text-[#0f2a5f]"
+                >
+                  폴더 수정
+                </button>
+
+                <button
+                  onClick={() => {
+                    setStep("moveFolder");
+                  }}
+                  className="h-12 w-full rounded-2xl bg-[#eef2f8] text-[13px] font-bold text-[#0f2a5f]"
+                >
+                  폴더 이동
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (!confirm("폴더를 삭제할까?")) return;
+
+                    saveBooks((prev) =>
+                      deleteFolderFromPath(
+                        prev,
+                        actionFolderId
+                      )
+                    );
+
+                    setActionFolderId(null);
+                  }}
+                  className="h-12 w-full rounded-2xl bg-[#fdeeee] text-[13px] font-bold text-[#b42318]"
+                >
+                  폴더 삭제
+                </button>
+
+                <button
+                  onClick={() => setActionFolderId(null)}
+                  className="h-12 w-full rounded-2xl border border-[#dce2ee]"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
     </main>
   );
 }
+
 
 function AddBook({
   initialBook,
@@ -1139,6 +1839,7 @@ function AddBook({
               id: initialBook?.id || crypto.randomUUID(),
               title: title.trim(),
               desc: desc.trim(),
+              folders: initialBook?.folders || [],
               days:
                 initialBook?.days ||
                 Array.from({ length: dayCount }, (_, i) => ({
@@ -1161,6 +1862,78 @@ function AddBook({
             단어장 삭제
           </button>
         )}
+      </div>
+    </div>
+  );
+}
+
+function AddFolder({
+  titleText = "폴더 추가",
+  labelText = "폴더 이름",
+  placeholder = "START TOEIC",
+  initialFolder,
+  onBack,
+  onSave,
+}: {
+  titleText?: string;
+  labelText?: string;
+  placeholder?: string;
+  initialFolder?: Folder;
+  onBack: () => void;
+  onSave: (folder: Folder) => void;
+}) {
+  const [title, setTitle] = useState(initialFolder?.title || "");
+  const [dayCount, setDayCount] = useState("");
+
+  return (
+    <div className="min-h-dvh px-5 pt-7 pb-6">
+      <BackButton onClick={onBack} label="뒤로" />
+
+      <h1 className="mt-5 text-[28px] font-bold text-[#0f2a5f]">
+        {titleText}
+      </h1>
+
+      <div className="mt-7 space-y-4">
+        <Input
+          label={labelText}
+          value={title}
+          onChange={setTitle}
+          placeholder={placeholder}
+        />
+
+        <Input
+          label="Day 개수"
+          value={dayCount}
+          onChange={setDayCount}
+          placeholder="비워두면 폴더만 생성"
+          type="number"
+        />
+
+        <button
+          onClick={() => {
+            if (!title.trim()) return alert("이름을 입력해줘.");
+
+            const count = Number(dayCount);
+
+            onSave({
+              id: initialFolder?.id || crypto.randomUUID(),
+              title: title.trim(),
+              desc: "",
+              folders: initialFolder?.folders || [],
+              days:
+                dayCount.trim() && count > 0
+                  ? Array.from({ length: count }, (_, i) => ({
+                      id: crypto.randomUUID(),
+                      title: `Day ${i + 1}`,
+                      words: [],
+                    }))
+                  : initialFolder?.days || [],
+            });
+          }}
+          className="h-12 w-full rounded-full bg-[#0f2a5f] text-[13px] font-bold text-white"
+        >
+          저장
+        </button>
       </div>
     </div>
   );
@@ -1453,7 +2226,7 @@ function AddWord({
                 </p>
                   <button
                     onClick={() => removeExample(index)}
-                    className="flex h-7 w-7 items-center justify-center rounded-full bg-[#f5f6fa] text-[15px] text-[#8a94a6]"
+                    className="flex h-5 w-5 items-center justify-center rounded-full bg-[#f5f6fa] text-[15px] text-[#8a94a6]"
                   >
                     ×
                   </button>
@@ -1606,7 +2379,8 @@ function AddWord({
                 .filter(
                   (point) => point.title || point.description || point.exampleEn || point.exampleKo
                 ),
-              memorized: initialWord?.memorized || false,
+              memorized: initialWord?.memorized ?? false,
+              highlightColor: initialWord?.highlightColor || "",
             });
           }}
           className="h-12 w-full rounded-full bg-[#0f2a5f] text-[13px] font-bold text-white"
@@ -1821,5 +2595,41 @@ function HighlightedText({ text, keyword }: { text: string; keyword: string }) {
         )
       )}
     </>
+  );
+}
+
+function MoveFolderList({
+  folder,
+  currentId,
+  onSelect,
+}: {
+  folder: Folder;
+  currentId: string;
+  onSelect: (id: string) => void;
+}) {
+  if (folder.id === currentId) return null;
+
+  return (
+    <div className="space-y-2">
+      <button
+        onClick={() => onSelect(folder.id)}
+        className="w-full rounded-2xl border border-[#dce2ee] px-4 py-4 text-left"
+      >
+        {folder.title}
+      </button>
+
+      {folder.folders.length > 0 && (
+        <div className="ml-4 space-y-2">
+          {folder.folders.map((child) => (
+            <MoveFolderList
+              key={child.id}
+              folder={child}
+              currentId={currentId}
+              onSelect={onSelect}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
