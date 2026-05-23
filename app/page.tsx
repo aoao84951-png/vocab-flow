@@ -335,7 +335,7 @@ export default function Home() {
       {isStandalone && (
         <button
           onClick={() => window.location.reload()}
-          className="fixed bottom-4 right-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border border-[#e4e8f0] bg-white/90 shadow-[0_6px_18px_rgba(15,23,42,0.08)] backdrop-blur transition active:scale-95"
+          className="fixed bottom-8 right-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border border-[#e4e8f0] bg-white/90 shadow-[0_6px_18px_rgba(15,23,42,0.08)] backdrop-blur transition active:scale-95"
           aria-label="새로고침"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
