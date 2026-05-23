@@ -63,6 +63,7 @@ export default function Home() {
   const [bookDropdownOpen, setBookDropdownOpen] = useState(false);
   const [actionWordIndex, setActionWordIndex] = useState<number | null>(null);
   const [actionDayId, setActionDayId] = useState<string | null>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   const isHistoryMoving = useRef(false);
   const isFirstHistoryState = useRef(true);
@@ -146,6 +147,14 @@ export default function Home() {
       })
     );
   }, [step, selectedBookId, selectedDayId, wordIndex]);
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+  
+    setIsStandalone(standalone);
+  }, []);
   
   async function fetchBooks() {
     const { data, error } = await supabase
@@ -323,6 +332,30 @@ export default function Home() {
   return (
     <main className="min-h-[100svh] bg-white text-[#111827]">
       <section className="mx-auto min-h-[100svh] w-full max-w-[430px] bg-white">
+      {isStandalone && (
+        <button
+          onClick={() => window.location.reload()}
+          className="fixed bottom-4 right-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border border-[#e4e8f0] bg-white/90 shadow-[0_6px_18px_rgba(15,23,42,0.08)] backdrop-blur transition active:scale-95"
+          aria-label="새로고침"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M20 11A8 8 0 1 0 17.7 16.7"
+              stroke="#0f2a5f"
+              strokeWidth="2.1"
+              strokeLinecap="round"
+            />
+            <path
+              d="M20 4V11H13"
+              stroke="#0f2a5f"
+              strokeWidth="2.1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      )}
+
         {step === "book" && (
           <div className="min-h-dvh px-5 pt-8 pb-6">
             <div className="flex items-start justify-between">
