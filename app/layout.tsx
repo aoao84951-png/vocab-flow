@@ -12,14 +12,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "VOCAB FLOW",
   description: "VOCAB FLOW",
 
   icons: {
     icon: "/icon",
-    apple: "/icon",
     shortcut: "/icon",
+    apple: "/apple-icon",
   },
 
   appleWebApp: {
