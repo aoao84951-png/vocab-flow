@@ -727,7 +727,7 @@ export default function Home() {
                   onClick={(e) => e.stopPropagation()}
                   className={`study-footer fixed left-1/2 z-10 w-full max-w-[430px] -translate-x-1/2 bg-white/95 px-4 pt-2 backdrop-blur ${
                     isStandalone
-                      ? "bottom-[56px] pb-2"
+                      ? "bottom-[44px] pb-2"
                       : "bottom-0 pb-[calc(12px+env(safe-area-inset-bottom))]"
                   }`}
                 >
