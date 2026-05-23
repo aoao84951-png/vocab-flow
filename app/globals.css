@@ -23,7 +23,7 @@ body {
 
 @media (display-mode: standalone) {
   .study-footer {
-    bottom: 18px !important;
+    bottom: 36px !important;
     padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
   }
 }

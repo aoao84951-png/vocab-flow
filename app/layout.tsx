@@ -15,10 +15,13 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "VOCAB FLOW",
   description: "VOCAB FLOW",
+
   icons: {
     icon: "/icon",
-    apple: "/apple-icon",
+    apple: "/icon",
+    shortcut: "/icon",
   },
+
   appleWebApp: {
     capable: true,
     title: "VOCAB FLOW",
