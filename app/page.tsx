@@ -63,7 +63,6 @@ export default function Home() {
   const [bookDropdownOpen, setBookDropdownOpen] = useState(false);
   const [actionWordIndex, setActionWordIndex] = useState<number | null>(null);
   const [actionDayId, setActionDayId] = useState<string | null>(null);
-  const [isStandalone, setIsStandalone] = useState(false);
 
   const isHistoryMoving = useRef(false);
   const isFirstHistoryState = useRef(true);
@@ -147,14 +146,6 @@ export default function Home() {
       })
     );
   }, [step, selectedBookId, selectedDayId, wordIndex]);
-
-  useEffect(() => {
-    const standalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-  
-    setIsStandalone(standalone);
-  }, []);
   
   async function fetchBooks() {
     const { data, error } = await supabase
@@ -293,7 +284,9 @@ export default function Home() {
                   ? {
                       ...day,
                       words: day.words.map((word, i) =>
-                        i === targetIndex ? { ...word, memorized: !word.memorized } : word
+                        i === targetIndex
+                          ? { ...word, memorized: !word.memorized }
+                          : word
                       ),
                     }
                   : day
@@ -302,8 +295,6 @@ export default function Home() {
           : book
       )
     );
-
-    setShowMeaning(false);
   };
 
   const deleteDay = (targetDayId: string) => {
@@ -545,10 +536,7 @@ export default function Home() {
         )}
 
           {step === "study" && selectedBook && selectedDay && (
-            <div
-              onClick={() => currentWord && setShowMeaning((prev) => !prev)}
-              className="flex min-h-[100svh] flex-col px-4 pt-4 pb-[76px]"
-            >
+            <div className="relative flex min-h-[100svh] flex-col px-4 pt-4 pb-6">
             <header
               onClick={(e) => e.stopPropagation()}
               className="flex h-10 shrink-0 items-center justify-between"
@@ -600,15 +588,40 @@ export default function Home() {
             ) : (
               <>
                 <section className="relative mt-3 flex h-[155px] shrink-0 items-center justify-center rounded-[22px] border border-[#dce2ee] bg-white">
-                  <h2 className="text-[44px] font-bold tracking-tight text-[#0f2a5f]">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleMemorized(wordIndex);
+                    }}
+                    className={`absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border text-[14px] font-bold ${
+                      currentWord.memorized
+                        ? "border-[#0f2a5f] bg-[#0f2a5f] text-white"
+                        : "border-[#dce2ee] bg-white text-[#b0b7c3]"
+                    }`}
+                    aria-label="암기완료"
+                  >
+                    ✓
+                  </button>
+
+                  <h2
+                    className={`text-[44px] font-bold tracking-tight ${
+                      currentWord.memorized
+                        ? "text-[#b0b7c3] line-through decoration-[#b0b7c3]"
+                        : "text-[#0f2a5f]"
+                    }`}
+                  >
                     {currentWord.word}
                   </h2>
                 </section>
 
                 <section
-                  className={`mt-4 min-h-0 flex-1 overflow-hidden transition-opacity duration-200 ${
-                    showMeaning ? "opacity-100" : "pointer-events-none opacity-0"
+                  className={`relative z-[2] mt-4 min-h-0 flex-1 overflow-hidden transition-opacity duration-200 ${
+                    showMeaning ? "pointer-events-none opacity-100" : "pointer-events-none opacity-0"
                   }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMeaning((prev) => !prev);
+                  }}
                 >
                   <div className="h-full overflow-y-auto px-3 pb-4">
                     <Block title="뜻">
@@ -721,47 +734,28 @@ export default function Home() {
                   </div>
                 </section>
 
-                <footer
+                <div
+                  className="absolute inset-x-0 top-[205px] bottom-0 z-[1] grid grid-cols-3"
                   onClick={(e) => e.stopPropagation()}
-                  className={`study-footer fixed left-1/2 z-10 w-full max-w-[430px] -translate-x-1/2 bg-white/95 px-4 pt-2 backdrop-blur ${
-                    isStandalone
-                      ? "bottom-[34px] pb-2"
-                      : "bottom-0 pb-[calc(12px+env(safe-area-inset-bottom))]"
-                  }`}
                 >
-                  <div className="grid grid-cols-[0.9fr_1.1fr_0.9fr] gap-2">
-                    <button
-                      onClick={prevWord}
-                      className="h-10 rounded-full border border-[#dce2ee] text-[12px] text-[#596275]"
-                    >
-                      <div className="flex items-center justify-center gap-1">
-                        <ChevronLeft />
-                        <span>이전</span>
-                      </div>
-                    </button>
+                  <button
+                    onClick={prevWord}
+                    className="h-full"
+                    aria-label="이전 단어"
+                  />
 
-                    <button
-                      onClick={() => toggleMemorized(wordIndex)}
-                      className={`h-10 rounded-full text-[12px] font-bold ${
-                        currentWord.memorized
-                          ? "bg-[#eef2f8] text-[#0f2a5f]"
-                          : "bg-[#0f2a5f] text-white"
-                      }`}
-                    >
-                      {currentWord.memorized ? "암기 취소" : "암기 완료"}
-                    </button>
+                  <button
+                    onClick={() => setShowMeaning((prev) => !prev)}
+                    className="h-full"
+                    aria-label="뜻 보기"
+                  />
 
-                    <button
-                      onClick={nextWord}
-                      className="h-10 rounded-full border border-[#dce2ee] text-[12px] text-[#596275]"
-                    >
-                      <div className="flex items-center justify-center gap-1">
-                        <span>다음</span>
-                        <ChevronRight />
-                      </div>
-                    </button>
-                  </div>
-                </footer>
+                  <button
+                    onClick={nextWord}
+                    className="h-full"
+                    aria-label="다음 단어"
+                  />
+                </div>
               </>
             )}
           </div>
