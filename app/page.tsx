@@ -698,7 +698,7 @@ export default function Home() {
                     </Block>
 
                     {currentWord.examples.length > 0 && (
-                      <Block>
+                      <Block title="예문">
                         <div className="max-h-[190px] space-y-3 overflow-y-auto pr-1">
                           {currentWord.examples.map((ex, i) => (
                             <div key={`${ex.en}-${i}`} className="pl-[2px]">
@@ -717,17 +717,16 @@ export default function Home() {
                     )}
 
                     {currentWord.synonyms.length > 0 && (
-                      <Block>
+                      <Block title="동의어">
                         <ChipList items={currentWord.synonyms} />
                       </Block>
                     )}
 
                     {currentWord.antonyms.length > 0 && (
-                      <Block>
+                      <Block title="반의어">
                         <ChipList items={currentWord.antonyms} tone="red" />
                       </Block>
                     )}
-
                     {(currentWord.studyPoints ?? []).length > 0 && (
                       <Block>
                         <div className="space-y-3">
@@ -1699,10 +1698,22 @@ function Empty({ text }: { text: string }) {
   );
 }
 
-function Block({ children }: { children: React.ReactNode }) {
+function Block({
+  children,
+  title,
+}: {
+  children: React.ReactNode;
+  title?: string;
+}) {
   return (
-    <div className="border-b border-[#eef1f5] py-4 last:border-b-0">
-      {children}
+    <div className="py-3">
+      {title && (
+        <p className="mb-2 text-[11px] font-bold tracking-[-0.01em] text-[#8a94a6]">
+          {title}
+        </p>
+      )}
+
+      <div>{children}</div>
     </div>
   );
 }
