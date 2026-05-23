@@ -120,8 +120,31 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const savedState = sessionStorage.getItem("vocab-flow-state");
+  
+    if (savedState) {
+      const parsed = JSON.parse(savedState);
+  
+      setStep(parsed.step || "book");
+      setSelectedBookId(parsed.selectedBookId || "");
+      setSelectedDayId(parsed.selectedDayId || "");
+      setWordIndex(parsed.wordIndex || 0);
+    }
+  
     fetchBooks();
   }, []);
+
+  useEffect(() => {
+    sessionStorage.setItem(
+      "vocab-flow-state",
+      JSON.stringify({
+        step,
+        selectedBookId,
+        selectedDayId,
+        wordIndex,
+      })
+    );
+  }, [step, selectedBookId, selectedDayId, wordIndex]);
   
   async function fetchBooks() {
     const { data, error } = await supabase
@@ -299,8 +322,8 @@ export default function Home() {
   
 
   return (
-    <main className="min-h-dvh bg-[#f6f7f9] text-[#111827]">
-      <section className="mx-auto min-h-dvh w-full max-w-[430px] overflow-hidden bg-white">
+    <main className="min-h-[100svh] bg-white text-[#111827]">
+      <section className="mx-auto min-h-[100svh] w-full max-w-[430px] bg-white">
         {step === "book" && (
           <div className="min-h-dvh px-5 pt-8 pb-6">
             <div className="flex items-start justify-between">
@@ -516,18 +539,29 @@ export default function Home() {
           {step === "study" && selectedBook && selectedDay && (
             <div
               onClick={() => currentWord && setShowMeaning((prev) => !prev)}
-              className="flex min-h-dvh flex-col px-4 pt-4 pb-[76px]"
+              className="flex min-h-[100svh] flex-col px-4 pt-4 pb-[76px]"
             >
             <header
               onClick={(e) => e.stopPropagation()}
               className="flex h-10 shrink-0 items-center justify-between"
             >
-              <button
-                onClick={() => setMenuOpen(true)}
-                className="h-9 w-9 text-[20px] text-[#0f2a5f]"
-              >
-                ☰
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setMenuOpen(true)}
+                  className="h-9 w-9 text-[20px] text-[#0f2a5f]"
+                  aria-label="메뉴"
+                >
+                  ☰
+                </button>
+
+                <button
+                  onClick={() => setStep("wordList")}
+                  className="flex h-9 w-9 items-center justify-center pt-[2px] text-[#0f2a5f]"
+                  aria-label="뒤로가기"
+                >
+                  <ChevronLeft />
+                </button>
+              </div>
 
               <p className="max-w-[160px] truncate text-center text-[11px] text-[#596275]">
                 {selectedBook.title} 〉 {selectedDay.title} 〉{" "}
@@ -535,13 +569,7 @@ export default function Home() {
               </p>
 
               <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setStep("wordList")}
-                  className="h-9 w-9 rounded-full text-[17px] text-[#0f2a5f]"
-                  aria-label="단어 목록"
-                >
-                  ‹
-                </button>
+            
 
                 <button
                   onClick={() => setStep("editWord")}
