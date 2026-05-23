@@ -1708,9 +1708,13 @@ function Block({
   return (
     <div className="py-3">
       {title && (
-        <p className="mb-2 text-[11px] font-bold tracking-[-0.01em] text-[#8a94a6]">
-          {title}
-        </p>
+        <p
+        className={`mb-2 text-[11px] font-bold tracking-[-0.01em] text-[#8a94a6] ${
+          title === "반의어" ? "pl-[1px]" : ""
+        }`}
+      >
+        {title}
+      </p>
       )}
 
       <div>{children}</div>
