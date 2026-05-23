@@ -24,3 +24,10 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@media (display-mode: standalone) {
+  .study-footer {
+    bottom: 10px;
+    padding-bottom: 10px !important;
+  }
+}

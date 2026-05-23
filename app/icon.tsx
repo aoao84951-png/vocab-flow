@@ -14,36 +14,63 @@ export default function Icon() {
         style={{
           width: "100%",
           height: "100%",
-          background: "#f7f8fb",
+          background: "#30343b",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: "110px",
         }}
       >
         <div
           style={{
-            width: 330,
-            height: 330,
-            borderRadius: 88,
-            background: "#ffffff",
-            border: "10px solid #dce2ee",
+            position: "relative",
+            width: 250,
+            height: 275,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 24px 70px rgba(15, 42, 95, 0.16)",
+            transform: "translateY(-4px)",
           }}
         >
-          <span
+          <div
             style={{
-              color: "#0f2a5f",
-              fontSize: 96,
-              fontWeight: 800,
-              letterSpacing: "-6px",
+              position: "absolute",
+              left: 16,
+              top: 18,
+              width: 72,
+              height: 245,
+              background: "#f4f5f7",
+              borderRadius: 18,
+              boxShadow: "6px 6px 0 #aeb4bf",
+              transform: "skewX(18deg)",
             }}
-          >
-            VF
-          </span>
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              right: 16,
+              top: 18,
+              width: 72,
+              height: 245,
+              background: "#f4f5f7",
+              borderRadius: 18,
+              boxShadow: "6px 6px 0 #aeb4bf",
+              transform: "skewX(-18deg)",
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              bottom: 4,
+              width: 116,
+              height: 74,
+              background: "#f4f5f7",
+              borderRadius: 20,
+              boxShadow: "6px 6px 0 #aeb4bf",
+              transform: "rotate(0deg)",
+            }}
+          />
         </div>
       </div>
     ),

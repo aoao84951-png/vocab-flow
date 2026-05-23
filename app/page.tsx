@@ -63,6 +63,7 @@ export default function Home() {
   const [bookDropdownOpen, setBookDropdownOpen] = useState(false);
   const [actionWordIndex, setActionWordIndex] = useState<number | null>(null);
   const [actionDayId, setActionDayId] = useState<string | null>(null);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const selectedBook = books.find((book) => book.id === selectedBookId);
   const selectedDay = selectedBook?.days.find((day) => day.id === selectedDayId);
@@ -246,8 +247,61 @@ export default function Home() {
     setActionDayId(null);
   };
 
+  const goBackByStep = () => {
+    if (step === "day") {
+      setStep("book");
+      return;
+    }
+  
+    if (step === "wordList") {
+      setStep("day");
+      return;
+    }
+  
+    if (step === "study") {
+      setStep("wordList");
+      return;
+    }
+  
+    if (step === "addBook" || step === "editBook") {
+      setStep("book");
+      return;
+    }
+  
+    if (step === "addDay") {
+      setStep("day");
+      return;
+    }
+  
+    if (step === "addWord") {
+      setStep(selectedDayId ? "wordList" : "day");
+      return;
+    }
+  
+    if (step === "editWord") {
+      setStep("study");
+    }
+  };
+  
+  const handleTouchEnd = (e: React.TouchEvent<HTMLElement>) => {
+    if (touchStartX === null) return;
+  
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchEndX - touchStartX;
+  
+    if (touchStartX < 35 && diff > 90) {
+      goBackByStep();
+    }
+  
+    setTouchStartX(null);
+  };
+
   return (
-    <main className="min-h-dvh bg-[#f6f7f9] text-[#111827]">
+    <main
+      onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+      onTouchEnd={handleTouchEnd}
+      className="min-h-dvh bg-[#f6f7f9] text-[#111827]"
+    >
       <section className="mx-auto min-h-dvh w-full max-w-[430px] overflow-hidden bg-white">
         {step === "book" && (
           <div className="min-h-dvh px-5 pt-8 pb-6">
@@ -461,9 +515,15 @@ export default function Home() {
           </div>
         )}
 
-        {step === "study" && selectedBook && selectedDay && (
-          <div className="flex min-h-dvh flex-col px-4 pt-4 pb-[76px]">
-            <header className="flex h-10 shrink-0 items-center justify-between">
+          {step === "study" && selectedBook && selectedDay && (
+            <div
+              onClick={() => currentWord && setShowMeaning((prev) => !prev)}
+              className="flex min-h-dvh flex-col px-4 pt-4 pb-[76px]"
+            >
+            <header
+              onClick={(e) => e.stopPropagation()}
+              className="flex h-10 shrink-0 items-center justify-between"
+            >
               <button
                 onClick={() => setMenuOpen(true)}
                 className="h-9 w-9 text-[20px] text-[#0f2a5f]"
@@ -505,10 +565,7 @@ export default function Home() {
               <Empty text="이 Day에는 아직 단어가 없어." />
             ) : (
               <>
-                <section
-                  onClick={() => setShowMeaning((prev) => !prev)}
-                  className="relative mt-3 flex h-[155px] shrink-0 items-center justify-center rounded-[22px] border border-[#dce2ee] bg-white"
-                >
+                <section className="relative mt-3 flex h-[155px] shrink-0 items-center justify-center rounded-[22px] border border-[#dce2ee] bg-white">
                   <h2 className="text-[44px] font-bold tracking-tight text-[#0f2a5f]">
                     {currentWord.word}
                   </h2>
@@ -630,7 +687,10 @@ export default function Home() {
                   </div>
                 </section>
 
-                <footer className="fixed bottom-0 left-1/2 z-10 w-full max-w-[430px] -translate-x-1/2 bg-white/95 px-4 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur">
+                <footer
+                  onClick={(e) => e.stopPropagation()}
+                  className="study-footer fixed bottom-0 left-1/2 z-10 w-full max-w-[430px] -translate-x-1/2 bg-white/95 px-4 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur"
+                >
                   <div className="grid grid-cols-[0.9fr_1.1fr_0.9fr] gap-2">
                     <button
                       onClick={prevWord}
@@ -885,8 +945,14 @@ export default function Home() {
         )}
 
         {actionWordIndex !== null && selectedDay && (
-          <div className="fixed inset-0 z-30 flex items-end bg-black/25">
-            <div className="mx-auto w-full max-w-[430px] rounded-t-[24px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]">
+          <div
+            onClick={() => setActionWordIndex(null)}
+            className="fixed inset-0 z-30 flex items-end bg-black/25"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="mx-auto w-full max-w-[430px] rounded-t-[24px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
+            >
               <p className="text-[16px] font-bold text-[#111827]">
                 {selectedDay.words[actionWordIndex]?.word}
               </p>
@@ -922,8 +988,14 @@ export default function Home() {
         )}
 
         {actionDayId !== null && selectedBook && (
-          <div className="fixed inset-0 z-30 flex items-end bg-black/25">
-            <div className="mx-auto w-full max-w-[430px] rounded-t-[24px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]">
+          <div
+            onClick={() => setActionDayId(null)}
+            className="fixed inset-0 z-30 flex items-end bg-black/25"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="mx-auto w-full max-w-[430px] rounded-t-[24px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
+            >
               <p className="text-[16px] font-bold text-[#111827]">
                 {selectedBook.days.find((day) => day.id === actionDayId)?.title}
               </p>
