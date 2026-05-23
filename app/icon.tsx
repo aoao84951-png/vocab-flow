@@ -20,58 +20,34 @@ export default function Icon() {
           justifyContent: "center",
         }}
       >
-        <div
-          style={{
-            position: "relative",
-            width: 250,
-            height: 275,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transform: "translateY(-4px)",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              left: 16,
-              top: 18,
-              width: 72,
-              height: 245,
-              background: "#f4f5f7",
-              borderRadius: 18,
-              boxShadow: "6px 6px 0 #aeb4bf",
-              transform: "skewX(18deg)",
-            }}
+        <svg width="300" height="300" viewBox="0 0 300 300">
+          <path
+            d="M58 52 L132 238 Q150 276 168 238 L242 52"
+            fill="none"
+            stroke="#f7f8fb"
+            strokeWidth="48"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
-
-          <div
-            style={{
-              position: "absolute",
-              right: 16,
-              top: 18,
-              width: 72,
-              height: 245,
-              background: "#f4f5f7",
-              borderRadius: 18,
-              boxShadow: "6px 6px 0 #aeb4bf",
-              transform: "skewX(-18deg)",
-            }}
+          <path
+            d="M58 52 L132 238 Q150 276 168 238 L242 52"
+            fill="none"
+            stroke="#b8bec8"
+            strokeWidth="48"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.75"
+            transform="translate(9 10)"
           />
-
-          <div
-            style={{
-              position: "absolute",
-              bottom: 4,
-              width: 116,
-              height: 74,
-              background: "#f4f5f7",
-              borderRadius: 20,
-              boxShadow: "6px 6px 0 #aeb4bf",
-              transform: "rotate(0deg)",
-            }}
+          <path
+            d="M58 52 L132 238 Q150 276 168 238 L242 52"
+            fill="none"
+            stroke="#f7f8fb"
+            strokeWidth="48"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
-        </div>
+        </svg>
       </div>
     ),
     size

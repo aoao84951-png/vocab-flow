@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/app/lib/supabase";
 
 type Meaning = {
@@ -63,12 +63,61 @@ export default function Home() {
   const [bookDropdownOpen, setBookDropdownOpen] = useState(false);
   const [actionWordIndex, setActionWordIndex] = useState<number | null>(null);
   const [actionDayId, setActionDayId] = useState<string | null>(null);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const isHistoryMoving = useRef(false);
+  const isFirstHistoryState = useRef(true);
 
   const selectedBook = books.find((book) => book.id === selectedBookId);
   const selectedDay = selectedBook?.days.find((day) => day.id === selectedDayId);
   const words = selectedDay?.words ?? [];
   const currentWord = words[wordIndex];
+
+  useEffect(() => {
+    const state = {
+      step,
+      selectedBookId,
+      selectedDayId,
+      wordIndex,
+    };
+  
+    if (isHistoryMoving.current) {
+      isHistoryMoving.current = false;
+      return;
+    }
+  
+    if (isFirstHistoryState.current) {
+      window.history.replaceState(state, "", window.location.href);
+      isFirstHistoryState.current = false;
+      return;
+    }
+  
+    window.history.pushState(state, "", window.location.href);
+  }, [step, selectedBookId, selectedDayId, wordIndex]);
+  
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state;
+  
+      if (!state) return;
+  
+      isHistoryMoving.current = true;
+  
+      setStep(state.step);
+      setSelectedBookId(state.selectedBookId || "");
+      setSelectedDayId(state.selectedDayId || "");
+      setWordIndex(state.wordIndex || 0);
+      setShowMeaning(false);
+      setMenuOpen(false);
+      setBookDropdownOpen(false);
+      setActionWordIndex(null);
+      setActionDayId(null);
+    };
+  
+    window.addEventListener("popstate", handlePopState);
+  
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
 
   useEffect(() => {
     fetchBooks();
@@ -247,61 +296,10 @@ export default function Home() {
     setActionDayId(null);
   };
 
-  const goBackByStep = () => {
-    if (step === "day") {
-      setStep("book");
-      return;
-    }
   
-    if (step === "wordList") {
-      setStep("day");
-      return;
-    }
-  
-    if (step === "study") {
-      setStep("wordList");
-      return;
-    }
-  
-    if (step === "addBook" || step === "editBook") {
-      setStep("book");
-      return;
-    }
-  
-    if (step === "addDay") {
-      setStep("day");
-      return;
-    }
-  
-    if (step === "addWord") {
-      setStep(selectedDayId ? "wordList" : "day");
-      return;
-    }
-  
-    if (step === "editWord") {
-      setStep("study");
-    }
-  };
-  
-  const handleTouchEnd = (e: React.TouchEvent<HTMLElement>) => {
-    if (touchStartX === null) return;
-  
-    const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchEndX - touchStartX;
-  
-    if (touchStartX < 35 && diff > 90) {
-      goBackByStep();
-    }
-  
-    setTouchStartX(null);
-  };
 
   return (
-    <main
-      onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
-      onTouchEnd={handleTouchEnd}
-      className="min-h-dvh bg-[#f6f7f9] text-[#111827]"
-    >
+    <main className="min-h-dvh bg-[#f6f7f9] text-[#111827]">
       <section className="mx-auto min-h-dvh w-full max-w-[430px] overflow-hidden bg-white">
         {step === "book" && (
           <div className="min-h-dvh px-5 pt-8 pb-6">

@@ -27,7 +27,7 @@ body {
 
 @media (display-mode: standalone) {
   .study-footer {
-    bottom: 10px;
-    padding-bottom: 10px !important;
+    bottom: 18px !important;
+    padding-bottom: 12px !important;
   }
 }
