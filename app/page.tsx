@@ -63,6 +63,8 @@ export default function Home() {
   const [bookDropdownOpen, setBookDropdownOpen] = useState(false);
   const [actionWordIndex, setActionWordIndex] = useState<number | null>(null);
   const [actionDayId, setActionDayId] = useState<string | null>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
+
   const isHistoryMoving = useRef(false);
   const isFirstHistoryState = useRef(true);
 
@@ -145,6 +147,14 @@ export default function Home() {
       })
     );
   }, [step, selectedBookId, selectedDayId, wordIndex]);
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+  
+    setIsStandalone(standalone);
+  }, []);
   
   async function fetchBooks() {
     const { data, error } = await supabase
@@ -715,7 +725,11 @@ export default function Home() {
 
                 <footer
                   onClick={(e) => e.stopPropagation()}
-                  className="study-footer fixed bottom-0 left-1/2 z-10 w-full max-w-[430px] -translate-x-1/2 bg-white/95 px-4 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur"
+                  className={`study-footer fixed left-1/2 z-10 w-full max-w-[430px] -translate-x-1/2 bg-white/95 px-4 pt-2 backdrop-blur ${
+                    isStandalone
+                      ? "bottom-[56px] pb-2"
+                      : "bottom-0 pb-[calc(12px+env(safe-area-inset-bottom))]"
+                  }`}
                 >
                   <div className="grid grid-cols-[0.9fr_1.1fr_0.9fr] gap-2">
                     <button
