@@ -25,13 +25,13 @@ export default function Icon() {
         }}
       >
         <svg
-          width="350"
-          height="330"
+          width="300"
+          height="280"
           viewBox="0 0 350 330"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           style={{
-            marginTop: "12px",
+            marginTop: "10px",
           }}
         >
           <path
