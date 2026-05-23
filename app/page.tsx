@@ -335,7 +335,7 @@ export default function Home() {
       {isStandalone && (
         <button
           onClick={() => window.location.reload()}
-          className="fixed bottom-8 right-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border border-[#e4e8f0] bg-white/90 shadow-[0_6px_18px_rgba(15,23,42,0.08)] backdrop-blur transition active:scale-95"
+          className="fixed bottom-16 right-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border border-[#e4e8f0] bg-white/90 shadow-[0_6px_18px_rgba(15,23,42,0.08)] backdrop-blur transition active:scale-95"
           aria-label="새로고침"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -665,7 +665,7 @@ export default function Home() {
                   }}
                 >
                   <div className="h-full overflow-y-auto px-3 pb-4">
-                    <Block title="뜻">
+                    <Block>
                       <div className="space-y-2">
                         {currentWord.meanings.map((group) => (
                           <div
@@ -698,7 +698,7 @@ export default function Home() {
                     </Block>
 
                     {currentWord.examples.length > 0 && (
-                      <Block title="예시문장">
+                      <Block>
                         <div className="max-h-[190px] space-y-3 overflow-y-auto pr-1">
                           {currentWord.examples.map((ex, i) => (
                             <div key={`${ex.en}-${i}`} className="pl-[2px]">
@@ -717,19 +717,19 @@ export default function Home() {
                     )}
 
                     {currentWord.synonyms.length > 0 && (
-                      <Block title="동의어">
+                      <Block>
                         <ChipList items={currentWord.synonyms} />
                       </Block>
                     )}
 
                     {currentWord.antonyms.length > 0 && (
-                      <Block title="반의어">
+                      <Block>
                         <ChipList items={currentWord.antonyms} tone="red" />
                       </Block>
                     )}
 
                     {(currentWord.studyPoints ?? []).length > 0 && (
-                      <Block title="학습 포인트">
+                      <Block>
                         <div className="space-y-3">
                           {(currentWord.studyPoints ?? []).map((point, index) => (
                             <div key={index} className="rounded-2xl bg-[#f5f6fa] px-3 py-3">
@@ -1699,11 +1699,10 @@ function Empty({ text }: { text: string }) {
   );
 }
 
-function Block({ title, children }: { title: string; children: React.ReactNode }) {
+function Block({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[68px_1fr] gap-3 border-b border-[#eef1f5] py-3 last:border-b-0">
-      <p className="pt-[1px] text-[12px] font-bold text-[#111827]">{title}</p>
-      <div>{children}</div>
+    <div className="border-b border-[#eef1f5] py-4 last:border-b-0">
+      {children}
     </div>
   );
 }
