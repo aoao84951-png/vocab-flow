@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
-export function GET() {
-  return NextResponse.redirect(new URL("/icon", process.env.NEXT_PUBLIC_SITE_URL));
+export const dynamic = "force-dynamic";
+
+export function GET(request: Request) {
+  return NextResponse.redirect(new URL("/icon", request.url));
 }
