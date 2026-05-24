@@ -86,6 +86,7 @@ export default function Home() {
   const didLongPressFolder = useRef(false);
   const [expandedFolderIds, setExpandedFolderIds] = useState<string[]>([]);
   const [wordSortOrder, setWordSortOrder] = useState<"latest" | "oldest">("oldest");
+  const [wordViewMode, setWordViewMode] = useState<"all" | "unmemorized">("all");
 
   const SWIPE_WIDTH = 145;
 
@@ -128,6 +129,14 @@ export default function Home() {
         return b.originalIndex - a.originalIndex;
       })
   : [];
+
+  const visibleSortedWords = sortedWords.filter(({ word }) =>
+    wordViewMode === "all" ? true : !word.memorized
+  );
+  
+  const studyIndexes = words
+    .map((word, originalIndex) => ({ word, originalIndex }))
+    .filter(({ word }) => (wordViewMode === "all" ? true : !word.memorized));
 
   useEffect(() => {
     const state = {
@@ -321,11 +330,27 @@ export default function Home() {
   };
 
   const nextWord = () => {
-    setWordIndex((prev) => Math.min(prev + 1, Math.max(words.length - 1, 0)));
+    if (wordViewMode === "all") {
+      setWordIndex((prev) => Math.min(prev + 1, Math.max(words.length - 1, 0)));
+      return;
+    }
+  
+    const currentPos = studyIndexes.findIndex((item) => item.originalIndex === wordIndex);
+    const next = studyIndexes[Math.min(currentPos + 1, studyIndexes.length - 1)];
+  
+    if (next) setWordIndex(next.originalIndex);
   };
   
   const prevWord = () => {
-    setWordIndex((prev) => Math.max(prev - 1, 0));
+    if (wordViewMode === "all") {
+      setWordIndex((prev) => Math.max(prev - 1, 0));
+      return;
+    }
+  
+    const currentPos = studyIndexes.findIndex((item) => item.originalIndex === wordIndex);
+    const prev = studyIndexes[Math.max(currentPos - 1, 0)];
+  
+    if (prev) setWordIndex(prev.originalIndex);
   };
 
   const handleStudyPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -1081,7 +1106,7 @@ const getDayProgress = (day: Day) => {
               </button>
             </div>
 
-            <div className="mt-5 flex items-start justify-between">
+            <div className="mt-5 flex items-center justify-between">
               <div>
                 <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                   {selectedDay.title}
@@ -1119,11 +1144,35 @@ const getDayProgress = (day: Day) => {
               </div>
             </div>
 
+            <div className="mt-4 flex rounded-full bg-[#f5f6fa] p-1">
+              <button
+                onClick={() => setWordViewMode("all")}
+                className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
+                  wordViewMode === "all"
+                    ? "bg-white text-[#0f2a5f] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
+                    : "text-[#8a94a6]"
+                }`}
+              >
+                전체보기
+              </button>
+
+              <button
+                onClick={() => setWordViewMode("unmemorized")}
+                className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
+                  wordViewMode === "unmemorized"
+                    ? "bg-white text-[#0f2a5f] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
+                    : "text-[#8a94a6]"
+                }`}
+              >
+                미암기만
+              </button>
+            </div>
+
             <div className="mt-7 space-y-2">
-              {selectedDay.words.length === 0 ? (
+              {visibleSortedWords.length === 0 ? (
                 <Empty text="이 Day에는 아직 단어가 없어." />
               ) : (
-                sortedWords.map(({ word: item, originalIndex }) => (
+                visibleSortedWords.map(({ word: item, originalIndex }) => (
                   <div key={item.id} className="relative overflow-hidden rounded-[18px] bg-[#f1f3f6]">
                     <div className="absolute inset-y-0 left-0 flex w-[145px] items-center justify-center gap-10 bg-[#eef0f3]">
                       <button
@@ -1178,21 +1227,29 @@ const getDayProgress = (day: Day) => {
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <p
-                            className={`truncate text-[17px] font-bold ${
-                              item.highlightColor === "red"
-                                ? "text-[#ef4444]"
-                                : item.highlightColor === "blue"
-                                ? "text-[#2563eb]"
-                                : "text-[#0f2a5f]"
-                            }`}
-                          >
-                            {item.word}
-                          </p>
-                
-                          <p className="mt-1 truncate text-[12px] text-[#8a94a6]">
-                            {item.meanings[0]?.items?.join(", ") || "뜻 없음"}
-                          </p>
+                        <p
+                          className={`truncate text-[17px] font-bold ${
+                            item.memorized
+                              ? "text-[#b0b7c3] line-through decoration-[#b0b7c3]"
+                              : item.highlightColor === "red"
+                              ? "text-[#ef4444]"
+                              : item.highlightColor === "blue"
+                              ? "text-[#2563eb]"
+                              : "text-[#0f2a5f]"
+                          }`}
+                        >
+                          {item.word}
+                        </p>
+
+                        <p
+                          className={`mt-1 truncate text-[12px] ${
+                            item.memorized
+                              ? "text-[#b0b7c3] line-through decoration-[#b0b7c3]"
+                              : "text-[#8a94a6]"
+                          }`}
+                        >
+                          {item.meanings[0]?.items?.join(", ") || "뜻 없음"}
+                        </p>
                         </div>
                 
                         <span
@@ -1243,10 +1300,22 @@ const getDayProgress = (day: Day) => {
 
               <p className="max-w-[160px] truncate text-center text-[11px] text-[#596275]">
                 {currentFolderTitle} 〉 {selectedDay.title} 〉{" "}
-                {words.length ? wordIndex + 1 : 0} / {words.length}
+                {wordViewMode === "all"
+                  ? `${words.length ? wordIndex + 1 : 0} / ${words.length}`
+                  : `${studyIndexes.findIndex((item) => item.originalIndex === wordIndex) + 1} / ${studyIndexes.length}`}
               </p>
 
               <div className="flex items-center gap-1">
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setWordViewMode((prev) => (prev === "all" ? "unmemorized" : "all"));
+                }}
+                className="h-9 rounded-full bg-[#f5f6fa] px-3 text-[11px] font-bold text-[#596275]"
+              >
+                {wordViewMode === "all" ? "전체" : "미암기"}
+              </button>
             
 
                 <button
@@ -2096,10 +2165,17 @@ function AddWord({
   const [antonyms, setAntonyms] = useState(initialWord?.antonyms.join(", ") || "");
   const [studyPoints, setStudyPoints] = useState<StudyPoint[]>(
     initialWord?.studyPoints?.length
-      ? initialWord.studyPoints
+      ? initialWord.studyPoints.map((point) => ({
+          category: point.category ?? "기타",
+          expression: point.expression ?? "",
+          description: point.description ?? "",
+          related: point.related ?? "",
+          exampleEn: point.exampleEn ?? "",
+          exampleKo: point.exampleKo ?? "",
+        }))
       : [
           {
-            category: "",
+            category: "기타",
             expression: "",
             description: "",
             related: "",
@@ -2172,7 +2248,7 @@ function AddWord({
     setStudyPoints((prev) => [
       ...prev,
       {
-        category: "",
+        category: "기타",
         expression: "",
         description: "",
         related: "",
@@ -2485,6 +2561,37 @@ function AddWord({
               }))
               .filter((example) => example.en || example.ko);
 
+              const cleanedStudyPoints = studyPoints
+                .map((point) => {
+                  const category = (point.category ?? "").trim();
+                  const expression = (point.expression ?? "").trim();
+                  const description = (point.description ?? "").trim();
+                  const related = (point.related ?? "").trim();
+                  const exampleEn = (point.exampleEn ?? "").trim();
+                  const exampleKo = (point.exampleKo ?? "").trim();
+
+                  const hasContent =
+                    expression || description || related || exampleEn || exampleKo;
+
+                  return {
+                    category: category || (hasContent ? "기타" : ""),
+                    expression,
+                    description,
+                    related,
+                    exampleEn,
+                    exampleKo,
+                  };
+                })
+                .filter(
+                  (point) =>
+                    point.category ||
+                    point.expression ||
+                    point.description ||
+                    point.related ||
+                    point.exampleEn ||
+                    point.exampleKo
+                );
+            
             onSave(dayId, {
               id: initialWord?.id || crypto.randomUUID(),
               word: word.trim(),
@@ -2492,24 +2599,7 @@ function AddWord({
               examples: cleanedExamples,
               synonyms: splitComma(synonyms),
               antonyms: splitComma(antonyms),
-              studyPoints: studyPoints
-              .map((point) => ({
-                category: point.category.trim(),
-                expression: point.expression.trim(),
-                description: point.description.trim(),
-                related: point.related.trim(),
-                exampleEn: point.exampleEn.trim(),
-                exampleKo: point.exampleKo.trim(),
-              }))
-              .filter(
-                (point) =>
-                  point.category ||
-                  point.expression ||
-                  point.description ||
-                  point.related ||
-                  point.exampleEn ||
-                  point.exampleKo
-              ),
+              studyPoints: cleanedStudyPoints,
               memorized: initialWord?.memorized ?? false,
               highlightColor: initialWord?.highlightColor || "",
               createdAt: initialWord?.createdAt || new Date().toISOString(),
@@ -2523,6 +2613,7 @@ function AddWord({
     </div>
   );
 }
+
 
 function splitComma(value: string) {
   return value
