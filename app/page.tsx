@@ -815,7 +815,7 @@ const disabledMoveIds = getDescendantIds(movingFolder);
             </div>
           </div>
 
-          <div className="mt-7 border-t border-[#e5e7eb]">
+          <div className="mt-7">
             {books.length === 0 ? (
               <Empty text="아직 단어장이 없어. 먼저 단어장을 추가해줘." />
             ) : (
@@ -865,7 +865,17 @@ const disabledMoveIds = getDescendantIds(movingFolder);
                       }}
                       className="flex h-[56px] w-full touch-none select-none items-center border-b border-[#e5e7eb] text-left active:bg-[#fafafa]"
                     >
-                      <span className="mr-3 flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-[5px] border border-[#9ca3af] text-[15px] font-light leading-none text-[#8a8f98]">
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`"${book.title}" 안에 하위 폴더를 추가할까?`)) {
+                            setSelectedBookId(book.id);
+                            setFolderPath([book.id]);
+                            setStep("addFolder");
+                          }
+                        }}
+                        className="mr-3 flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-[5px] border border-[#9ca3af] text-[15px] font-light leading-none text-[#8a8f98] active:scale-95"
+                      >
                         +
                       </span>
 
@@ -873,13 +883,10 @@ const disabledMoveIds = getDescendantIds(movingFolder);
                         <span className="truncate text-[16px] font-medium tracking-[-0.03em] text-[#303236]">
                           {book.title}
                         </span>
-                        <span className="ml-2 align-[1px] text-[11px] font-semibold text-[#c5c9cf]">
-                          0% (0/0)
-                        </span>
                       </div>
 
-                      <span className="ml-3 text-[22px] font-light leading-none text-[#9aa3b2]">
-                        {isOpen ? "⌃" : "⌄"}
+                      <span className="ml-3 flex h-7 w-7 shrink-0 items-center justify-center text-[#9aa3b2]">
+                        <ChevronToggle open={isOpen} />
                       </span>
                     </button>
 
@@ -901,11 +908,7 @@ const disabledMoveIds = getDescendantIds(movingFolder);
                             <span className="truncate text-[16px] font-normal tracking-[-0.03em] text-[#666a70]">
                               {folder.title}
                             </span>
-                            <span className="ml-2 align-[1px] text-[11px] font-semibold text-[#c5c9cf]">
-                              0% (0/0)
-                            </span>
                           </div>
-
                         </button>
                       ))}
                   </div>
@@ -2865,5 +2868,25 @@ function MenuFolderTree({
         </div>
       )}
     </div>
+  );
+}
+
+function ChevronToggle({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+    >
+      <path
+        d="M6 9L12 15L18 9"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
