@@ -87,6 +87,7 @@ export default function Home() {
   const [expandedFolderIds, setExpandedFolderIds] = useState<string[]>([]);
   const [wordSortOrder, setWordSortOrder] = useState<"latest" | "oldest">("oldest");
   const [wordViewMode, setWordViewMode] = useState<"all" | "unmemorized">("all");
+  const [showListMeanings, setShowListMeanings] = useState(true);
 
   const SWIPE_WIDTH = 145;
 
@@ -1168,6 +1169,13 @@ const getDayProgress = (day: Day) => {
               </button>
             </div>
 
+            <button
+              onClick={() => setShowListMeanings((prev) => !prev)}
+              className="mt-2 h-8 w-full rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275]"
+            >
+              {showListMeanings ? "뜻 숨기기" : "뜻 보기"}
+            </button>
+
             <div className="mt-7 space-y-2">
               {visibleSortedWords.length === 0 ? (
                 <Empty text="이 Day에는 아직 단어가 없어." />
@@ -1230,7 +1238,7 @@ const getDayProgress = (day: Day) => {
                         <p
                           className={`truncate text-[17px] font-bold ${
                             item.memorized
-                              ? "text-[#b0b7c3] line-through decoration-[#b0b7c3]"
+                              ? "text-[#b0b7c3]"
                               : item.highlightColor === "red"
                               ? "text-[#ef4444]"
                               : item.highlightColor === "blue"
@@ -1241,15 +1249,52 @@ const getDayProgress = (day: Day) => {
                           {item.word}
                         </p>
 
-                        <p
-                          className={`mt-1 truncate text-[12px] ${
-                            item.memorized
-                              ? "text-[#b0b7c3] line-through decoration-[#b0b7c3]"
-                              : "text-[#8a94a6]"
-                          }`}
-                        >
-                          {item.meanings[0]?.items?.join(", ") || "뜻 없음"}
-                        </p>
+                        {showListMeanings && (
+                          <div className="mt-2 space-y-1">
+                            {(item.meanings ?? []).length > 0 ? (
+                              (item.meanings ?? []).map((group, groupIndex) => (
+                                <div
+                                  key={`${group.pos}-${groupIndex}`}
+                                  className={`relative flex items-start gap-1.5 ${
+                                    item.memorized ? "text-[#b0b7c3]" : ""
+                                  }`}
+                                >
+                            
+                                  <span
+                                    className={`mt-[1px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-[4px] text-[9px] font-bold ${
+                                      item.memorized ? "bg-[#b0b7c3] text-white" : "bg-[#0f2a5f] text-white"
+                                    }`}
+                                  >
+                                    {group.pos}
+                                  </span>
+                            
+                                  <div
+                                    className={`min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] leading-[1.45] ${
+                                      item.memorized ? "text-[#b0b7c3]" : "text-[#596275]"
+                                    }`}
+                                  >
+                                    {(group.items ?? []).map((meaning, index) => (
+                                      <span key={`${meaning}-${index}`} className="inline-flex items-center gap-0.5">
+                                        {group.numbered && (
+                                          <span
+                                            className={`inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-full px-[3px] text-[8px] font-bold ${
+                                              item.memorized ? "bg-[#b0b7c3] text-white" : "bg-[#9aa3b2] text-white"
+                                            }`}
+                                          >
+                                            {index + 1}
+                                          </span>
+                                        )}
+                                        <span>{meaning}</span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-[11px] text-[#8a94a6]">뜻 없음</p>
+                            )}
+                          </div>
+                        )}
                         </div>
                 
                         <span
@@ -1310,27 +1355,131 @@ const getDayProgress = (day: Day) => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setWordViewMode((prev) => (prev === "all" ? "unmemorized" : "all"));
+                  setWordViewMode((prev) =>
+                    prev === "all" ? "unmemorized" : "all"
+                  );
                 }}
-                className="h-9 rounded-full bg-[#f5f6fa] px-3 text-[11px] font-bold text-[#596275]"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f5f6fa] text-[#596275] active:scale-95"
+                aria-label="보기 변경"
               >
-                {wordViewMode === "all" ? "전체" : "미암기"}
+                {wordViewMode === "all" ? (
+                  // 전체보기 아이콘 (눈 + 빗금)
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M4 12C6.5 7.5 9.5 5 12 5C14.5 5 17.5 7.5 20 12C17.5 16.5 14.5 19 12 19C9.5 19 6.5 16.5 4 12Z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="2.5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M5 19L19 5"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                ) : (
+                  // 미암기만 아이콘 (눈)
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M4 12C6.5 7.5 9.5 5 12 5C14.5 5 17.5 7.5 20 12C17.5 16.5 14.5 19 12 19C9.5 19 6.5 16.5 4 12Z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="2.5"
+                      fill="currentColor"
+                    />
+                  </svg>
+                )}
               </button>
             
 
-                <button
-                  onClick={() => setStep("editWord")}
-                  className="h-9 rounded-full bg-[#eef2f8] px-3 text-[12px] font-bold text-[#0f2a5f]"
-                >
-                  수정
-                </button>
+              <button
+                onClick={() => setStep("editWord")}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-[#0f2a5f] active:scale-95"
+                aria-label="수정"
+              >
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M4.5 19.5L8.8 18.6L18.9 8.5C19.5 7.9 19.5 6.9 18.9 6.3L17.7 5.1C17.1 4.5 16.1 4.5 15.5 5.1L5.4 15.2L4.5 19.5Z"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M14.4 6.2L17.8 9.6"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
 
-                <button
-                  onClick={() => deleteWord(wordIndex)}
-                  className="h-9 rounded-full px-2 text-[12px] font-bold text-[#b42318]"
-                >
-                  삭제
-                </button>
+              <button
+                onClick={() => deleteWord(wordIndex)}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-[#cf231c] active:scale-95"
+                aria-label="삭제"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  {/* 손잡이 */}
+                  <rect
+                    x="9"
+                    y="3.8"
+                    width="6"
+                    height="2.2"
+                    rx="1.1"
+                    fill="currentColor"
+                  />
+
+                  {/* 뚜껑 */}
+                  <rect
+                    x="4"
+                    y="6.2"
+                    width="16"
+                    height="2.4"
+                    rx="1.2"
+                    fill="currentColor"
+                  />
+
+                  {/* 몸통 */}
+                  <path
+                    d="M7.3 9.2H16.7L15.9 19C15.82 19.95 15.03 20.7 14.08 20.7H9.92C8.97 20.7 8.18 19.95 8.1 19L7.3 9.2Z"
+                    stroke="currentColor"
+                    strokeWidth="2.3"
+                    strokeLinejoin="round"
+                    fill="white"
+                  />
+
+                  {/* 내부선 */}
+                  <rect
+                    x="9.5"
+                    y="11.4"
+                    width="1.9"
+                    height="5.8"
+                    rx="0.95"
+                    fill="currentColor"
+                  />
+
+                  <rect
+                    x="12.6"
+                    y="11.4"
+                    width="1.9"
+                    height="5.8"
+                    rx="0.95"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
               </div>
             </header>
 
@@ -1365,7 +1514,7 @@ const getDayProgress = (day: Day) => {
                   <h2
                     className={`text-[44px] font-bold tracking-tight ${
                       currentWord.memorized
-                        ? "text-[#b0b7c3] line-through decoration-[#b0b7c3]"
+                        ? "text-[#b0b7c3]"
                         : "text-[#0f2a5f]"
                     }`}
                   >
@@ -1461,7 +1610,7 @@ const getDayProgress = (day: Day) => {
                               </div>
 
                               {point.description && (
-                                <p className="mt-2 text-[12px] leading-relaxed text-[#596275]">
+                                <p className="mt-2 pl-[7px] whitespace-pre-line text-[12px] leading-relaxed text-[#596275]">
                                   {point.description}
                                 </p>
                               )}
@@ -1479,7 +1628,7 @@ const getDayProgress = (day: Day) => {
                               )}
 
                               {(point.exampleEn || point.exampleKo) && (
-                                <div className="mt-3 border-l-2 border-[#d7ddea] pl-3">
+                                <div className="mt-3 ml-[6px] border-l-2 border-[#d7ddea] pl-3">
                                   {point.exampleEn && (
                                     <p className="text-[12px] leading-relaxed text-[#596275]">
                                       <HighlightedText
@@ -2173,16 +2322,7 @@ function AddWord({
           exampleEn: point.exampleEn ?? "",
           exampleKo: point.exampleKo ?? "",
         }))
-      : [
-          {
-            category: "기타",
-            expression: "",
-            description: "",
-            related: "",
-            exampleEn: "",
-            exampleKo: "",
-          },
-        ]
+      : []
   );
 
   const STUDY_CATEGORIES = [
