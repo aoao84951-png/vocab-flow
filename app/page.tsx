@@ -71,6 +71,7 @@ export default function Home() {
   const [showMeaning, setShowMeaning] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [bookDropdownOpen, setBookDropdownOpen] = useState(false);
+  const [menuExpandedFolderIds, setMenuExpandedFolderIds] = useState<string[]>([]);
   const [actionWordIndex, setActionWordIndex] = useState<number | null>(null);
   const [actionDayId, setActionDayId] = useState<string | null>(null);
   const [actionFolderId, setActionFolderId] = useState<string | null>(null);
@@ -641,6 +642,14 @@ export default function Home() {
     return null;
   };
 
+  const toggleMenuFolder = (folderId: string) => {
+    setMenuExpandedFolderIds((prev) =>
+      prev.includes(folderId)
+        ? prev.filter((id) => id !== folderId)
+        : [...prev, folderId]
+    );
+  };
+
   const moveFolderToFolder = (
     folders: Folder[],
     movingFolderId: string,
@@ -757,17 +766,6 @@ const getDescendantIds = (folder?: Folder): string[] => {
 
 const disabledMoveIds = getDescendantIds(movingFolder);
 
-  const FolderIcon = () => (
-    <svg width="18" height="15" viewBox="0 0 24 20" fill="none">
-      <path
-        d="M2.5 5.2C2.5 3.98 3.48 3 4.7 3H9.2L11.1 5.1H19.3C20.52 5.1 21.5 6.08 21.5 7.3V15.3C21.5 16.52 20.52 17.5 19.3 17.5H4.7C3.48 17.5 2.5 16.52 2.5 15.3V5.2Z"
-        fill="#eef2f8"
-        stroke="#0f2a5f"
-        strokeWidth="1.7"
-      />
-    </svg>
-  );
-
   
   return (
     <main className="min-h-[100svh] bg-white text-[#111827]">
@@ -796,191 +794,127 @@ const disabledMoveIds = getDescendantIds(movingFolder);
         </button>
       )}
 
-        {step === "book" && (
-          <div className="min-h-dvh px-5 pt-8 pb-6">
-            <div>
-              <p className="text-[12px] font-semibold text-[#8a94a6]">
-                VOCAB FLOW
-              </p>
+      {step === "book" && (
+        <div className="min-h-dvh bg-white px-5 pt-8 pb-6">
+          <div>
+            <p className="text-[12px] font-semibold text-[#8a94a6]">
+              VOCAB FLOW
+            </p>
 
-              <div className="mt-2 flex items-center justify-between">
-                <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
-                  단어장
-                </h1>
+            <div className="mt-2 flex items-center justify-between">
+              <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
+                단어장
+              </h1>
 
-                <button
-                  onClick={() => setStep("addBook")}
-                  className="h-[38px] rounded-full bg-[#0f2a5f] px-5 text-[12px] font-bold text-white"
-                >
-                  + 추가
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-7 space-y-3">
-              {books.length === 0 ? (
-                <Empty text="아직 단어장이 없어. 먼저 단어장을 추가해줘." />
-              ) : (
-                books.map((book) => {
-                  const isOpen = expandedFolderIds.includes(book.id);
-
-                  return (
-                    <div
-                      key={book.id}
-                      className="rounded-[22px] border border-[#e4e8f0] bg-[#fbfcfe] p-4"
-                    >
-                      <button
-                        onClick={() => {
-                          if (didLongPressFolder.current) {
-                            didLongPressFolder.current = false;
-                            return;
-                          }
-
-                          toggleFolderOpen(book.id);
-                        }}
-                        onPointerDown={() => {
-                          didLongPressFolder.current = false;
-
-                          folderLongPressTimer.current = setTimeout(() => {
-                            didLongPressFolder.current = true;
-                            setSelectedBookId(book.id);
-                            setActionFolderId(book.id);
-                          }, 450);
-                        }}
-                        onPointerUp={() => {
-                          if (folderLongPressTimer.current) {
-                            clearTimeout(folderLongPressTimer.current);
-                            folderLongPressTimer.current = null;
-                          }
-                        }}
-                        onPointerCancel={() => {
-                          if (folderLongPressTimer.current) {
-                            clearTimeout(folderLongPressTimer.current);
-                            folderLongPressTimer.current = null;
-                          }
-                        }}
-                        onPointerLeave={() => {
-                          if (folderLongPressTimer.current) {
-                            clearTimeout(folderLongPressTimer.current);
-                            folderLongPressTimer.current = null;
-                          }
-                        }}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          setSelectedBookId(book.id);
-                          setActionFolderId(book.id);
-                        }}
-                        className="w-full touch-none select-none text-left"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="text-[18px] font-bold">{book.title}</p>
-
-                            {book.desc && (
-                              <p className="mt-1 text-[12px] text-[#8a94a6]">
-                                {book.desc}
-                              </p>
-                            )}
-                          </div>
-
-                          <span className="text-[#8a94a6]">
-                            {isOpen ? "⌃" : "⌄"}
-                          </span>
-                        </div>
-
-                        {(book.folders.length > 0 || book.days.length > 0) && (
-                          <div className="mt-4 flex gap-2">
-                            {book.folders.length > 0 && (
-                              <span className="rounded-full bg-[#eef2f8] px-3 py-1 text-[11px] text-[#0f2a5f]">
-                                하위 폴더 {book.folders.length}개
-                              </span>
-                            )}
-
-                            {book.days.length > 0 && (
-                              <span className="rounded-full bg-[#eef2f8] px-3 py-1 text-[11px] text-[#0f2a5f]">
-                                Day {book.days.length}개
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </button>
-
-                      {isOpen && book.folders.length > 0 && (
-                        <div className="mt-3">
-                          {book.folders.map((folder) => (
-                            <button
-                              key={folder.id}
-                              onClick={() => {
-                                if (didLongPressFolder.current) {
-                                  didLongPressFolder.current = false;
-                                  return;
-                                }
-                            
-                                setSelectedBookId(book.id);
-                                setFolderPath([book.id, folder.id]);
-                                setSelectedDayId("");
-                                setWordIndex(0);
-                                setShowMeaning(false);
-                                setStep("day");
-                              }}
-                              onPointerDown={() => {
-                                didLongPressFolder.current = false;
-                            
-                                folderLongPressTimer.current = setTimeout(() => {
-                                  didLongPressFolder.current = true;
-                                  setSelectedBookId(book.id);
-                                  setActionFolderId(folder.id);
-                                }, 450);
-                              }}
-                              onPointerUp={() => {
-                                if (folderLongPressTimer.current) {
-                                  clearTimeout(folderLongPressTimer.current);
-                                  folderLongPressTimer.current = null;
-                                }
-                              }}
-                              onPointerCancel={() => {
-                                if (folderLongPressTimer.current) {
-                                  clearTimeout(folderLongPressTimer.current);
-                                  folderLongPressTimer.current = null;
-                                }
-                              }}
-                              onPointerLeave={() => {
-                                if (folderLongPressTimer.current) {
-                                  clearTimeout(folderLongPressTimer.current);
-                                  folderLongPressTimer.current = null;
-                                }
-                              }}
-                              onContextMenu={(e) => {
-                                e.preventDefault();
-                                setSelectedBookId(book.id);
-                                setActionFolderId(folder.id);
-                              }}
-                              className="flex w-full touch-none select-none items-center gap-3 border-t border-[#edf1f7] px-1 py-3.5 text-left first:border-t-0 active:bg-[#f8fafc]"
-                            >
-                              <FolderIcon />
-
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-[15px] font-bold text-[#111827]">
-                                  {folder.title}
-                                </p>
-
-                                {folder.days.length > 0 && (
-                                  <p className="mt-0.5 text-[10px] font-medium text-[#a3abb8]">
-                                    Day {folder.days.length}개
-                                  </p>
-                                )}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
+              <button
+                onClick={() => setStep("addBook")}
+                className="h-[38px] rounded-full bg-[#0f2a5f] px-5 text-[12px] font-bold text-white"
+              >
+                + 추가
+              </button>
             </div>
           </div>
-        )}
+
+          <div className="mt-7 border-t border-[#e5e7eb]">
+            {books.length === 0 ? (
+              <Empty text="아직 단어장이 없어. 먼저 단어장을 추가해줘." />
+            ) : (
+              books.map((book) => {
+                const isOpen = expandedFolderIds.includes(book.id);
+
+                return (
+                  <div key={book.id}>
+                    <button
+                      onClick={() => {
+                        if (didLongPressFolder.current) {
+                          didLongPressFolder.current = false;
+                          return;
+                        }
+                        toggleFolderOpen(book.id);
+                      }}
+                      onPointerDown={() => {
+                        didLongPressFolder.current = false;
+                        folderLongPressTimer.current = setTimeout(() => {
+                          didLongPressFolder.current = true;
+                          setSelectedBookId(book.id);
+                          setActionFolderId(book.id);
+                        }, 450);
+                      }}
+                      onPointerUp={() => {
+                        if (folderLongPressTimer.current) {
+                          clearTimeout(folderLongPressTimer.current);
+                          folderLongPressTimer.current = null;
+                        }
+                      }}
+                      onPointerCancel={() => {
+                        if (folderLongPressTimer.current) {
+                          clearTimeout(folderLongPressTimer.current);
+                          folderLongPressTimer.current = null;
+                        }
+                      }}
+                      onPointerLeave={() => {
+                        if (folderLongPressTimer.current) {
+                          clearTimeout(folderLongPressTimer.current);
+                          folderLongPressTimer.current = null;
+                        }
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setSelectedBookId(book.id);
+                        setActionFolderId(book.id);
+                      }}
+                      className="flex h-[56px] w-full touch-none select-none items-center border-b border-[#e5e7eb] text-left active:bg-[#fafafa]"
+                    >
+                      <span className="mr-3 flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-[5px] border border-[#9ca3af] text-[15px] font-light leading-none text-[#8a8f98]">
+                        +
+                      </span>
+
+                      <div className="min-w-0 flex-1">
+                        <span className="truncate text-[16px] font-medium tracking-[-0.03em] text-[#303236]">
+                          {book.title}
+                        </span>
+                        <span className="ml-2 align-[1px] text-[11px] font-semibold text-[#c5c9cf]">
+                          0% (0/0)
+                        </span>
+                      </div>
+
+                      <span className="ml-3 text-[22px] font-light leading-none text-[#9aa3b2]">
+                        {isOpen ? "⌃" : "⌄"}
+                      </span>
+                    </button>
+
+                    {isOpen &&
+                      book.folders.map((folder) => (
+                        <button
+                          key={folder.id}
+                          onClick={() => {
+                            setSelectedBookId(book.id);
+                            setFolderPath([book.id, folder.id]);
+                            setSelectedDayId("");
+                            setWordIndex(0);
+                            setShowMeaning(false);
+                            setStep("day");
+                          }}
+                          className="flex h-[50px] w-full items-center border-b border-[#e5e7eb] pl-[45px] text-left active:bg-[#fafafa]"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <span className="truncate text-[16px] font-normal tracking-[-0.03em] text-[#666a70]">
+                              {folder.title}
+                            </span>
+                            <span className="ml-2 align-[1px] text-[11px] font-semibold text-[#c5c9cf]">
+                              0% (0/0)
+                            </span>
+                          </div>
+
+                        </button>
+                      ))}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
 
         {step === "day" && activeFolder && (
           <div className="min-h-dvh px-5 pt-7 pb-6">
@@ -1703,7 +1637,7 @@ const disabledMoveIds = getDescendantIds(movingFolder);
                   onClick={() => setBookDropdownOpen((prev) => !prev)}
                   className="flex w-full items-center justify-between rounded-xl border border-[#0f2a5f] bg-[#f8fbff] px-4 py-3 text-left text-[13px] font-bold text-[#0f2a5f]"
                 >
-                  <span>{selectedBook.title}</span>
+                  <span className="truncate">{currentFolderTitle || selectedBook.title}</span>
                   <span className="text-[12px]">{bookDropdownOpen ? "⌃" : "⌄"}</span>
                 </button>
 
@@ -1711,11 +1645,17 @@ const disabledMoveIds = getDescendantIds(movingFolder);
                   <div className="absolute left-0 right-0 top-[68px] z-30 rounded-[22px] border border-[#e6e9f0] bg-white/95 p-2 shadow-[0_18px_55px_rgba(15,23,42,0.16)] backdrop-blur">
                     <div className="max-h-[270px] overflow-y-auto py-1">
                       {books.map((book) => (
-                        <button
+                        <MenuFolderTree
                           key={book.id}
-                          onClick={() => {
-                            setSelectedBookId(book.id);
-                            setFolderPath([book.id]);
+                          folder={book}
+                          path={[book.id]}
+                          depth={0}
+                          selectedPath={folderPath}
+                          expandedIds={menuExpandedFolderIds}
+                          onToggle={toggleMenuFolder}
+                          onSelect={(path) => {
+                            setSelectedBookId(path[0]);
+                            setFolderPath(path);
                             setSelectedDayId("");
                             setWordIndex(0);
                             setShowMeaning(false);
@@ -1723,13 +1663,7 @@ const disabledMoveIds = getDescendantIds(movingFolder);
                             setMenuOpen(false);
                             setStep("day");
                           }}
-                          className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-[14px] text-[#111827]"
-                        >
-                          <span className="w-4 text-[13px] text-[#0f2a5f]">
-                            {book.id === selectedBookId ? "✓" : ""}
-                          </span>
-                          <span>{book.title}</span>
-                        </button>
+                        />
                       ))}
                     </div>
                   </div>
@@ -2834,6 +2768,97 @@ function MoveFolderList({
               folder={child}
               currentId={currentId}
               disabledIds={disabledIds}
+              onSelect={onSelect}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MenuFolderTree({
+  folder,
+  path,
+  depth,
+  selectedPath,
+  expandedIds,
+  onToggle,
+  onSelect,
+}: {
+  folder: Folder;
+  path: string[];
+  depth: number;
+  selectedPath: string[];
+  expandedIds: string[];
+  onToggle: (folderId: string) => void;
+  onSelect: (path: string[]) => void;
+}) {
+  const children = folder.folders;
+
+  const isOpen = expandedIds.includes(folder.id);
+  const isSelected =
+    selectedPath.length === path.length &&
+    selectedPath.every((id, index) => id === path[index]);
+
+  const canSelect = true;
+  const hasChildren = children.length > 0;
+
+  return (
+    <div>
+      <div
+        className={`flex w-full items-center rounded-xl px-2.5 py-2 ${
+          isSelected ? "bg-[#f8fbff] text-[#0f2a5f]" : "text-[#111827]"
+        }`}
+        style={{ paddingLeft: `${10 + depth * 14}px` }}
+      >
+        <button
+          type="button"
+          disabled={!canSelect}
+          onClick={() => onSelect(path)}
+          className={`min-w-0 flex-1 text-left ${
+            canSelect ? "" : "cursor-default"
+          }`}
+        >
+          <p
+            className={`truncate ${
+              depth === 0
+                ? "text-[13px] font-bold"
+                : "text-[12px] font-semibold"
+            }`}
+          >
+            {folder.title}
+          </p>
+
+          {hasChildren && (
+            <p className="mt-0.5 text-[9px] font-medium text-[#a3abb8]">
+              하위폴더 {children.length}개
+            </p>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (hasChildren) onToggle(folder.id);
+          }}
+          className="flex h-7 w-7 shrink-0 items-center justify-center text-[13px] text-[#8a94a6]"
+        >
+          {hasChildren ? (isOpen ? "⌃" : "⌄") : isSelected ? "✓" : ""}
+        </button>
+      </div>
+
+      {isOpen && hasChildren && (
+        <div className="mt-1 space-y-1">
+          {children.map((child) => (
+            <MenuFolderTree
+              key={child.id}
+              folder={child}
+              path={[...path, child.id]}
+              depth={depth + 1}
+              selectedPath={selectedPath}
+              expandedIds={expandedIds}
+              onToggle={onToggle}
               onSelect={onSelect}
             />
           ))}
