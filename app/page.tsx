@@ -766,6 +766,14 @@ const getDescendantIds = (folder?: Folder): string[] => {
 
 const disabledMoveIds = getDescendantIds(movingFolder);
 
+const getDayProgress = (day: Day) => {
+  const total = day.words.length;
+  const memorized = day.words.filter((word) => word.memorized).length;
+  const percent = total === 0 ? 0 : Math.round((memorized / total) * 100);
+
+  return `${percent}% (${memorized}/${total})`;
+};
+
   
   return (
     <main className="min-h-[100svh] bg-white text-[#111827]">
@@ -863,7 +871,9 @@ const disabledMoveIds = getDescendantIds(movingFolder);
                         setSelectedBookId(book.id);
                         setActionFolderId(book.id);
                       }}
-                      className="flex h-[56px] w-full touch-none select-none items-center border-b border-[#e5e7eb] text-left active:bg-[#fafafa]"
+                      className={`flex h-[56px] w-full touch-none select-none items-center text-left active:bg-[#fafafa] ${
+                        isOpen ? "border-b border-[#e5e7eb]" : ""
+                      }`}
                     >
                       <span
                         onClick={(e) => {
@@ -1033,11 +1043,16 @@ const disabledMoveIds = getDescendantIds(movingFolder);
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[17px] font-bold text-[#111827]">{day.title}</p>
-
-                      <p className="mt-0.5 text-[10px] font-medium text-[#a3abb8]">
-                        {day.words.length} 단어
+                    <div className="flex min-w-0 items-baseline gap-2">
+                      <p className="truncate text-[17px] font-bold text-[#111827]">
+                        {day.title}
                       </p>
+
+                      <span className="shrink-0 pt-[1px] text-[11px] font-medium tracking-[-0.015em] text-[#d1d5db]">
+                        {getDayProgress(day)}
+                      </span>
+                    </div>
+
                     </div>
 
                     <span
