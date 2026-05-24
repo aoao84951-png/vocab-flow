@@ -11,8 +11,10 @@ type Meaning = {
 
 type StudyPoint = {
   category: string;
-  title: string;
+  expression: string;
+  meaning: string;
   description: string;
+  related: string;
   exampleEn: string;
   exampleKo: string;
 };
@@ -27,6 +29,7 @@ type Word = {
   studyPoints?: StudyPoint[];
   memorized?: boolean;
   highlightColor?: "red" | "blue" | "yellow" | "green" | "purple" | "";
+  createdAt?: string;
 };
 
 type Day = {
@@ -72,7 +75,6 @@ export default function Home() {
   const [actionWordIndex, setActionWordIndex] = useState<number | null>(null);
   const [actionDayId, setActionDayId] = useState<string | null>(null);
   const [actionFolderId, setActionFolderId] = useState<string | null>(null);
-  const [moveTargetFolderId, setMoveTargetFolderId] = useState("");
   const [isStandalone, setIsStandalone] = useState(false);
 
   const [swipedIndex, setSwipedIndex] = useState<number | null>(null);
@@ -82,6 +84,7 @@ export default function Home() {
   const folderLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPressFolder = useRef(false);
   const [expandedFolderIds, setExpandedFolderIds] = useState<string[]>([]);
+  const [wordSortOrder, setWordSortOrder] = useState<"latest" | "oldest">("oldest");
 
   const SWIPE_WIDTH = 145;
 
@@ -115,6 +118,15 @@ export default function Home() {
   const selectedDay = activeFolder?.days.find((day) => day.id === selectedDayId);
   const words = selectedDay?.words ?? [];
   const currentWord = words[wordIndex];
+
+  const sortedWords = selectedDay
+  ? selectedDay.words
+      .map((word, originalIndex) => ({ word, originalIndex }))
+      .sort((a, b) => {
+        if (wordSortOrder === "oldest") return a.originalIndex - b.originalIndex;
+        return b.originalIndex - a.originalIndex;
+      })
+  : [];
 
   useEffect(() => {
     const state = {
@@ -563,15 +575,32 @@ export default function Home() {
     return undefined;
   };
 
+  const findFolderPathById = (
+    folders: Folder[],
+    targetFolderId: string,
+    path: string[] = []
+  ): string[] | null => {
+    for (const folder of folders) {
+      const nextPath = [...path, folder.id];
+  
+      if (folder.id === targetFolderId) return nextPath;
+  
+      const found = findFolderPathById(folder.folders, targetFolderId, nextPath);
+      if (found) return found;
+    }
+  
+    return null;
+  };
+
   const moveFolderToFolder = (
     folders: Folder[],
     movingFolderId: string,
-    targetFolderId: string
+    targetFolderId: string | null
   ): Folder[] => {
     let movingFolder: Folder | null = null;
   
-    const removeFolder = (list: Folder[]): Folder[] => {
-      return list
+    const removeFolder = (list: Folder[]): Folder[] =>
+      list
         .filter((folder) => {
           if (folder.id === movingFolderId) {
             movingFolder = folder;
@@ -583,25 +612,20 @@ export default function Home() {
           ...folder,
           folders: removeFolder(folder.folders),
         }));
-    };
-
-    const removed = removeFolder(folders);
   
+    const removed = removeFolder(folders);
     if (!movingFolder) return folders;
   
-    const insertFolder = (list: Folder[]): Folder[] => {
-      return list.map((folder) =>
+    if (targetFolderId === null) {
+      return [...removed, movingFolder];
+    }
+  
+    const insertFolder = (list: Folder[]): Folder[] =>
+      list.map((folder) =>
         folder.id === targetFolderId
-          ? {
-              ...folder,
-              folders: [...folder.folders, movingFolder!],
-            }
-          : {
-              ...folder,
-              folders: insertFolder(folder.folders),
-            }
+          ? { ...folder, folders: [...folder.folders, movingFolder!] }
+          : { ...folder, folders: insertFolder(folder.folders) }
       );
-    };
   
     return insertFolder(removed);
   };
@@ -668,6 +692,21 @@ export default function Home() {
         : [...prev, folderId]
     );
   };
+
+  const movingFolder = actionFolderId
+  ? findFolderById(books, actionFolderId)
+  : undefined;
+
+const getDescendantIds = (folder?: Folder): string[] => {
+  if (!folder) return [];
+
+  return folder.folders.flatMap((child) => [
+    child.id,
+    ...getDescendantIds(child),
+  ]);
+};
+
+const disabledMoveIds = getDescendantIds(movingFolder);
 
   const FolderIcon = () => (
     <svg width="18" height="15" viewBox="0 0 24 20" fill="none">
@@ -1046,30 +1085,50 @@ export default function Home() {
                 <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                   {selectedDay.title}
                 </h1>
-                <p className="mt-2 text-[13px] text-[#8a94a6]">
-                  단어를 선택하면 그 단어부터 학습해.
-                </p>
               </div>
 
-              <button
-                onClick={() => setStep("addWord")}
-                className="rounded-full bg-[#0f2a5f] px-4 py-2 text-[12px] font-bold text-white"
-              >
-                + 단어
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="relative h-8 w-8 shrink-0">
+                  <select
+                    value={wordSortOrder}
+                    onChange={(e) => setWordSortOrder(e.target.value as "latest" | "oldest")}
+                    className="absolute inset-0 z-10 h-8 w-8 cursor-pointer appearance-none opacity-0"
+                    aria-label="정렬"
+                  >
+                    <option value="latest">최신순</option>
+                    <option value="oldest">오래된순</option>
+                  </select>
+
+                  <div className="pointer-events-none flex h-8 w-8 items-center justify-center text-[#8a94a6]">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <path d="M4 8H20" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
+                      <circle cx="9" cy="8" r="2.7" fill="white" stroke="currentColor" strokeWidth="2.3" />
+                      <path d="M4 16H20" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
+                      <circle cx="15" cy="16" r="2.7" fill="white" stroke="currentColor" strokeWidth="2.3" />
+                    </svg>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setStep("addWord")}
+                  className="rounded-full bg-[#0f2a5f] px-4 py-2 text-[12px] font-bold text-white"
+                >
+                  + 단어
+                </button>
+              </div>
             </div>
 
             <div className="mt-7 space-y-2">
               {selectedDay.words.length === 0 ? (
                 <Empty text="이 Day에는 아직 단어가 없어." />
               ) : (
-                selectedDay.words.map((item, index) => (
+                sortedWords.map(({ word: item, originalIndex }) => (
                   <div key={item.id} className="relative overflow-hidden rounded-[18px] bg-[#f1f3f6]">
                     <div className="absolute inset-y-0 left-0 flex w-[145px] items-center justify-center gap-10 bg-[#eef0f3]">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          changeWordColor(index, "blue");
+                          changeWordColor(originalIndex, "blue");
                         }}
                         className="h-[11px] w-[11px] rounded-full border border-white bg-[#3b82f6] shadow-[0_1px_3px_rgba(15,23,42,0.18)]"
                         aria-label="파란색 표시"
@@ -1078,7 +1137,7 @@ export default function Home() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          changeWordColor(index, "red");
+                          changeWordColor(originalIndex, "red");
                         }}
                         className="h-[11px] w-[11px] rounded-full border border-white bg-[#ef4444] shadow-[0_1px_3px_rgba(15,23,42,0.18)]"
                         aria-label="빨간색 표시"
@@ -1086,25 +1145,25 @@ export default function Home() {
                     </div>
                 
                     <button
-                      onClick={() => startStudy(index)}
+                      onClick={() => startStudy(originalIndex)}
                       onTouchStart={(e) => {
                         touchStartX.current = e.touches[0].clientX;
-                        setDraggingIndex(index);
+                        setDraggingIndex(originalIndex);
                 
-                        const base = swipedIndex === index ? SWIPE_WIDTH : 0;
+                        const base = swipedIndex === originalIndex ? SWIPE_WIDTH : 0;
                         setDragX(base);
                       }}
                       onTouchMove={(e) => {
                         if (touchStartX.current === null) return;
                 
                         const diff = e.touches[0].clientX - touchStartX.current;
-                        const base = swipedIndex === index ? SWIPE_WIDTH : 0;
+                        const base = swipedIndex === originalIndex ? SWIPE_WIDTH : 0;
                 
                         setDragX(Math.max(0, Math.min(base + diff, SWIPE_WIDTH)));
                       }}
                       onTouchEnd={() => {
                         if (dragX > SWIPE_WIDTH / 2) {
-                          setSwipedIndex(index);
+                          setSwipedIndex(originalIndex);
                         } else {
                           setSwipedIndex(null);
                         }
@@ -1114,7 +1173,7 @@ export default function Home() {
                         touchStartX.current = null;
                       }}
                       className="relative z-10 w-full rounded-[18px] border border-[#e4e8f0] bg-white px-4 py-4 text-left shadow-[0_3px_10px_rgba(15,23,42,0.04)] transition-transform active:scale-[0.99]"
-                      style={{ transform: `translateX(${getSwipeX(index)}px)` }}
+                      style={{ transform: `translateX(${getSwipeX(originalIndex)}px)` }}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
@@ -1138,7 +1197,7 @@ export default function Home() {
                         <span
                           onClick={(e) => {
                             e.stopPropagation();
-                            setActionWordIndex(index);
+                            setActionWordIndex(originalIndex);
                           }}
                           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f5f6fa] text-[#8a94a6]"
                         >
@@ -1242,14 +1301,17 @@ export default function Home() {
 
                 <section
                   className={`relative z-[2] mt-4 min-h-0 flex-1 overflow-hidden transition-opacity duration-200 ${
-                    showMeaning ? "pointer-events-none opacity-100" : "pointer-events-none opacity-0"
+                    showMeaning ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
                   }`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowMeaning((prev) => !prev);
                   }}
                 >
-                  <div className="h-full overflow-y-auto px-3 pb-4">
+                  <div
+                    className="h-full overflow-y-auto px-3 pb-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Block>
                       <div className="space-y-2">
                         {currentWord.meanings.map((group) => (
@@ -1322,12 +1384,24 @@ export default function Home() {
                                   {point.category}
                                 </span>
 
-                                {point.title && (
+                                {point.expression && (
                                   <p className="text-[13px] font-bold text-[#111827]">
-                                    {point.title}
+                                    {point.expression}
                                   </p>
                                 )}
                               </div>
+
+                              {point.meaning && (
+                                <p className="mt-1 text-[12px] text-[#596275]">
+                                  {point.meaning}
+                                </p>
+                              )}
+
+                              {point.related && (
+                                <p className="mt-1 text-[11px] text-[#8a94a6]">
+                                  유사 표현: {point.related}
+                                </p>
+                              )}
 
                               {point.description && (
                                 <p className="mt-2 text-[12px] leading-relaxed text-[#596275]">
@@ -1452,6 +1526,7 @@ export default function Home() {
 
         {step === "addWord" && activeFolder && (
           <AddWord
+            key={`add-word-${selectedDayId}-${selectedDay?.words.length ?? 0}`}
             book={activeFolder}
             defaultDayId={selectedDayId || activeFolder.days[0]?.id || ""}
             onBack={() => setStep(selectedDayId ? "wordList" : "day")}
@@ -1463,7 +1538,7 @@ export default function Home() {
               setSelectedDayId(dayId);
               setWordIndex(0);
               setShowMeaning(false);
-              setStep("wordList");
+              setStep("addWord");
             }}
           />
         )}
@@ -1489,7 +1564,7 @@ export default function Home() {
               );
 
               setSelectedDayId(dayId);
-              setWordIndex(0);
+              setWordIndex(wordIndex);
               setShowMeaning(false);
               setStep(movedToOtherDay ? "wordList" : "study");
             }}
@@ -1521,7 +1596,10 @@ export default function Home() {
         {step === "moveFolder" && actionFolderId && (
           <div className="min-h-dvh px-5 pt-7 pb-6">
             <BackButton
-              onClick={() => setStep("day")}
+              onClick={() => {
+                setActionFolderId(null);
+                setStep(folderPath.length ? "day" : "book");
+              }}
               label="뒤로"
             />
 
@@ -1530,21 +1608,43 @@ export default function Home() {
             </h1>
 
             <div className="mt-7 space-y-2">
+            <button
+              disabled={books.some((book) => book.id === actionFolderId)}
+              onClick={() => {
+                saveBooks((prev) => moveFolderToFolder(prev, actionFolderId, null));
+
+                setActionFolderId(null);
+                setSelectedBookId("");
+                setFolderPath([]);
+                setSelectedDayId("");
+                setWordIndex(0);
+                setShowMeaning(false);
+                setStep("book");
+              }}
+              className={`w-full rounded-2xl border border-[#dce2ee] bg-[#f8fafc] px-4 py-4 text-left text-[14px] font-bold text-[#0f2a5f] ${
+                books.some((book) => book.id === actionFolderId) ? "opacity-35" : ""
+              }`}
+            >
+              최상위로 이동
+            </button>
               {books.map((book) => (
                 <MoveFolderList
                   key={book.id}
                   folder={book}
                   currentId={actionFolderId}
+                  disabledIds={disabledMoveIds}
                   onSelect={(targetId) => {
                     saveBooks((prev) =>
-                      moveFolderToFolder(
-                        prev,
-                        actionFolderId,
-                        targetId
-                      )
+                      moveFolderToFolder(prev, actionFolderId, targetId)
                     );
-
-                    setStep("day");
+                
+                    setActionFolderId(null);
+                    setSelectedBookId("");
+                    setFolderPath([]);
+                    setSelectedDayId("");
+                    setWordIndex(0);
+                    setShowMeaning(false);
+                    setStep("book");
                   }}
                 />
               ))}
@@ -1702,7 +1802,7 @@ export default function Home() {
           </div>
         )}
 
-        {actionDayId !== null && activeFolder && (
+        {actionDayId !== null && actionDayId !== "__sort__" && activeFolder && (
           <div
             onClick={() => setActionDayId(null)}
             className="fixed inset-0 z-30 flex items-end bg-black/25"
@@ -1733,7 +1833,7 @@ export default function Home() {
             </div>
           </div>
         )}
-        {actionFolderId !== null && (activeFolder || step === "book") && (
+        {actionFolderId !== null && step !== "moveFolder" && step !== "editFolder" && (
           <div
             onClick={() => setActionFolderId(null)}
             className="fixed inset-0 z-30 flex items-end bg-black/25"
@@ -1743,6 +1843,20 @@ export default function Home() {
               className="mx-auto w-full max-w-[430px] rounded-t-[24px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
             >
               <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    const path = findFolderPathById(books, actionFolderId);
+                    if (!path) return;
+
+                    setFolderPath(path);
+                    setActionFolderId(null);
+                    setStep("addFolder");
+                  }}
+                  className="h-12 w-full rounded-2xl bg-[#eef2f8] text-[13px] font-bold text-[#0f2a5f]"
+                >
+                  하위 폴더 추가
+                </button>
+
                 <button
                   onClick={() => {
                     setStep("editFolder");
@@ -2006,14 +2120,26 @@ function AddWord({
       ? initialWord.studyPoints
       : [
           {
-            category: "문법/용법",
-            title: "",
+            category: "",
+            expression: "",
+            meaning: "",
             description: "",
+            related: "",
             exampleEn: "",
             exampleKo: "",
           },
         ]
   );
+
+  const STUDY_CATEGORIES = [
+    "문법/용법",
+    "표현/패턴",
+    "전치사",
+    "숙어",
+    "혼동주의",
+    "시험포인트",
+    "기타",
+  ];
 
   const addMeaningGroup = () => {
     setMeanings((prev) => [...prev, { pos: "명", items: [""], numbered: false }]);
@@ -2068,9 +2194,11 @@ function AddWord({
     setStudyPoints((prev) => [
       ...prev,
       {
-        category: "기타",
-        title: "",
+        category: "",
+        expression: "",
+        meaning: "",
         description: "",
+        related: "",
         exampleEn: "",
         exampleKo: "",
       },
@@ -2282,24 +2410,27 @@ function AddWord({
             {studyPoints.map((point, index) => (
               <div key={index} className="rounded-2xl border border-[#dce2ee] p-4">
                 <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <select
-                      value={point.category}
-                      onChange={(e) => updateStudyPoint(index, "category", e.target.value)}
-                      className="h-10 w-full appearance-none rounded-xl border border-[#dce2ee] px-3 pr-9 text-[13px] outline-none"
-                    >
-                      <option value="문법/용법">문법/용법</option>
-                      <option value="표현/패턴">표현/패턴</option>
-                      <option value="혼동주의">혼동주의</option>
-                      <option value="cf.">cf.</option>
-                      <option value="시험포인트">시험포인트</option>
-                      <option value="기타">기타</option>
-                    </select>
+                <div className="relative flex-1">
+                  <select
+                    value={STUDY_CATEGORIES.includes(point.category) ? point.category : "직접입력"}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      updateStudyPoint(index, "category", value === "직접입력" ? "" : value);
+                    }}
+                    className="h-10 w-full appearance-none rounded-xl border border-[#dce2ee] px-3 pr-9 text-[13px] outline-none"
+                  >
+                    {STUDY_CATEGORIES.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                    <option value="직접입력">직접입력</option>
+                  </select>
 
-                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#8a94a6]">
-                      <ChevronDownIcon />
-                    </span>
-                  </div>
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#8a94a6]">
+                    <ChevronDownIcon />
+                  </span>
+                </div>
 
                   <button
                     onClick={() => removeStudyPoint(index)}
@@ -2309,11 +2440,27 @@ function AddWord({
                   </button>
                 </div>
 
+                {!STUDY_CATEGORIES.includes(point.category) && (
+                  <input
+                    value={point.category}
+                    onChange={(e) => updateStudyPoint(index, "category", e.target.value)}
+                    placeholder="유형 직접입력"
+                    className="mt-3 h-10 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
+                  />
+                )}
+
                 <input
-                  value={point.title}
-                  onChange={(e) => updateStudyPoint(index, "title", e.target.value)}
-                  placeholder="제목 예: 후치수식 가능 / respond to / readership"
+                  value={point.expression}
+                  onChange={(e) => updateStudyPoint(index, "expression", e.target.value)}
+                  placeholder="표현 예: upon request / respond to"
                   className="mt-3 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
+                />
+
+                <input
+                  value={point.meaning}
+                  onChange={(e) => updateStudyPoint(index, "meaning", e.target.value)}
+                  placeholder="뜻 예: 요청 시 / ~에 응답하다"
+                  className="mt-2 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
                 />
 
                 <textarea
@@ -2322,6 +2469,13 @@ function AddWord({
                   placeholder="설명"
                   rows={3}
                   className="mt-2 w-full resize-none rounded-xl border border-[#dce2ee] px-3 py-3 text-[13px] outline-none"
+                />
+
+                <input
+                  value={point.related}
+                  onChange={(e) => updateStudyPoint(index, "related", e.target.value)}
+                  placeholder="유사 표현/동의어 예: on request, reply to, react to"
+                  className="mt-2 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
                 />
 
                 <input
@@ -2369,18 +2523,28 @@ function AddWord({
               synonyms: splitComma(synonyms),
               antonyms: splitComma(antonyms),
               studyPoints: studyPoints
-                .map((point) => ({
-                  category: point.category,
-                  title: point.title.trim(),
-                  description: point.description.trim(),
-                  exampleEn: point.exampleEn.trim(),
-                  exampleKo: point.exampleKo.trim(),
-                }))
-                .filter(
-                  (point) => point.title || point.description || point.exampleEn || point.exampleKo
-                ),
+              .map((point) => ({
+                category: point.category.trim(),
+                expression: point.expression.trim(),
+                meaning: point.meaning.trim(),
+                description: point.description.trim(),
+                related: point.related.trim(),
+                exampleEn: point.exampleEn.trim(),
+                exampleKo: point.exampleKo.trim(),
+              }))
+              .filter(
+                (point) =>
+                  point.category ||
+                  point.expression ||
+                  point.meaning ||
+                  point.description ||
+                  point.related ||
+                  point.exampleEn ||
+                  point.exampleKo
+              ),
               memorized: initialWord?.memorized ?? false,
               highlightColor: initialWord?.highlightColor || "",
+              createdAt: initialWord?.createdAt || new Date().toISOString(),
             });
           }}
           className="h-12 w-full rounded-full bg-[#0f2a5f] text-[13px] font-bold text-white"
@@ -2577,23 +2741,44 @@ function HomeIcon() {
 }
 
 function HighlightedText({ text, keyword }: { text: string; keyword: string }) {
-  if (!keyword.trim()) return <>{text}</>;
+  if (!text) return null;
 
-  const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(`(${escapedKeyword})`, "gi");
-  const parts = text.split(regex);
+  const chunks = text.split(/(\[\[.*?\]\])/g);
+  const escapedKeyword = keyword.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const autoRegex = escapedKeyword
+    ? new RegExp(`\\b(${escapedKeyword}(?:s|es|ed|ing)?)\\b`, "gi")
+    : null;
 
   return (
     <>
-      {parts.map((part, index) =>
-        part.toLowerCase() === keyword.toLowerCase() ? (
-          <strong key={index} className="font-bold text-[#d92d20]">
-            {part}
-          </strong>
-        ) : (
-          <span key={index}>{part}</span>
-        )
-      )}
+      {chunks.map((chunk, chunkIndex) => {
+        if (chunk.startsWith("[[") && chunk.endsWith("]]")) {
+          return (
+            <strong key={chunkIndex} className="font-bold text-[#d92d20]">
+              {chunk.slice(2, -2)}
+            </strong>
+          );
+        }
+
+        if (!autoRegex) return <span key={chunkIndex}>{chunk}</span>;
+
+        return (
+          <span key={chunkIndex}>
+            {chunk.split(autoRegex).map((part, index) => {
+              const checkRegex = new RegExp(`^${escapedKeyword}(?:s|es|ed|ing)?$`, "i");
+
+              return checkRegex.test(part) ? (
+                <strong key={index} className="font-bold text-[#d92d20]">
+                  {part}
+                </strong>
+              ) : (
+                <span key={index}>{part}</span>
+              );
+            })}
+          </span>
+        );
+      })}
     </>
   );
 }
@@ -2602,18 +2787,25 @@ function MoveFolderList({
   folder,
   currentId,
   onSelect,
+  disabledIds = [],
 }: {
   folder: Folder;
   currentId: string;
   onSelect: (id: string) => void;
+  disabledIds?: string[];
 }) {
   if (folder.id === currentId) return null;
+
+  const disabled = disabledIds.includes(folder.id);
 
   return (
     <div className="space-y-2">
       <button
+        disabled={disabled}
         onClick={() => onSelect(folder.id)}
-        className="w-full rounded-2xl border border-[#dce2ee] px-4 py-4 text-left"
+        className={`w-full rounded-2xl border border-[#dce2ee] px-4 py-4 text-left ${
+          disabled ? "opacity-35" : ""
+        }`}
       >
         {folder.title}
       </button>
@@ -2625,6 +2817,7 @@ function MoveFolderList({
               key={child.id}
               folder={child}
               currentId={currentId}
+              disabledIds={disabledIds}
               onSelect={onSelect}
             />
           ))}
