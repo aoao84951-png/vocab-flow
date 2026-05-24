@@ -1409,17 +1409,19 @@ const disabledMoveIds = getDescendantIds(movingFolder);
                                 </p>
                               )}
 
-                              {point.exampleEn && (
+                              {(point.exampleEn || point.exampleKo) && (
                                 <div className="mt-3 rounded-xl bg-white px-3 py-3">
-                                  <p className="text-[12px] leading-relaxed">
-                                    <HighlightedText
-                                      text={point.exampleEn}
-                                      keyword={currentWord.word}
-                                    />
-                                  </p>
+                                  {point.exampleEn && (
+                                    <p className="text-[12px] leading-relaxed">
+                                      <HighlightedText
+                                        text={point.exampleEn}
+                                        keyword={currentWord.word}
+                                      />
+                                    </p>
+                                  )}
 
                                   {point.exampleKo && (
-                                    <p className="mt-1 text-[11px] text-[#8a94a6]">
+                                    <p className={`${point.exampleEn ? "mt-1" : ""} text-[11px] text-[#8a94a6]`}>
                                       {point.exampleKo}
                                     </p>
                                   )}
@@ -2452,15 +2454,8 @@ function AddWord({
                 <input
                   value={point.expression}
                   onChange={(e) => updateStudyPoint(index, "expression", e.target.value)}
-                  placeholder="표현 예: upon request / respond to"
+                  placeholder="제목"
                   className="mt-3 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
-                />
-
-                <input
-                  value={point.meaning}
-                  onChange={(e) => updateStudyPoint(index, "meaning", e.target.value)}
-                  placeholder="뜻 예: 요청 시 / ~에 응답하다"
-                  className="mt-2 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
                 />
 
                 <textarea
