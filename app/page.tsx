@@ -12,7 +12,6 @@ type Meaning = {
 type StudyPoint = {
   category: string;
   expression: string;
-  meaning: string;
   description: string;
   related: string;
   exampleEn: string;
@@ -81,6 +80,7 @@ export default function Home() {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [dragX, setDragX] = useState(0);
   const touchStartX = useRef<number | null>(null);
+  const studyTapStart = useRef<{ x: number; y: number } | null>(null);
   const folderLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPressFolder = useRef(false);
   const [expandedFolderIds, setExpandedFolderIds] = useState<string[]>([]);
@@ -325,6 +325,55 @@ export default function Home() {
   
   const prevWord = () => {
     setWordIndex((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleStudyPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    studyTapStart.current = { x: e.clientX, y: e.clientY };
+  };
+  
+  const handleStudyPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!studyTapStart.current) return;
+  
+    const target = e.target as HTMLElement;
+  
+    if (
+      target.closest("button") ||
+      target.closest("input") ||
+      target.closest("textarea") ||
+      target.closest("select")
+    ) {
+      studyTapStart.current = null;
+      return;
+    }
+  
+    const movedX = Math.abs(e.clientX - studyTapStart.current.x);
+    const movedY = Math.abs(e.clientY - studyTapStart.current.y);
+  
+    if (movedX > 10 || movedY > 10) {
+      studyTapStart.current = null;
+      return;
+    }
+  
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+  
+    if (y < 58) {
+      studyTapStart.current = null;
+      return;
+    }
+  
+    const third = rect.width / 3;
+  
+    if (x < third) {
+      prevWord();
+    } else if (x > third * 2) {
+      nextWord();
+    } else {
+      setShowMeaning((prev) => !prev);
+    }
+  
+    studyTapStart.current = null;
   };
 
   const deleteWord = (targetIndex: number) => {
@@ -1213,7 +1262,11 @@ const disabledMoveIds = getDescendantIds(movingFolder);
         )}
 
           {step === "study" && selectedBook && selectedDay && (
-            <div className="relative flex min-h-[100svh] flex-col px-4 pt-4 pb-6">
+            <div
+              className="relative flex min-h-[100svh] flex-col px-4 pt-4 pb-6"
+              onPointerDown={handleStudyPointerDown}
+              onPointerUp={handleStudyPointerUp}
+            >
             <header
               onClick={(e) => e.stopPropagation()}
               className="flex h-10 shrink-0 items-center justify-between"
@@ -1303,14 +1356,9 @@ const disabledMoveIds = getDescendantIds(movingFolder);
                   className={`relative z-[2] mt-4 min-h-0 flex-1 overflow-hidden transition-opacity duration-200 ${
                     showMeaning ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
                   }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMeaning((prev) => !prev);
-                  }}
                 >
                   <div
                     className="h-full overflow-y-auto px-3 pb-4"
-                    onClick={(e) => e.stopPropagation()}
                   >
                     <Block>
                       <div className="space-y-2">
@@ -1391,28 +1439,28 @@ const disabledMoveIds = getDescendantIds(movingFolder);
                                 )}
                               </div>
 
-                              {point.meaning && (
-                                <p className="mt-1 text-[12px] text-[#596275]">
-                                  {point.meaning}
-                                </p>
-                              )}
-
-                              {point.related && (
-                                <p className="mt-1 text-[11px] text-[#8a94a6]">
-                                  유사 표현: {point.related}
-                                </p>
-                              )}
-
                               {point.description && (
                                 <p className="mt-2 text-[12px] leading-relaxed text-[#596275]">
                                   {point.description}
                                 </p>
                               )}
 
+                              {point.related && (
+                                <div className="mt-2 flex items-center gap-2">
+                                  <span className="inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-[4px] bg-[#4b6cb7] px-[3px] text-[8px] font-bold text-white">
+                                    유
+                                  </span>
+
+                                  <p className="text-[12px] font-bold tracking-[-0.01em] text-[#4b6cb7]">
+                                    {point.related}
+                                  </p>
+                                </div>
+                              )}
+
                               {(point.exampleEn || point.exampleKo) && (
-                                <div className="mt-3 rounded-xl bg-white px-3 py-3">
+                                <div className="mt-3 border-l-2 border-[#d7ddea] pl-3">
                                   {point.exampleEn && (
-                                    <p className="text-[12px] leading-relaxed">
+                                    <p className="text-[12px] leading-relaxed text-[#596275]">
                                       <HighlightedText
                                         text={point.exampleEn}
                                         keyword={currentWord.word}
@@ -1421,7 +1469,7 @@ const disabledMoveIds = getDescendantIds(movingFolder);
                                   )}
 
                                   {point.exampleKo && (
-                                    <p className={`${point.exampleEn ? "mt-1" : ""} text-[11px] text-[#8a94a6]`}>
+                                    <p className={`${point.exampleEn ? "mt-1" : ""} text-[11px] leading-relaxed text-[#8a94a6]`}>
                                       {point.exampleKo}
                                     </p>
                                   )}
@@ -1434,29 +1482,6 @@ const disabledMoveIds = getDescendantIds(movingFolder);
                     )}
                   </div>
                 </section>
-
-                <div
-                  className="absolute inset-x-0 top-[205px] bottom-0 z-[1] grid grid-cols-3"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    onClick={prevWord}
-                    className="h-full"
-                    aria-label="이전 단어"
-                  />
-
-                  <button
-                    onClick={() => setShowMeaning((prev) => !prev)}
-                    className="h-full"
-                    aria-label="뜻 보기"
-                  />
-
-                  <button
-                    onClick={nextWord}
-                    className="h-full"
-                    aria-label="다음 단어"
-                  />
-                </div>
               </>
             )}
           </div>
@@ -2124,7 +2149,6 @@ function AddWord({
           {
             category: "",
             expression: "",
-            meaning: "",
             description: "",
             related: "",
             exampleEn: "",
@@ -2198,7 +2222,6 @@ function AddWord({
       {
         category: "",
         expression: "",
-        meaning: "",
         description: "",
         related: "",
         exampleEn: "",
@@ -2521,7 +2544,6 @@ function AddWord({
               .map((point) => ({
                 category: point.category.trim(),
                 expression: point.expression.trim(),
-                meaning: point.meaning.trim(),
                 description: point.description.trim(),
                 related: point.related.trim(),
                 exampleEn: point.exampleEn.trim(),
@@ -2531,7 +2553,6 @@ function AddWord({
                 (point) =>
                   point.category ||
                   point.expression ||
-                  point.meaning ||
                   point.description ||
                   point.related ||
                   point.exampleEn ||
