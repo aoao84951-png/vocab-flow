@@ -936,7 +936,7 @@ const disabledMoveIds = getDescendantIds(movingFolder);
               </button>
             </div>
 
-            <div className="mt-5 flex items-start justify-between">
+            <div className="mt-5 flex items-center justify-between">
               <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                 {activeFolder.title}
               </h1>
