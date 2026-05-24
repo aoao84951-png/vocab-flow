@@ -1616,7 +1616,7 @@ const getDayProgress = (day: Day) => {
                               )}
 
                               {point.related && (
-                                <div className="mt-2 flex items-center gap-2">
+                                <div className="mt-2 flex items-center gap-2 pl-[7px]">
                                   <span className="inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-[4px] bg-[#4b6cb7] px-[3px] text-[8px] font-bold text-white">
                                     유
                                   </span>
