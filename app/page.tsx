@@ -18,13 +18,27 @@ type StudyPoint = {
   exampleKo: string;
 };
 
+type LinkedTerm = {
+  text: string;
+  meaningRef?: string;
+  meaningLabel?: string;
+};
+
+type RelatedWord = {
+  text: string;
+  meaningRef?: {
+    pos: string;
+    index: number;
+  } | null;
+};
+
 type Word = {
   id: string;
   word: string;
   meanings: Meaning[];
   examples: { en: string; ko: string }[];
-  synonyms: string[];
-  antonyms: string[];
+  synonyms: (string | LinkedTerm)[];
+  antonyms: (string | LinkedTerm)[];
   studyPoints?: StudyPoint[];
   memorized?: boolean;
   highlightColor?: "red" | "blue" | "yellow" | "green" | "purple" | "";
@@ -1583,13 +1597,13 @@ const getDayProgress = (day: Day) => {
 
                     {currentWord.synonyms.length > 0 && (
                       <Block title="동의어">
-                        <ChipList items={currentWord.synonyms} />
+                        <ChipList items={currentWord.synonyms} meanings={currentWord.meanings} />
                       </Block>
                     )}
 
                     {currentWord.antonyms.length > 0 && (
                       <Block title="반의어">
-                        <ChipList items={currentWord.antonyms} tone="red" />
+                        <ChipList items={currentWord.antonyms} meanings={currentWord.meanings} tone="red" />
                       </Block>
                     )}
                     {(currentWord.studyPoints ?? []).length > 0 && (
@@ -2310,8 +2324,45 @@ function AddWord({
     initialWord?.examples?.length ? initialWord.examples : [{ en: "", ko: "" }]
   );
 
-  const [synonyms, setSynonyms] = useState(initialWord?.synonyms.join(", ") || "");
-  const [antonyms, setAntonyms] = useState(initialWord?.antonyms.join(", ") || "");
+  const toLinkedTerms = (items?: (string | LinkedTerm)[]): LinkedTerm[] => {
+    if (!items?.length) return [{ text: "", meaningRef: "", meaningLabel: "" }];
+  
+    const grouped = new Map<string, LinkedTerm>();
+  
+    items.forEach((item) => {
+      const next =
+        typeof item === "string"
+          ? { text: item, meaningRef: "", meaningLabel: "" }
+          : {
+              text: item.text ?? "",
+              meaningRef: item.meaningRef ?? "",
+              meaningLabel: item.meaningLabel ?? "",
+            };
+  
+      const key = `${next.meaningRef || ""}__${next.meaningLabel || ""}`;
+  
+      if (grouped.has(key)) {
+        const prev = grouped.get(key)!;
+        grouped.set(key, {
+          ...prev,
+          text: [prev.text, next.text].filter(Boolean).join(", "),
+        });
+      } else {
+        grouped.set(key, next);
+      }
+    });
+  
+    return Array.from(grouped.values()).filter((item) => item.text);
+  };
+  
+  const [synonyms, setSynonyms] = useState<LinkedTerm[]>(
+    toLinkedTerms(initialWord?.synonyms)
+  );
+  
+  const [antonyms, setAntonyms] = useState<LinkedTerm[]>(
+    toLinkedTerms(initialWord?.antonyms)
+  );
+
   const [studyPoints, setStudyPoints] = useState<StudyPoint[]>(
     initialWord?.studyPoints?.length
       ? initialWord.studyPoints.map((point) => ({
@@ -2352,6 +2403,22 @@ function AddWord({
           ? {
               ...group,
               items: group.items.map((item, j) => (j === itemIndex ? value : item)),
+            }
+          : group
+      )
+    );
+  };
+
+  const removeMeaningItem = (groupIndex: number, itemIndex: number) => {
+    setMeanings((prev) =>
+      prev.map((group, i) =>
+        i === groupIndex
+          ? {
+              ...group,
+              items:
+                group.items.length > 1
+                  ? group.items.filter((_, j) => j !== itemIndex)
+                  : [""],
             }
           : group
       )
@@ -2407,6 +2474,25 @@ function AddWord({
   const removeStudyPoint = (index: number) => {
     setStudyPoints((prev) => prev.filter((_, i) => i !== index));
   };
+
+  const meaningOptions = meanings.flatMap((group, groupIndex) =>
+    group.items.map((item, itemIndex) => ({
+      value: `${groupIndex}:${itemIndex}`,
+      label: group.numbered
+        ? `${group.pos} ${itemIndex + 1}`
+        : group.pos,
+      text: item,
+    }))
+  );
+  
+  const cleanLinkedTerms = (items: LinkedTerm[]) =>
+    items
+      .map((item) => ({
+        text: item.text.trim(),
+        meaningRef: item.meaningRef || "",
+        meaningLabel: item.meaningLabel || "",
+      }))
+      .filter((item) => item.text);
 
   return (
     <div className="min-h-dvh px-5 pt-7 pb-6">
@@ -2506,13 +2592,22 @@ function AddWord({
 
                 <div className="mt-3 space-y-2">
                   {group.items.map((item, itemIndex) => (
-                    <input
-                      key={itemIndex}
-                      value={item}
-                      onChange={(e) => updateMeaningItem(groupIndex, itemIndex, e.target.value)}
-                      placeholder={group.numbered ? `${itemIndex + 1}번째 뜻` : "뜻 입력"}
-                      className="h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
-                    />
+                    <div key={itemIndex} className="relative">
+                      <input
+                        value={item}
+                        onChange={(e) => updateMeaningItem(groupIndex, itemIndex, e.target.value)}
+                        placeholder={group.numbered ? `${itemIndex + 1}번째 뜻` : "뜻 입력"}
+                        className="h-11 w-full rounded-xl border border-[#dce2ee] px-3 pr-10 text-[13px] outline-none"
+                      />
+
+                      <button
+                        onClick={() => removeMeaningItem(groupIndex, itemIndex)}
+                        className="absolute right-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-[#f5f6fa] text-[15px] text-[#8a94a6]"
+                        aria-label="뜻 삭제"
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))}
                 </div>
 
@@ -2571,20 +2666,20 @@ function AddWord({
           </div>
         </div>
 
-        <TextArea
-          label="동의어"
-          value={synonyms}
-          onChange={setSynonyms}
+        <LinkedTermEditor
+          title="동의어"
+          items={synonyms}
+          meaningOptions={meaningOptions}
           placeholder="rank, emphasize, focus on"
-          rows={2}
+          onChangeAll={setSynonyms}
         />
 
-        <TextArea
-          label="반의어"
-          value={antonyms}
-          onChange={setAntonyms}
+        <LinkedTermEditor
+          title="반의어"
+          items={antonyms}
+          meaningOptions={meaningOptions}
           placeholder="ignore, neglect"
-          rows={2}
+          onChangeAll={setAntonyms}
         />
 
         <div>
@@ -2737,8 +2832,8 @@ function AddWord({
               word: word.trim(),
               meanings: cleanedMeanings,
               examples: cleanedExamples,
-              synonyms: splitComma(synonyms),
-              antonyms: splitComma(antonyms),
+              synonyms: cleanLinkedTerms(synonyms),
+              antonyms: cleanLinkedTerms(antonyms),
               studyPoints: cleanedStudyPoints,
               memorized: initialWord?.memorized ?? false,
               highlightColor: initialWord?.highlightColor || "",
@@ -2754,12 +2849,15 @@ function AddWord({
   );
 }
 
-
-function splitComma(value: string) {
+function splitComma(value: string): RelatedWord[] {
   return value
     .split(",")
     .map((v: string) => v.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((text) => ({
+      text,
+      meaningRef: null,
+    }));
 }
 
 function BackButton({ onClick, label }: { onClick: () => void; label: string }) {
@@ -2827,6 +2925,116 @@ function TextArea({
   );
 }
 
+function LinkedTermEditor({
+  title,
+  items,
+  meaningOptions,
+  placeholder,
+  onChangeAll,
+}: {
+  title: string;
+  items: LinkedTerm[];
+  meaningOptions: { value: string; label: string; text: string }[];
+  placeholder: string;
+  onChangeAll: React.Dispatch<React.SetStateAction<LinkedTerm[]>>;
+}) {
+  const safeItems = items.length
+    ? items
+    : [{ text: "", meaningRef: "", meaningLabel: "" }];
+
+  const updateItem = (index: number, next: Partial<LinkedTerm>) => {
+    onChangeAll((prev) => {
+      const list = prev.length ? prev : [{ text: "", meaningRef: "", meaningLabel: "" }];
+
+      return list.map((item, i) =>
+        i === index ? { ...item, ...next } : item
+      );
+    });
+  };
+
+  const addItem = () => {
+    onChangeAll((prev) => [
+      ...prev,
+      { text: "", meaningRef: "", meaningLabel: "" },
+    ]);
+  };
+
+  const removeItem = (index: number) => {
+    onChangeAll((prev) => {
+      if (prev.length <= 1) return [{ text: "", meaningRef: "", meaningLabel: "" }];
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <p className="pl-1.5 text-[12px] font-bold text-[#596275]">{title}</p>
+
+        <button
+          onClick={addItem}
+          className="rounded-full bg-[#eef2f8] px-3 py-1.5 text-[11px] font-bold text-[#0f2a5f]"
+        >
+          + 추가
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        {safeItems.map((item, index) => (
+          <div key={index} className="rounded-2xl border border-[#dce2ee] p-4">
+            <div className="flex gap-2">
+              <div className="relative w-[100px] shrink-0">
+                <select
+                  value={item.meaningRef || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const option = meaningOptions.find((opt) => opt.value === value);
+
+                    updateItem(index, {
+                      meaningRef: value,
+                      meaningLabel: option?.label || "",
+                    });
+                  }}
+                  className="h-11 w-full appearance-none rounded-xl border border-[#dce2ee] px-3 pr-8 text-[12px] outline-none"
+                >
+                  <option value="">연결 없음</option>
+
+                  {meaningOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#8a94a6]">
+                  <ChevronDownIcon />
+                </span>
+              </div>
+
+              <div className="relative min-w-0 flex-1">
+                <input
+                  value={item.text}
+                  onChange={(e) => updateItem(index, { text: e.target.value })}
+                  placeholder={placeholder}
+                  className="h-11 w-full rounded-xl border border-[#dce2ee] px-3 pr-12 text-[13px] outline-none"
+                />
+
+                <button
+                  onClick={() => removeItem(index)}
+                  className="absolute right-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-[#f5f6fa] text-[15px] text-[#8a94a6]"
+                  aria-label={`${title} 삭제`}
+                >
+                  ×
+                </button>
+                </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Empty({ text }: { text: string }) {
   return (
     <div className="mt-8 rounded-[22px] border border-dashed border-[#dce2ee] p-8 text-center text-[13px] text-[#8a94a6]">
@@ -2859,18 +3067,73 @@ function Block({
   );
 }
 
-function ChipList({ items, tone = "blue" }: { items: string[]; tone?: "blue" | "red" }) {
-  const className =
+function ChipList({
+  items,
+  meanings,
+  tone = "blue",
+}: {
+  items: (string | LinkedTerm)[];
+  meanings: Meaning[];
+  tone?: "blue" | "red";
+}) {
+  const circledNums = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨"];
+
+  const formatLabel = (label?: string, ref?: string) => {
+    if (!label) return "";
+  
+    const [pos, num] = label.split(" ");
+  
+    if (!ref) return pos;
+  
+    const [groupIndex] = ref.split(":").map(Number);
+    const group = meanings[groupIndex];
+  
+    if (!group?.numbered) return pos;
+  
+    const displayNum = circledNums[Number(num) - 1] || num;
+    return num ? `${pos} ${displayNum}` : pos;
+  };
+
+  const groups = items.reduce<Record<string, string[]>>((acc, item) => {
+    const text = typeof item === "string" ? item : item.text;
+    const label =
+      typeof item === "string"
+        ? ""
+        : formatLabel(item.meaningLabel, item.meaningRef);
+  
+    const words = text
+      .split(",")
+      .map((word) => word.trim())
+      .filter(Boolean);
+  
+    if (!acc[label]) acc[label] = [];
+    acc[label].push(...words);
+  
+    return acc;
+  }, {});
+
+  const wordChipClass =
     tone === "red"
-      ? "rounded-full bg-[#fdeeee] px-3 py-1 text-[11px] text-[#b42318]"
-      : "rounded-full bg-[#eef2f8] px-3 py-1 text-[11px] text-[#0f2a5f]";
+      ? "rounded-full bg-[#fdeeee] px-3 py-1 text-[11px] leading-none text-[#b42318]"
+      : "rounded-full bg-[#eef2f8] px-3 py-1 text-[11px] leading-none text-[#0f2a5f]";
+
+  const labelClass =
+    tone === "red"
+      ? "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#b42318] px-1.5 text-[9px] font-bold leading-none text-white"
+      : "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#4b6cb7] px-1.5 text-[9px] font-bold leading-none text-white";
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {items.map((item) => (
-        <span key={item} className={className}>
-          {item}
-        </span>
+    <div className="space-y-2">
+      {Object.entries(groups).map(([label, words]) => (
+        <div key={label || words.join("-")} className="flex flex-wrap items-center gap-2">
+          {label && <span className={labelClass}>{label}</span>}
+
+          {words.map((word, index) => (
+            <span key={`${word}-${index}`} className={wordChipClass}>
+              {word}
+            </span>
+          ))}
+        </div>
       ))}
     </div>
   );
