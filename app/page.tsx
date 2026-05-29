@@ -1195,7 +1195,12 @@ const getDayProgress = (day: Day) => {
                 <Empty text="이 Day에는 아직 단어가 없어." />
               ) : (
                 visibleSortedWords.map(({ word: item, originalIndex }) => (
-                  <div key={item.id} className="relative overflow-hidden rounded-[18px] bg-[#f1f3f6]">
+                  <div
+                    key={item.id}
+                    className={`relative overflow-hidden rounded-[18px] bg-[#f1f3f6] ${
+                      item.memorized ? "opacity-45" : ""
+                    }`}
+                  >
                     <div className="absolute inset-y-0 left-0 flex w-[145px] items-center justify-center gap-10 bg-[#eef0f3]">
                       <button
                         onClick={(e) => {
@@ -1251,9 +1256,7 @@ const getDayProgress = (day: Day) => {
                         <div className="min-w-0">
                         <p
                           className={`truncate text-[17px] font-bold ${
-                            item.memorized
-                              ? "text-[#b0b7c3]"
-                              : item.highlightColor === "red"
+                            item.highlightColor === "red"
                               ? "text-[#ef4444]"
                               : item.highlightColor === "blue"
                               ? "text-[#2563eb]"
@@ -1269,31 +1272,23 @@ const getDayProgress = (day: Day) => {
                               (item.meanings ?? []).map((group, groupIndex) => (
                                 <div
                                   key={`${group.pos}-${groupIndex}`}
-                                  className={`relative flex items-start gap-1.5 ${
-                                    item.memorized ? "text-[#b0b7c3]" : ""
-                                  }`}
+                                  className="relative flex items-start gap-1.5"
                                 >
                             
                                   <span
-                                    className={`mt-[1px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-[4px] text-[9px] font-bold ${
-                                      item.memorized ? "bg-[#b0b7c3] text-white" : "bg-[#0f2a5f] text-white"
-                                    }`}
+                                    className="mt-[1px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-[4px] bg-[#0f2a5f] text-[9px] font-bold text-white"
                                   >
                                     {group.pos}
                                   </span>
                             
                                   <div
-                                    className={`min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] leading-[1.45] ${
-                                      item.memorized ? "text-[#b0b7c3]" : "text-[#596275]"
-                                    }`}
+                                    className="min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] leading-[1.45] text-[#596275]"
                                   >
                                     {(group.items ?? []).map((meaning, index) => (
                                       <span key={`${meaning}-${index}`} className="inline-flex items-center gap-0.5">
                                         {group.numbered && (
                                           <span
-                                            className={`inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-full px-[3px] text-[8px] font-bold ${
-                                              item.memorized ? "bg-[#b0b7c3] text-white" : "bg-[#9aa3b2] text-white"
-                                            }`}
+                                            className="inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#9aa3b2] px-[3px] text-[8px] font-bold text-white"
                                           >
                                             {index + 1}
                                           </span>
@@ -1538,7 +1533,11 @@ const getDayProgress = (day: Day) => {
 
                 <section
                   className={`relative z-[2] mt-4 min-h-0 flex-1 overflow-hidden transition-opacity duration-200 ${
-                    showMeaning ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+                    showMeaning
+                      ? currentWord.memorized
+                        ? "pointer-events-auto opacity-45"
+                        : "pointer-events-auto opacity-100"
+                      : "pointer-events-none opacity-0"
                   }`}
                 >
                   <div
