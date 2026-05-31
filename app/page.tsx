@@ -1259,7 +1259,7 @@ const getDayProgress = (day: Day) => {
                       </p>
 
                       <span
-                        className="shrink-0 translate-y-[2.5px] text-[10px] font-semibold leading-none tracking-[-0.02em] text-[#c4c6cc]"
+                        className="shrink-0 translate-y-[2px] text-[10px] font-semibold leading-none tracking-[-0.02em] text-[#c4c6cc]"
                         style={{
                           fontFamily:
                             '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", sans-serif',
