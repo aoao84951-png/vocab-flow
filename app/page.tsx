@@ -811,7 +811,17 @@ const getDayProgress = (day: Day) => {
   const memorized = day.words.filter((word) => word.memorized).length;
   const percent = total === 0 ? 0 : Math.round((memorized / total) * 100);
 
-  return `${percent}% (${memorized}/${total})`;
+  return (
+    <>
+      {percent}
+      <span className="ml-[1px]">%</span>
+      {" ("}
+      {memorized}
+      <span className="mx-[1px]">/</span>
+      {total}
+      )
+    </>
+  );
 };
 
   
@@ -1083,12 +1093,18 @@ const getDayProgress = (day: Day) => {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                    <div className="flex min-w-0 items-baseline gap-2">
-                      <p className="truncate text-[17px] font-bold text-[#111827]">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <p className="truncate text-[17px] font-bold tracking-[-0.03em] text-[#111827]">
                         {day.title}
                       </p>
 
-                      <span className="shrink-0 pt-[1px] text-[11px] font-medium tracking-[-0.015em] text-[#d1d5db]">
+                      <span
+                        className="shrink-0 translate-y-[2.5px] text-[10px] font-semibold leading-none tracking-[-0.02em] text-[#c4c6cc]"
+                        style={{
+                          fontFamily:
+                            '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", sans-serif',
+                        }}
+                      >
                         {getDayProgress(day)}
                       </span>
                     </div>
