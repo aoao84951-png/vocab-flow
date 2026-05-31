@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { MutableRefObject } from "react";
 import { supabase } from "@/app/lib/supabase";
 
 type Meaning = {
@@ -1089,7 +1090,7 @@ const getDayProgress = (day: Day) => {
                             e.preventDefault();
                             setActionFolderId(folder.id);
                           }}
-                          className="flex h-[50px] w-full touch-none select-none items-center border-b border-[#e5e7eb] pl-[45px] text-left active:bg-[#fafafa]"
+                          className="flex h-[50px] w-full touch-none select-none items-center border-b border-[#e5e7eb] pl-[42px] text-left active:bg-[#fafafa]"
                         >
                           <div className="min-w-0 flex-1">
                             <span className="truncate text-[16px] font-normal tracking-[-0.03em] text-[#666a70]">
@@ -1145,69 +1146,27 @@ const getDayProgress = (day: Day) => {
               </div>
             </div>
 
+            {activeFolder.folders.length > 0 && (
+              <div className="mt-7 space-y-2">
+                <FolderTreeRows
+                  folders={activeFolder.folders}
+                  basePath={folderPath}
+                  expandedIds={expandedFolderIds}
+                  onToggle={toggleFolderOpen}
+                  onSelect={(path) => {
+                    setFolderPath(path);
+                    setSelectedDayId("");
+                    setWordIndex(0);
+                    setShowMeaning(false);
+                  }}
+                  onOpenAction={setActionFolderId}
+                  longPressTimer={folderLongPressTimer}
+                  didLongPress={didLongPressFolder}
+                />
+              </div>
+            )}
+
             <div className="mt-7 space-y-2">
-              {activeFolder.folders.map((folder) => (
-                <button
-                  key={folder.id}
-                  onClick={() => {
-                    if (didLongPressFolder.current) {
-                      didLongPressFolder.current = false;
-                      return;
-                    }
-                
-                    setFolderPath((prev) => [...prev, folder.id]);
-                  }}
-                  onPointerDown={(e) => {
-                    didLongPressFolder.current = false;
-                
-                    folderLongPressTimer.current = setTimeout(() => {
-                      didLongPressFolder.current = true;
-                      setActionFolderId(folder.id);
-                    }, 450);
-                  }}
-                  onPointerUp={() => {
-                    if (folderLongPressTimer.current) {
-                      clearTimeout(folderLongPressTimer.current);
-                      folderLongPressTimer.current = null;
-                    }
-                  }}
-                  onPointerCancel={() => {
-                    if (folderLongPressTimer.current) {
-                      clearTimeout(folderLongPressTimer.current);
-                      folderLongPressTimer.current = null;
-                    }
-                  }}
-                  onPointerLeave={() => {
-                    if (folderLongPressTimer.current) {
-                      clearTimeout(folderLongPressTimer.current);
-                      folderLongPressTimer.current = null;
-                    }
-                  }}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    setActionFolderId(folder.id);
-                  }}
-                  className="w-full touch-none select-none rounded-[18px] border border-[#e4e8f0] bg-[#f8fafc] px-4 py-4 text-left active:scale-[0.99]"
-                >
-                  <p className="text-[17px] font-bold text-[#111827]">
-                    {folder.title}
-                  </p>
-                  <div className="mt-1 flex gap-1.5">
-                    {folder.folders.length > 0 && (
-                      <span className="text-[10px] text-[#a3abb8]">
-                        하위 폴더 {folder.folders.length}개
-                      </span>
-                    )}
-
-                    {folder.days.length > 0 && (
-                      <span className="text-[10px] text-[#a3abb8]">
-                        Day {folder.days.length}개
-                      </span>
-                    )}
-                  </div>
-                </button>
-              ))}
-
               {activeFolder.days.map((day) => (
                 <button
                   key={day.id}
@@ -3582,6 +3541,126 @@ function MoveFolderList({
         </div>
       )}
     </div>
+  );
+}
+
+function FolderTreeRows({
+  folders,
+  depth = 0,
+  basePath,
+  expandedIds,
+  onToggle,
+  onSelect,
+  onOpenAction,
+  longPressTimer,
+  didLongPress,
+}: {
+  folders: Folder[];
+  depth?: number;
+  basePath: string[];
+  expandedIds: string[];
+  onToggle: (id: string) => void;
+  onSelect: (path: string[]) => void;
+  onOpenAction: (id: string) => void;
+  longPressTimer: MutableRefObject<ReturnType<typeof setTimeout> | null>;
+  didLongPress: MutableRefObject<boolean>;
+}) {
+  return (
+    <>
+      {folders.map((folder, index) => {
+        const hasChildren = folder.folders.length > 0;
+        const open = expandedIds.includes(folder.id);
+        const path = [...basePath, folder.id];
+
+        return (
+          <div
+            key={folder.id}
+            className={depth === 0 ? "overflow-hidden rounded-[16px] bg-white" : ""}
+          >
+            <div
+              className={`flex h-[52px] items-center bg-white active:bg-[#f7f8fb] ${
+                depth > 0 || index > 0 ? "border-t border-[#e5e7eb]" : ""
+              }`}
+              style={{ paddingLeft: 4 + depth * 18, paddingRight: 4 }}
+            >
+              <button
+                onClick={() => {
+                  if (didLongPress.current) {
+                    didLongPress.current = false;
+                    return;
+                  }
+
+                  onSelect(path);
+                }}
+                onPointerDown={() => {
+                  didLongPress.current = false;
+
+                  longPressTimer.current = setTimeout(() => {
+                    didLongPress.current = true;
+                    onOpenAction(folder.id);
+                  }, 450);
+                }}
+                onPointerUp={() => {
+                  if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                  longPressTimer.current = null;
+                }}
+                onPointerCancel={() => {
+                  if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                  longPressTimer.current = null;
+                }}
+                onPointerLeave={() => {
+                  if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                  longPressTimer.current = null;
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  onOpenAction(folder.id);
+                }}
+                className="min-w-0 flex-1 touch-none select-none truncate text-left"
+              >
+                <span
+                  className={`truncate tracking-[-0.03em] ${
+                    depth === 0
+                      ? "text-[15px] font-semibold text-[#303236]"
+                      : "text-[14px] font-medium text-[#666a70]"
+                  }`}
+                >
+                  {folder.title}
+                </span>
+              </button>
+
+              {hasChildren ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggle(folder.id);
+                  }}
+                  className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0f2a5f] text-white active:scale-95"
+                >
+                  <ChevronToggle open={open} />
+                </button>
+              ) : (
+                <span className="ml-2 h-5 w-5 shrink-0" />
+              )}
+            </div>
+
+            {hasChildren && open && (
+              <FolderTreeRows
+                folders={folder.folders}
+                depth={depth + 1}
+                basePath={path}
+                expandedIds={expandedIds}
+                onToggle={onToggle}
+                onSelect={onSelect}
+                onOpenAction={onOpenAction}
+                longPressTimer={longPressTimer}
+                didLongPress={didLongPress}
+              />
+            )}
+          </div>
+        );
+      })}
+    </>
   );
 }
 
