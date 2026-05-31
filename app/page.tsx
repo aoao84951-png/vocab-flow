@@ -72,6 +72,7 @@ export default function Home() {
     | "editBook"
     | "addFolder"
     | "addDay"
+    | "editDay"
     | "addWord"
     | "editWord"
     | "editFolder"
@@ -98,6 +99,8 @@ export default function Home() {
   const studyTapStart = useRef<{ x: number; y: number } | null>(null);
   const folderLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPressFolder = useRef(false);
+  const dayLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didLongPressDay = useRef(false);
   const [expandedFolderIds, setExpandedFolderIds] = useState<string[]>([]);
   const [wordSortOrder, setWordSortOrder] = useState<"latest" | "oldest">("oldest");
   const [wordViewMode, setWordViewMode] = useState<"all" | "unmemorized">("all");
@@ -621,6 +624,34 @@ export default function Home() {
     );
   };
 
+  const editDayTitleFromPath = (
+    folders: Folder[],
+    path: string[],
+    targetDayId: string,
+    title: string
+  ): Folder[] => {
+    return folders.map((folder) =>
+      folder.id === path[0]
+        ? path.length === 1
+          ? {
+              ...folder,
+              days: folder.days.map((day) =>
+                day.id === targetDayId ? { ...day, title } : day
+              ),
+            }
+          : {
+              ...folder,
+              folders: editDayTitleFromPath(
+                folder.folders,
+                path.slice(1),
+                targetDayId,
+                title
+              ),
+            }
+        : folder
+    );
+  };
+
   const deleteFolderFromPath = (
     folders: Folder[],
     targetFolderId: string
@@ -687,6 +718,67 @@ export default function Home() {
       prev.includes(folderId)
         ? prev.filter((id) => id !== folderId)
         : [...prev, folderId]
+    );
+  };
+
+  const moveFolderOrder = (
+    folders: Folder[],
+    targetFolderId: string,
+    direction: "up" | "down"
+  ): Folder[] => {
+    const index = folders.findIndex((folder) => folder.id === targetFolderId);
+  
+    if (index !== -1) {
+      const nextIndex = direction === "up" ? index - 1 : index + 1;
+  
+      if (nextIndex < 0 || nextIndex >= folders.length) return folders;
+  
+      const copied = [...folders];
+      [copied[index], copied[nextIndex]] = [copied[nextIndex], copied[index]];
+  
+      return copied;
+    }
+  
+    return folders.map((folder) => ({
+      ...folder,
+      folders: moveFolderOrder(folder.folders, targetFolderId, direction),
+    }));
+  };
+  
+  const moveDayOrderFromPath = (
+    folders: Folder[],
+    path: string[],
+    targetDayId: string,
+    direction: "up" | "down"
+  ): Folder[] => {
+    return folders.map((folder) =>
+      folder.id === path[0]
+        ? path.length === 1
+          ? {
+              ...folder,
+              days: (() => {
+                const index = folder.days.findIndex((day) => day.id === targetDayId);
+                if (index === -1) return folder.days;
+  
+                const nextIndex = direction === "up" ? index - 1 : index + 1;
+                if (nextIndex < 0 || nextIndex >= folder.days.length) return folder.days;
+  
+                const copied = [...folder.days];
+                [copied[index], copied[nextIndex]] = [copied[nextIndex], copied[index]];
+  
+                return copied;
+              })(),
+            }
+          : {
+              ...folder,
+              folders: moveDayOrderFromPath(
+                folder.folders,
+                path.slice(1),
+                targetDayId,
+                direction
+              ),
+            }
+        : folder
     );
   };
 
@@ -955,6 +1047,11 @@ const getDayProgress = (day: Day) => {
                         <button
                           key={folder.id}
                           onClick={() => {
+                            if (didLongPressFolder.current) {
+                              didLongPressFolder.current = false;
+                              return;
+                            }
+
                             setSelectedBookId(book.id);
                             setFolderPath([book.id, folder.id]);
                             setSelectedDayId("");
@@ -962,7 +1059,37 @@ const getDayProgress = (day: Day) => {
                             setShowMeaning(false);
                             setStep("day");
                           }}
-                          className="flex h-[50px] w-full items-center border-b border-[#e5e7eb] pl-[45px] text-left active:bg-[#fafafa]"
+                          onPointerDown={() => {
+                            didLongPressFolder.current = false;
+
+                            folderLongPressTimer.current = setTimeout(() => {
+                              didLongPressFolder.current = true;
+                              setActionFolderId(folder.id);
+                            }, 450);
+                          }}
+                          onPointerUp={() => {
+                            if (folderLongPressTimer.current) {
+                              clearTimeout(folderLongPressTimer.current);
+                              folderLongPressTimer.current = null;
+                            }
+                          }}
+                          onPointerCancel={() => {
+                            if (folderLongPressTimer.current) {
+                              clearTimeout(folderLongPressTimer.current);
+                              folderLongPressTimer.current = null;
+                            }
+                          }}
+                          onPointerLeave={() => {
+                            if (folderLongPressTimer.current) {
+                              clearTimeout(folderLongPressTimer.current);
+                              folderLongPressTimer.current = null;
+                            }
+                          }}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            setActionFolderId(folder.id);
+                          }}
+                          className="flex h-[50px] w-full touch-none select-none items-center border-b border-[#e5e7eb] pl-[45px] text-left active:bg-[#fafafa]"
                         >
                           <div className="min-w-0 flex-1">
                             <span className="truncate text-[16px] font-normal tracking-[-0.03em] text-[#666a70]">
@@ -1084,12 +1211,45 @@ const getDayProgress = (day: Day) => {
               {activeFolder.days.map((day) => (
                 <button
                   key={day.id}
-                  onClick={() => goWordList(day.id)}
+                  onClick={() => {
+                    if (didLongPressDay.current) {
+                      didLongPressDay.current = false;
+                      return;
+                    }
+
+                    goWordList(day.id);
+                  }}
+                  onPointerDown={() => {
+                    didLongPressDay.current = false;
+
+                    dayLongPressTimer.current = setTimeout(() => {
+                      didLongPressDay.current = true;
+                      setActionDayId(day.id);
+                    }, 450);
+                  }}
+                  onPointerUp={() => {
+                    if (dayLongPressTimer.current) {
+                      clearTimeout(dayLongPressTimer.current);
+                      dayLongPressTimer.current = null;
+                    }
+                  }}
+                  onPointerCancel={() => {
+                    if (dayLongPressTimer.current) {
+                      clearTimeout(dayLongPressTimer.current);
+                      dayLongPressTimer.current = null;
+                    }
+                  }}
+                  onPointerLeave={() => {
+                    if (dayLongPressTimer.current) {
+                      clearTimeout(dayLongPressTimer.current);
+                      dayLongPressTimer.current = null;
+                    }
+                  }}
                   onContextMenu={(e) => {
                     e.preventDefault();
                     setActionDayId(day.id);
                   }}
-                  className="w-full rounded-[16px] px-3 py-3 text-left active:scale-[0.99]"
+                  className="w-full touch-none select-none rounded-[16px] px-3 py-3 text-left active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
@@ -1734,7 +1894,7 @@ const getDayProgress = (day: Day) => {
 
         {step === "addDay" && activeFolder && (
           <AddDay
-            defaultTitle={`Day ${activeFolder.days.length + 1}`}
+            defaultTitle={`DAY ${activeFolder.days.length + 1}`}
             onBack={() => setStep("day")}
             onSave={(title) => {
               saveBooks((prev) =>
@@ -1745,6 +1905,27 @@ const getDayProgress = (day: Day) => {
                 })
               );
 
+              setStep("day");
+            }}
+          />
+        )}
+
+        {step === "editDay" && activeFolder && actionDayId && (
+          <AddDay
+            titleText="Day 수정"
+            defaultTitle={
+              activeFolder.days.find((day) => day.id === actionDayId)?.title || ""
+            }
+            onBack={() => {
+              setActionDayId(null);
+              setStep("day");
+            }}
+            onSave={(title) => {
+              saveBooks((prev) =>
+                editDayTitleFromPath(prev, folderPath, actionDayId, title)
+              );
+
+              setActionDayId(null);
               setStep("day");
             }}
           />
@@ -2028,7 +2209,10 @@ const getDayProgress = (day: Day) => {
           </div>
         )}
 
-        {actionDayId !== null && actionDayId !== "__sort__" && activeFolder && (
+        {actionDayId !== null &&
+          actionDayId !== "__sort__" &&
+          activeFolder &&
+          step !== "editDay" && (
           <div
             onClick={() => setActionDayId(null)}
             className="fixed inset-0 z-30 flex items-end bg-black/25"
@@ -2037,11 +2221,63 @@ const getDayProgress = (day: Day) => {
               onClick={(e) => e.stopPropagation()}
               className="mx-auto w-full max-w-[430px] rounded-t-[24px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
             >
-              <p className="text-[16px] font-bold text-[#111827]">
-                {activeFolder?.days.find((day) => day.id === actionDayId)?.title}
-              </p>
+
+              <div className="flex select-none items-center justify-between">
+                <p className="translate-x-[8px] text-[16px] font-bold tracking-[-0.03em] text-[#111827]">
+                  {activeFolder?.days.find((day) => day.id === actionDayId)?.title}
+                </p>
+
+                <div className="relative h-9 w-9">
+                  <select
+                    defaultValue=""
+                    onChange={(e) => {
+                      if (e.target.value === "up") {
+                        saveBooks((prev) =>
+                          moveDayOrderFromPath(prev, folderPath, actionDayId, "up")
+                        );
+                      }
+
+                      if (e.target.value === "down") {
+                        saveBooks((prev) =>
+                          moveDayOrderFromPath(prev, folderPath, actionDayId, "down")
+                        );
+                      }
+
+                      setActionDayId(null);
+                      e.target.value = "";
+                    }}
+                    className="absolute inset-0 z-10 h-9 w-9 cursor-pointer appearance-none opacity-0"
+                    aria-label="Day 순서 변경"
+                  >
+                    <option value="" disabled>
+                      순서 변경
+                    </option>
+                    <option value="up">위로 올리기</option>
+                    <option value="down">아래로 내리기</option>
+                  </select>
+
+                  <div
+                    className="pointer-events-none flex h-7 w-7 translate-y-[3px] items-center justify-center text-[13px] font-bold leading-none text-[#8a94a6]"
+                    style={{
+                      fontFamily:
+                        '-apple-system, BlinkMacSystemFont, "Segoe UI Symbol", "Apple Symbols", sans-serif',
+                    }}
+                  >
+                    ⇅
+                  </div>
+                </div>
+              </div>
 
               <div className="mt-5 space-y-2">
+                <button
+                  onClick={() => {
+                    setStep("editDay");
+                  }}
+                  className="h-12 w-full rounded-2xl bg-[#eef2f8] text-[13px] font-bold text-[#0f2a5f]"
+                >
+                  Day 수정
+                </button>
+
                 <button
                   onClick={() => deleteDay(actionDayId)}
                   className="h-12 w-full rounded-2xl bg-[#fdeeee] text-[13px] font-bold text-[#b42318]"
@@ -2068,7 +2304,50 @@ const getDayProgress = (day: Day) => {
               onClick={(e) => e.stopPropagation()}
               className="mx-auto w-full max-w-[430px] rounded-t-[24px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
             >
-              <div className="space-y-2">
+
+            <div className="flex select-none items-center justify-between">
+              <p className="translate-x-[8px] text-[16px] font-bold tracking-[-0.03em] text-[#111827]">
+                {findFolderById(books, actionFolderId)?.title}
+              </p>
+
+              <div className="relative h-9 w-9">
+                <select
+                  defaultValue=""
+                  onChange={(e) => {
+                    if (e.target.value === "up") {
+                      saveBooks((prev) => moveFolderOrder(prev, actionFolderId, "up"));
+                    }
+
+                    if (e.target.value === "down") {
+                      saveBooks((prev) => moveFolderOrder(prev, actionFolderId, "down"));
+                    }
+
+                    setActionFolderId(null);
+                    e.target.value = "";
+                  }}
+                  className="absolute inset-0 z-10 h-9 w-9 cursor-pointer appearance-none opacity-0"
+                  aria-label="폴더 순서 변경"
+                >
+                  <option value="" disabled>
+                    순서 변경
+                  </option>
+                  <option value="up">위로 올리기</option>
+                  <option value="down">아래로 내리기</option>
+                </select>
+
+                <div
+                  className="pointer-events-none flex h-7 w-7 translate-y-[3px] items-center justify-center text-[13px] font-bold leading-none text-[#8a94a6]"
+                  style={{
+                    fontFamily:
+                      '-apple-system, BlinkMacSystemFont, "Segoe UI Symbol", "Apple Symbols", sans-serif',
+                  }}
+                >
+                  ⇅
+                </div>
+              </div>
+            </div>
+
+              <div className="mt-5 space-y-2">
                 <button
                   onClick={() => {
                     const path = findFolderPathById(books, actionFolderId);
@@ -2184,7 +2463,7 @@ function AddBook({
                 initialBook?.days ||
                 Array.from({ length: dayCount }, (_, i) => ({
                   id: crypto.randomUUID(),
-                  title: `Day ${i + 1}`,
+                  title: `DAY ${i + 1}`,
                   words: [],
                 })),
             });
@@ -2264,7 +2543,7 @@ function AddFolder({
                 dayCount.trim() && count > 0
                   ? Array.from({ length: count }, (_, i) => ({
                       id: crypto.randomUUID(),
-                      title: `Day ${i + 1}`,
+                      title: `DAY ${i + 1}`,
                       words: [],
                     }))
                   : initialFolder?.days || [],
@@ -2280,10 +2559,12 @@ function AddFolder({
 }
 
 function AddDay({
+  titleText = "Day 추가",
   defaultTitle,
   onBack,
   onSave,
 }: {
+  titleText?: string;
   defaultTitle: string;
   onBack: () => void;
   onSave: (title: string) => void;
@@ -2294,7 +2575,7 @@ function AddDay({
     <div className="min-h-dvh px-5 pt-7 pb-6">
       <BackButton onClick={onBack} label="뒤로" />
 
-      <h1 className="mt-5 text-[28px] font-bold text-[#0f2a5f]">Day 추가</h1>
+      <h1 className="mt-5 text-[28px] font-bold text-[#0f2a5f]">{titleText}</h1>
 
       <div className="mt-7 space-y-4">
         <Input label="Day 이름" value={title} onChange={setTitle} placeholder="Day 11" />
