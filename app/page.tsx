@@ -1657,10 +1657,8 @@ const getDayProgress = (day: Day) => {
 
                 <h2
                   className={`w-full min-w-0 px-10 text-center font-bold leading-tight tracking-tight break-words ${
-                    currentWord.word.length >= 22
-                      ? "text-[30px]"
-                      : currentWord.word.length >= 16
-                      ? "text-[36px]"
+                    currentWord.word.includes(" ")
+                      ? "text-[34px]"
                       : "text-[44px]"
                   } ${
                     currentWord.memorized
