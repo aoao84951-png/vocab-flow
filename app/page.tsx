@@ -1655,15 +1655,15 @@ const getDayProgress = (day: Day) => {
                   </svg>
                 </button>
 
-                  <h2
-                    className={`text-[44px] font-bold tracking-tight ${
-                      currentWord.memorized
-                        ? "text-[#b0b7c3]"
-                        : "text-[#0f2a5f]"
-                    }`}
-                  >
-                    {currentWord.word}
-                  </h2>
+                <h2
+                  className={`w-full min-w-0 px-10 text-center text-[clamp(24px,7vw,40px)] font-bold leading-tight tracking-tight break-words ${
+                    currentWord.memorized
+                      ? "text-[#b0b7c3]"
+                      : "text-[#0f2a5f]"
+                  }`}
+                >
+                  {currentWord.word}
+                </h2>
                 </section>
 
                 <section
