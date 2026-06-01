@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { MutableRefObject } from "react";
+import type { Dispatch, MutableRefObject, PointerEvent, ReactNode, SetStateAction } from "react";
 import { supabase } from "@/app/lib/supabase";
 
 type Meaning = {
   pos: string;
   items: string[];
   numbered: boolean;
+};
+
+type StudyPointExample = {
+  en: string;
+  ko: string;
 };
 
 type StudyPoint = {
@@ -17,6 +22,7 @@ type StudyPoint = {
   related: string;
   exampleEn: string;
   exampleKo: string;
+  examples?: StudyPointExample[];
 };
 
 type LinkedTerm = {
@@ -61,6 +67,27 @@ type Folder = {
 };
 
 type Book = Folder;
+
+const cleanEditorHtml = (html: string) => {
+  const cleaned = html.replace(/\u200B/g, "");
+
+  const div = document.createElement("div");
+  div.innerHTML = cleaned;
+
+  div.querySelectorAll<HTMLElement>("*").forEach((el) => {
+    el.removeAttribute("class");
+
+    const color = el.style.color;
+    const backgroundColor = el.style.backgroundColor;
+
+    el.removeAttribute("style");
+
+    if (color) el.style.color = color;
+    if (backgroundColor) el.style.backgroundColor = backgroundColor;
+  });
+
+  return div.innerHTML.trim();
+};
 
 export default function Home() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -372,11 +399,11 @@ export default function Home() {
     if (prev) setWordIndex(prev.originalIndex);
   };
 
-  const handleStudyPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handleStudyPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     studyTapStart.current = { x: e.clientX, y: e.clientY };
   };
   
-  const handleStudyPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handleStudyPointerUp = (e: PointerEvent<HTMLDivElement>) => {
     if (!studyTapStart.current) return;
   
     const target = e.target as HTMLElement;
@@ -1762,9 +1789,10 @@ const getDayProgress = (day: Day) => {
                               </div>
 
                               {point.description && (
-                                <p className="mt-2 pl-[7px] whitespace-pre-line text-[12px] leading-relaxed text-[#596275]">
-                                  {point.description}
-                                </p>
+                                <div
+                                  className="mt-2 pl-[7px] whitespace-pre-wrap text-[12px] leading-relaxed text-[#596275]"
+                                  dangerouslySetInnerHTML={{ __html: point.description }}
+                                />
                               )}
 
                               {point.related && (
@@ -1779,24 +1807,44 @@ const getDayProgress = (day: Day) => {
                                 </div>
                               )}
 
-                              {(point.exampleEn || point.exampleKo) && (
-                                <div className="mt-3 ml-[6px] border-l-2 border-[#d7ddea] pl-3">
-                                  {point.exampleEn && (
-                                    <p className="text-[12px] leading-relaxed text-[#596275]">
-                                      <HighlightedText
-                                        text={point.exampleEn}
-                                        keyword={currentWord.word}
-                                      />
-                                    </p>
-                                  )}
+                              {(() => {
+                                const pointExamples =
+                                  point.examples?.length
+                                    ? point.examples
+                                    : point.exampleEn || point.exampleKo
+                                    ? [{ en: point.exampleEn, ko: point.exampleKo }]
+                                    : [];
 
-                                  {point.exampleKo && (
-                                    <p className={`${point.exampleEn ? "mt-1" : ""} text-[11px] leading-relaxed text-[#8a94a6]`}>
-                                      {point.exampleKo}
-                                    </p>
-                                  )}
-                                </div>
-                              )}
+                                if (pointExamples.length === 0) return null;
+
+                                return (
+                                  <div className="mt-3 ml-[6px] space-y-3">
+                                    {pointExamples.map((example, exampleIndex) => (
+                                      <div
+                                        key={`${example.en}-${exampleIndex}`}
+                                        className="border-l-2 border-[#d7ddea] pl-3"
+                                      >
+                                        {example.en && (
+                                          <p className="text-[12px] leading-relaxed text-[#596275]">
+                                            <HighlightedText
+                                              text={example.en}
+                                              keyword={currentWord.word}
+                                            />
+                                          </p>
+                                        )}
+
+                                        {example.ko && (
+                                          <p
+                                            className={`${example.en ? "mt-1" : ""} text-[11px] leading-relaxed text-[#8a94a6]`}
+                                          >
+                                            {example.ko}
+                                          </p>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           ))}
                         </div>
@@ -2631,9 +2679,61 @@ function AddWord({
           related: point.related ?? "",
           exampleEn: point.exampleEn ?? "",
           exampleKo: point.exampleKo ?? "",
+          examples: point.examples?.length
+            ? point.examples.map((example) => ({
+                en: example.en ?? "",
+                ko: example.ko ?? "",
+              }))
+            : point.exampleEn || point.exampleKo
+            ? [{ en: point.exampleEn ?? "", ko: point.exampleKo ?? "" }]
+            : [{ en: "", ko: "" }],
         }))
       : []
   );
+
+  const studyDescriptionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const savedSelectionRef = useRef<Range | null>(null);
+  const [customColors, setCustomColors] = useState<string[]>([]);
+  const COLOR_STORAGE_KEY = "vocab-custom-colors-v1";
+
+  useEffect(() => {
+    const saved = localStorage.getItem(COLOR_STORAGE_KEY);
+    if (!saved) return;
+
+    try {
+      setCustomColors(JSON.parse(saved));
+    } catch {
+      localStorage.removeItem(COLOR_STORAGE_KEY);
+    }
+  }, []);
+
+  const saveSelection = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    savedSelectionRef.current = selection.getRangeAt(0).cloneRange();
+  };
+
+  const restoreSelection = () => {
+    const selection = window.getSelection();
+    const range = savedSelectionRef.current;
+
+    if (!selection || !range) return;
+
+    selection.removeAllRanges();
+    selection.addRange(range);
+  };
+
+  const saveCustomColors = (next: string[]) => {
+    setCustomColors(next);
+    localStorage.setItem(COLOR_STORAGE_KEY, JSON.stringify(next));
+  };
+
+  const runCommand = (command: string, value?: string) => {
+    restoreSelection();
+    document.execCommand(command, false, value);
+    savedSelectionRef.current = null;
+  };
 
   const STUDY_CATEGORIES = [
     "문법/용법",
@@ -2720,6 +2820,7 @@ function AddWord({
         related: "",
         exampleEn: "",
         exampleKo: "",
+        examples: [{ en: "", ko: "" }],
       },
     ]);
   };
@@ -2727,6 +2828,68 @@ function AddWord({
   const updateStudyPoint = (index: number, key: keyof StudyPoint, value: string) => {
     setStudyPoints((prev) =>
       prev.map((point, i) => (i === index ? { ...point, [key]: value } : point))
+    );
+  };
+
+  const addStudyPointExample = (pointIndex: number) => {
+    setStudyPoints((prev) =>
+      prev.map((point, i) =>
+        i === pointIndex
+          ? {
+              ...point,
+              examples: [
+                ...(point.examples?.length
+                  ? point.examples
+                  : [{ en: point.exampleEn, ko: point.exampleKo }]),
+                { en: "", ko: "" },
+              ],
+            }
+          : point
+      )
+    );
+  };
+
+  const updateStudyPointExample = (
+    pointIndex: number,
+    exampleIndex: number,
+    key: keyof StudyPointExample,
+    value: string
+  ) => {
+    setStudyPoints((prev) =>
+      prev.map((point, i) => {
+        if (i !== pointIndex) return point;
+
+        const examples = point.examples?.length
+          ? point.examples
+          : [{ en: point.exampleEn, ko: point.exampleKo }];
+
+        return {
+          ...point,
+          examples: examples.map((example, j) =>
+            j === exampleIndex ? { ...example, [key]: value } : example
+          ),
+        };
+      })
+    );
+  };
+
+  const removeStudyPointExample = (pointIndex: number, exampleIndex: number) => {
+    setStudyPoints((prev) =>
+      prev.map((point, i) => {
+        if (i !== pointIndex) return point;
+
+        const examples = point.examples?.length
+          ? point.examples
+          : [{ en: point.exampleEn, ko: point.exampleKo }];
+
+        return {
+          ...point,
+          examples:
+            examples.length > 1
+              ? examples.filter((_, j) => j !== exampleIndex)
+              : [{ en: "", ko: "" }],
+        };
+      })
     );
   };
 
@@ -3003,13 +3166,21 @@ function AddWord({
                   className="mt-3 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
                 />
 
-                <textarea
-                  value={point.description}
-                  onChange={(e) => updateStudyPoint(index, "description", e.target.value)}
-                  placeholder="설명"
-                  rows={3}
-                  className="mt-2 w-full resize-none rounded-xl border border-[#dce2ee] px-3 py-3 text-[13px] outline-none"
-                />
+                <div className="mt-2">
+                  <EditorToolbar
+                    runCommand={runCommand}
+                    customColors={customColors}
+                    saveCustomColors={saveCustomColors}
+                    saveSelection={saveSelection}
+                  />
+                  <EditorBox
+                    setRef={(el) => {
+                      studyDescriptionRefs.current[index] = el;
+                    }}
+                    defaultHtml={point.description}
+                    placeholder="설명"
+                  />
+                </div>
 
                 <input
                   value={point.related}
@@ -3018,19 +3189,64 @@ function AddWord({
                   className="mt-2 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
                 />
 
-                <input
-                  value={point.exampleEn}
-                  onChange={(e) => updateStudyPoint(index, "exampleEn", e.target.value)}
-                  placeholder="영어 예시"
-                  className="mt-2 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
-                />
+                <div className="mt-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="pl-1 text-[11px] font-bold text-[#596275]">예시</p>
 
-                <input
-                  value={point.exampleKo}
-                  onChange={(e) => updateStudyPoint(index, "exampleKo", e.target.value)}
-                  placeholder="한국어 해석"
-                  className="mt-2 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
-                />
+                    <button
+                      type="button"
+                      onClick={() => addStudyPointExample(index)}
+                      className="rounded-full bg-[#eef2f8] px-3 py-1.5 text-[11px] font-bold text-[#0f2a5f]"
+                    >
+                      + 예시 추가
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {(point.examples?.length
+                      ? point.examples
+                      : [{ en: point.exampleEn, ko: point.exampleKo }]
+                    ).map((example, exampleIndex) => (
+                      <div
+                        key={exampleIndex}
+                        className="rounded-xl border border-[#dce2ee] bg-white p-3"
+                      >
+                        <div className="mb-2 flex items-center justify-between">
+                          <p className="pl-1 text-[11px] font-bold text-[#8a94a6]">
+                            예시 {exampleIndex + 1}
+                          </p>
+
+                          <button
+                            type="button"
+                            onClick={() => removeStudyPointExample(index, exampleIndex)}
+                            className="flex h-5 w-5 items-center justify-center rounded-full bg-[#f5f6fa] text-[15px] text-[#8a94a6]"
+                            aria-label="예시 삭제"
+                          >
+                            ×
+                          </button>
+                        </div>
+
+                        <input
+                          value={example.en}
+                          onChange={(e) =>
+                            updateStudyPointExample(index, exampleIndex, "en", e.target.value)
+                          }
+                          placeholder="영어 예시"
+                          className="h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
+                        />
+
+                        <input
+                          value={example.ko}
+                          onChange={(e) =>
+                            updateStudyPointExample(index, exampleIndex, "ko", e.target.value)
+                          }
+                          placeholder="한국어 해석"
+                          className="mt-2 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -3056,16 +3272,27 @@ function AddWord({
               .filter((example) => example.en || example.ko);
 
               const cleanedStudyPoints = studyPoints
-                .map((point) => {
+                .map((point, index) => {
                   const category = (point.category ?? "").trim();
                   const expression = (point.expression ?? "").trim();
-                  const description = (point.description ?? "").trim();
+                  const description = cleanEditorHtml(
+                    studyDescriptionRefs.current[index]?.innerHTML ?? point.description ?? ""
+                  );
                   const related = (point.related ?? "").trim();
-                  const exampleEn = (point.exampleEn ?? "").trim();
-                  const exampleKo = (point.exampleKo ?? "").trim();
+                  const examples = (point.examples?.length
+                    ? point.examples
+                    : [{ en: point.exampleEn ?? "", ko: point.exampleKo ?? "" }]
+                  )
+                    .map((example) => ({
+                      en: (example.en ?? "").trim(),
+                      ko: (example.ko ?? "").trim(),
+                    }))
+                    .filter((example) => example.en || example.ko);
+                  const exampleEn = examples[0]?.en ?? "";
+                  const exampleKo = examples[0]?.ko ?? "";
 
                   const hasContent =
-                    expression || description || related || exampleEn || exampleKo;
+                    expression || description || related || examples.length > 0;
 
                   return {
                     category: category || (hasContent ? "기타" : ""),
@@ -3074,6 +3301,7 @@ function AddWord({
                     related,
                     exampleEn,
                     exampleKo,
+                    examples,
                   };
                 })
                 .filter(
@@ -3195,7 +3423,7 @@ function LinkedTermEditor({
   items: LinkedTerm[];
   meaningOptions: { value: string; label: string; text: string }[];
   placeholder: string;
-  onChangeAll: React.Dispatch<React.SetStateAction<LinkedTerm[]>>;
+  onChangeAll: Dispatch<SetStateAction<LinkedTerm[]>>;
 }) {
   const safeItems = items.length
     ? items
@@ -3306,7 +3534,7 @@ function Block({
   children,
   title,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   title?: string;
 }) {
   return (
@@ -3545,6 +3773,260 @@ function MoveFolderList({
         </div>
       )}
     </div>
+  );
+}
+
+function EditorBox({
+  setRef,
+  defaultHtml,
+  placeholder,
+}: {
+  setRef: (el: HTMLDivElement | null) => void;
+  defaultHtml: string;
+  placeholder: string;
+}) {
+  const innerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!innerRef.current) return;
+    innerRef.current.innerHTML = defaultHtml;
+  }, [defaultHtml]);
+
+  return (
+    <div
+      ref={(el) => {
+        innerRef.current = el;
+        setRef(el);
+      }}
+      contentEditable
+      suppressContentEditableWarning
+      data-placeholder={placeholder}
+      className="min-h-[96px] w-full whitespace-pre-wrap rounded-b-xl border border-t-0 border-[#dce2ee] bg-white px-3 py-3 text-[13px] leading-[1.8] text-[#303236] outline-none empty:before:text-[#a3abb8] empty:before:content-[attr(data-placeholder)]"
+    />
+  );
+}
+
+function EditorToolbar({
+  runCommand,
+  customColors,
+  saveCustomColors,
+  saveSelection,
+}: {
+  runCommand: (command: string, value?: string) => void;
+  customColors: string[];
+  saveCustomColors: (colors: string[]) => void;
+  saveSelection: () => void;
+}) {
+  const [textPaletteOpen, setTextPaletteOpen] = useState(false);
+  const [highlightPaletteOpen, setHighlightPaletteOpen] = useState(false);
+  const baseColors = ["#e45f5f", "#4778c7", "#f1d466", "#83bd95", "#b79add"];
+
+  const addCustomColor = (color: string) => {
+    const next = color.trim();
+
+    if (!/^#[0-9a-fA-F]{6}$/.test(next)) {
+      alert("#000000 형식으로 입력해줘.");
+      return;
+    }
+
+    if (customColors.includes(next)) return;
+    saveCustomColors([...customColors, next]);
+  };
+
+  const deleteCustomColor = (color: string) => {
+    if (!confirm("이 색상을 삭제할까?")) return;
+    saveCustomColors(customColors.filter((item) => item !== color));
+  };
+
+  return (
+    <div className="relative flex min-h-8 flex-wrap items-center gap-1 rounded-t-xl border border-[#dce2ee] bg-[#f8fafc] px-2 py-1.5">
+      <ToolIcon onClick={() => runCommand("bold")}>B</ToolIcon>
+      <ToolIcon onClick={() => runCommand("underline")}>
+        <span className="underline">U</span>
+      </ToolIcon>
+      <ToolIcon onClick={() => runCommand("italic")}>
+        <span className="italic">I</span>
+      </ToolIcon>
+      <ToolIcon onClick={() => runCommand("strikeThrough")}>
+        <span className="line-through">S</span>
+      </ToolIcon>
+
+      <span className="mx-0.5 h-4 w-px bg-[#d7ddea]" />
+
+      <div className="relative">
+        <ToolIcon
+          onClick={() => {
+            saveSelection();
+            setTextPaletteOpen((prev) => !prev);
+            setHighlightPaletteOpen(false);
+          }}
+        >
+          <span className="font-black text-[#22c55e]">C</span>
+        </ToolIcon>
+
+        {textPaletteOpen && (
+          <ColorPalette
+            baseColors={baseColors}
+            customColors={customColors}
+            onNone={() => runCommand("foreColor", "#303236")}
+            onPick={(color) => runCommand("foreColor", color)}
+            onAdd={addCustomColor}
+            onDelete={deleteCustomColor}
+            onClose={() => setTextPaletteOpen(false)}
+          />
+        )}
+      </div>
+
+      <div className="relative">
+        <ToolIcon
+          onClick={() => {
+            saveSelection();
+            setHighlightPaletteOpen((prev) => !prev);
+            setTextPaletteOpen(false);
+          }}
+        >
+          <span className="rounded-[3px] bg-[#22c55e] px-1 font-black text-white">C</span>
+        </ToolIcon>
+
+        {highlightPaletteOpen && (
+          <ColorPalette
+            baseColors={baseColors}
+            customColors={customColors}
+            onNone={() => runCommand("backColor", "transparent")}
+            onPick={(color) => runCommand("backColor", color)}
+            onAdd={addCustomColor}
+            onDelete={deleteCustomColor}
+            onClose={() => setHighlightPaletteOpen(false)}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ToolIcon({
+  children,
+  onClick,
+}: {
+  children: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onClick}
+      className="flex h-6 min-w-6 items-center justify-center rounded-[5px] border border-[#cfd6e3] bg-white px-1.5 text-[11px] font-bold text-[#303236] active:bg-[#eef2f8]"
+    >
+      {children}
+    </button>
+  );
+}
+
+function ColorPalette({
+  baseColors,
+  customColors,
+  onNone,
+  onPick,
+  onAdd,
+  onDelete,
+  onClose,
+}: {
+  baseColors: string[];
+  customColors: string[];
+  onNone: () => void;
+  onPick: (color: string) => void;
+  onAdd: (color: string) => void;
+  onDelete: (color: string) => void;
+  onClose: () => void;
+}) {
+  const [newColor, setNewColor] = useState("#000000");
+  const colors = [...baseColors, ...customColors];
+
+  return (
+    <>
+      <button
+        type="button"
+        className="fixed inset-0 z-40 cursor-default"
+        onClick={onClose}
+        aria-label="색상창 닫기"
+      />
+
+      <div className="absolute left-0 top-8 z-50 w-[220px] rounded-[12px] border border-[#cfd6e3] bg-white p-2 shadow-[0_10px_30px_rgba(15,23,42,0.18)]">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              onNone();
+              onClose();
+            }}
+            className="h-6 rounded-md border border-[#dce2ee] px-2 text-[10px] font-bold text-[#596275]"
+          >
+            없음
+          </button>
+
+          {colors.map((color) => {
+            const isCustom = customColors.includes(color);
+
+            return (
+              <div key={color} className="relative">
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    onPick(color);
+                    onClose();
+                  }}
+                  className="h-6 w-6 rounded-[6px] border border-white shadow-[0_0_0_1px_rgba(0,0,0,0.12)]"
+                  style={{ backgroundColor: color }}
+                  title={color}
+                />
+
+                {isCustom && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(color);
+                    }}
+                    className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#111827] text-[9px] font-bold leading-none text-white"
+                    aria-label="색상 삭제"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-3 flex items-center gap-1.5">
+          <input
+            type="color"
+            value={newColor}
+            onChange={(e) => setNewColor(e.target.value)}
+            className="h-7 w-8 rounded-md border border-[#dce2ee] bg-white"
+          />
+
+          <input
+            value={newColor}
+            onChange={(e) => setNewColor(e.target.value)}
+            placeholder="#000000"
+            maxLength={7}
+            className="h-7 min-w-0 flex-1 rounded-md border border-[#dce2ee] px-2 text-[11px] font-bold text-[#596275] outline-none"
+          />
+
+          <button
+            type="button"
+            onClick={() => onAdd(newColor)}
+            className="h-7 rounded-md bg-[#0f2a5f] px-2 text-[10px] font-bold text-white"
+          >
+            추가
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 
