@@ -3578,8 +3578,8 @@ function FolderTreeRows({
             className={depth === 0 ? "overflow-hidden rounded-[16px] bg-white" : ""}
           >
             <div
-              className={`flex h-[52px] items-center bg-white active:bg-[#f7f8fb] ${
-                depth > 0 || index > 0 ? "border-t border-[#e5e7eb]" : ""
+              className={`flex h-[46px] items-center bg-white active:bg-[#f7f8fb] ${
+                depth > 0 ? "border-t border-[#e5e7eb]" : ""
               }`}
               style={{ paddingLeft: 4 + depth * 18, paddingRight: 4 }}
             >
