@@ -1166,7 +1166,7 @@ const getDayProgress = (day: Day) => {
               </div>
             )}
 
-            <div className="mt-7 space-y-2">
+            <div className="mt-7 space-y-1">
               {activeFolder.days.map((day) => (
                 <button
                   key={day.id}
