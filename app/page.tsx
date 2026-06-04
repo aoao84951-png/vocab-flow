@@ -1877,12 +1877,10 @@ const getDayProgress = (day: Day) => {
                                         className="border-l-2 border-[#d7ddea] pl-3"
                                       >
                                         {example.en && (
-                                          <p className="text-[12px] leading-relaxed text-[#596275]">
-                                            <HighlightedText
-                                              text={example.en}
-                                              keyword={currentWord.word}
-                                            />
-                                          </p>
+                                          <div
+                                            className="whitespace-pre-wrap text-[12px] leading-relaxed text-[#596275]"
+                                            dangerouslySetInnerHTML={{ __html: example.en }}
+                                          />
                                         )}
 
                                         {example.ko && (
@@ -2801,6 +2799,7 @@ function AddWord({
   );
 
   const studyDescriptionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const studyExampleEnRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const savedSelectionRef = useRef<Range | null>(null);
   const [customColors, setCustomColors] = useState<string[]>([]);
   const COLOR_STORAGE_KEY = "vocab-custom-colors-v1";
@@ -3335,14 +3334,21 @@ function AddWord({
                           </button>
                         </div>
 
-                        <input
-                          value={example.en}
-                          onChange={(e) =>
-                            updateStudyPointExample(index, exampleIndex, "en", e.target.value)
-                          }
-                          placeholder="영어 예시"
-                          className="h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
-                        />
+                        <div>
+                          <EditorToolbar
+                            runCommand={runCommand}
+                            customColors={customColors}
+                            saveCustomColors={saveCustomColors}
+                            saveSelection={saveSelection}
+                          />
+                          <InlineEditorBox
+                            setRef={(el) => {
+                              studyExampleEnRefs.current[`${index}-${exampleIndex}`] = el;
+                            }}
+                            defaultHtml={example.en}
+                            placeholder="영어 예시"
+                          />
+                        </div>
 
                         <input
                           value={example.ko}
@@ -3392,8 +3398,12 @@ function AddWord({
                     ? point.examples
                     : [{ en: point.exampleEn ?? "", ko: point.exampleKo ?? "" }]
                   )
-                    .map((example) => ({
-                      en: (example.en ?? "").trim(),
+                    .map((example, exampleIndex) => ({
+                      en: cleanEditorHtml(
+                        studyExampleEnRefs.current[`${index}-${exampleIndex}`]?.innerHTML ??
+                          example.en ??
+                          ""
+                      ),
                       ko: (example.ko ?? "").trim(),
                     }))
                     .filter((example) => example.en || example.ko);
@@ -3911,6 +3921,36 @@ function EditorBox({
       suppressContentEditableWarning
       data-placeholder={placeholder}
       className="min-h-[96px] w-full whitespace-pre-wrap rounded-b-xl border border-t-0 border-[#dce2ee] bg-white px-3 py-3 text-[13px] leading-[1.8] text-[#303236] outline-none empty:before:text-[#a3abb8] empty:before:content-[attr(data-placeholder)]"
+    />
+  );
+}
+
+function InlineEditorBox({
+  setRef,
+  defaultHtml,
+  placeholder,
+}: {
+  setRef: (el: HTMLDivElement | null) => void;
+  defaultHtml: string;
+  placeholder: string;
+}) {
+  const innerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!innerRef.current) return;
+    innerRef.current.innerHTML = defaultHtml;
+  }, [defaultHtml]);
+
+  return (
+    <div
+      ref={(el) => {
+        innerRef.current = el;
+        setRef(el);
+      }}
+      contentEditable
+      suppressContentEditableWarning
+      data-placeholder={placeholder}
+      className="min-h-[44px] w-full whitespace-pre-wrap rounded-b-xl border border-t-0 border-[#dce2ee] bg-white px-3 py-3 text-[13px] leading-[1.5] text-[#303236] outline-none empty:before:text-[#a3abb8] empty:before:content-[attr(data-placeholder)]"
     />
   );
 }
