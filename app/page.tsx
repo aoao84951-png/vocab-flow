@@ -68,6 +68,20 @@ type Folder = {
 
 type Book = Folder;
 
+
+const applyBracketHighlightToHtml = (html: string) => {
+  if (!html) return "";
+
+  return html
+    .split(/(<[^>]+>)/g)
+    .map((part) => {
+      if (part.startsWith("<") && part.endsWith(">")) return part;
+
+      return part.replace(/\[\[(.*?)\]\]/g, '<strong class="font-bold text-[#d92d20]">$1</strong>');
+    })
+    .join("");
+};
+
 const cleanEditorHtml = (html: string) => {
   const cleaned = html.replace(/\u200B/g, "");
 
@@ -1835,7 +1849,7 @@ const getDayProgress = (day: Day) => {
 
                                 {point.expression && (
                                   <p className="text-[13px] font-bold text-[#111827]">
-                                    {point.expression}
+                                    <HighlightedText text={point.expression} keyword="" />
                                   </p>
                                 )}
                               </div>
@@ -1843,7 +1857,7 @@ const getDayProgress = (day: Day) => {
                               {point.description && (
                                 <div
                                   className="mt-2 pl-[7px] whitespace-pre-wrap text-[12px] leading-relaxed text-[#596275]"
-                                  dangerouslySetInnerHTML={{ __html: point.description }}
+                                  dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }}
                                 />
                               )}
 
@@ -1854,7 +1868,7 @@ const getDayProgress = (day: Day) => {
                                   </span>
 
                                   <p className="text-[12px] font-bold tracking-[-0.01em] text-[#4b6cb7]">
-                                    {point.related}
+                                    <HighlightedText text={point.related} keyword="" />
                                   </p>
                                 </div>
                               )}
@@ -1879,7 +1893,7 @@ const getDayProgress = (day: Day) => {
                                         {example.en && (
                                           <div
                                             className="whitespace-pre-wrap text-[12px] leading-relaxed text-[#596275]"
-                                            dangerouslySetInnerHTML={{ __html: example.en }}
+                                            dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(example.en) }}
                                           />
                                         )}
 
@@ -1887,7 +1901,7 @@ const getDayProgress = (day: Day) => {
                                           <p
                                             className={`${example.en ? "mt-1" : ""} text-[11px] leading-relaxed text-[#8a94a6]`}
                                           >
-                                            {example.ko}
+                                            <HighlightedText text={example.ko} keyword="" />
                                           </p>
                                         )}
                                       </div>
