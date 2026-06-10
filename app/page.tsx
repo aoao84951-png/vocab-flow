@@ -3104,6 +3104,7 @@ function AddWord({
                       <option value="감">감</option>
                       <option value="숙">숙</option>
                       <option value="구">구</option>
+                      <option value="한">한</option>
                     </select>
 
                     <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#8a94a6]">
