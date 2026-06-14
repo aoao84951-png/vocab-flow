@@ -83,10 +83,12 @@ const applyBracketHighlightToHtml = (html: string) => {
 };
 
 const cleanEditorHtml = (html: string) => {
-  const cleaned = html.replace(/\u200B/g, "");
+  const cleaned = html.replace(/\u200B/g, "").replace(/&nbsp;/g, " ");
 
   const div = document.createElement("div");
   div.innerHTML = cleaned;
+
+  if (!div.textContent?.trim()) return "";
 
   div.querySelectorAll<HTMLElement>("*").forEach((el) => {
     el.removeAttribute("class");
