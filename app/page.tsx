@@ -83,7 +83,10 @@ const applyBracketHighlightToHtml = (html: string) => {
 };
 
 const cleanEditorHtml = (html: string) => {
-  const cleaned = html.replace(/\u200B/g, "").replace(/&nbsp;/g, " ");
+  const cleaned = html
+    .replace(/\u200B/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/<br\s*\/?>(\s*)/gi, "");
 
   const div = document.createElement("div");
   div.innerHTML = cleaned;
@@ -103,6 +106,14 @@ const cleanEditorHtml = (html: string) => {
   });
 
   return div.innerHTML.trim();
+};
+
+const resetEditorIfEmpty = (el: HTMLDivElement) => {
+  const normalizedText = (el.textContent ?? "").replace(/\u200B/g, "").trim();
+
+  if (!normalizedText) {
+    el.innerHTML = "";
+  }
 };
 
 export default function Home() {
@@ -3305,6 +3316,7 @@ function AddWord({
                     }}
                     defaultHtml={point.description}
                     placeholder="설명"
+                    onBlur={(html) => updateStudyPoint(index, "description", html)}
                   />
                 </div>
 
@@ -3917,10 +3929,12 @@ function EditorBox({
   setRef,
   defaultHtml,
   placeholder,
+  onBlur,
 }: {
   setRef: (el: HTMLDivElement | null) => void;
   defaultHtml: string;
   placeholder: string;
+  onBlur?: (html: string) => void;
 }) {
   const innerRef = useRef<HTMLDivElement | null>(null);
 
@@ -3938,6 +3952,11 @@ function EditorBox({
       contentEditable
       suppressContentEditableWarning
       data-placeholder={placeholder}
+      onInput={(e) => resetEditorIfEmpty(e.currentTarget)}
+      onBlur={(e) => {
+        resetEditorIfEmpty(e.currentTarget);
+        onBlur?.(cleanEditorHtml(e.currentTarget.innerHTML));
+      }}
       className="min-h-[96px] w-full whitespace-pre-wrap rounded-b-xl border border-t-0 border-[#dce2ee] bg-white px-3 py-3 text-[13px] leading-[1.8] text-[#303236] outline-none empty:before:text-[#a3abb8] empty:before:content-[attr(data-placeholder)]"
     />
   );
@@ -3968,6 +3987,7 @@ function InlineEditorBox({
       contentEditable
       suppressContentEditableWarning
       data-placeholder={placeholder}
+      onInput={(e) => resetEditorIfEmpty(e.currentTarget)}
       className="min-h-[44px] w-full whitespace-pre-wrap rounded-b-xl border border-t-0 border-[#dce2ee] bg-white px-3 py-3 text-[13px] leading-[1.5] text-[#303236] outline-none empty:before:text-[#a3abb8] empty:before:content-[attr(data-placeholder)]"
     />
   );
