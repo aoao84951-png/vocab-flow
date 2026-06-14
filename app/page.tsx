@@ -15,6 +15,17 @@ type StudyPointExample = {
   ko: string;
 };
 
+type StudyPointVariantMeaning = {
+  pos: string;
+  items: string[];
+  numbered?: boolean;
+};
+
+type StudyPointVariant = {
+  word: string;
+  meanings: StudyPointVariantMeaning[];
+};
+
 type StudyPoint = {
   category: string;
   expression: string;
@@ -23,6 +34,7 @@ type StudyPoint = {
   exampleEn: string;
   exampleKo: string;
   examples?: StudyPointExample[];
+  variants?: StudyPointVariant[];
 };
 
 type LinkedTerm = {
@@ -1886,6 +1898,52 @@ const getDayProgress = (day: Day) => {
                                 </div>
                               )}
 
+                              {(point.variants ?? []).length > 0 && (
+                                <div className="mt-3 ml-[0px] space-y-2">
+                                  {(point.variants ?? []).map((variant, variantIndex) => (
+                                    <div
+                                      key={`${variant.word}-${variantIndex}`}
+                                      className="rounded-xl border border-[#e4e8f0] bg-white px-3 py-2"
+                                    >
+                                      {variant.word && (
+                                        <p className="mb-1.5 text-[13px] font-bold text-[#111827]">
+                                          <HighlightedText text={variant.word} keyword="" />
+                                        </p>
+                                      )}
+
+                                      <div className="space-y-1">
+                                        {(variant.meanings ?? []).map((meaning, meaningIndex) => (
+                                          <div
+                                            key={`${meaning.pos}-${meaningIndex}`}
+                                            className="flex items-start gap-1.5"
+                                          >
+                                            <span className="mt-[1px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-[4px] bg-[#0f2a5f] text-[9px] font-bold text-white">
+                                              {meaning.pos}
+                                            </span>
+
+                                            <div className="min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] leading-[1.45] text-[#596275]">
+                                              {(meaning.items ?? []).map((item, itemIndex) => (
+                                                <span
+                                                  key={`${item}-${itemIndex}`}
+                                                  className="inline-flex items-center gap-0.5"
+                                                >
+                                                  {meaning.numbered && (
+                                                    <span className="inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#9aa3b2] px-[3px] text-[8px] font-bold text-white">
+                                                      {itemIndex + 1}
+                                                    </span>
+                                                  )}
+                                                  <HighlightedText text={item} keyword="" />
+                                                </span>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
                               {(() => {
                                 const pointExamples =
                                   point.examples?.length
@@ -2821,6 +2879,18 @@ function AddWord({
             : point.exampleEn || point.exampleKo
             ? [{ en: point.exampleEn ?? "", ko: point.exampleKo ?? "" }]
             : [{ en: "", ko: "" }],
+          variants: point.variants?.length
+            ? point.variants.map((variant) => ({
+                word: variant.word ?? "",
+                meanings: variant.meanings?.length
+                  ? variant.meanings.map((meaning) => ({
+                      pos: meaning.pos ?? "명",
+                      items: meaning.items?.length ? meaning.items : [""],
+                      numbered: meaning.numbered ?? false,
+                    }))
+                  : [{ pos: "명", items: [""], numbered: false }],
+              }))
+            : [],
         }))
       : []
   );
@@ -2956,6 +3026,7 @@ function AddWord({
         exampleEn: "",
         exampleKo: "",
         examples: [{ en: "", ko: "" }],
+        variants: [],
       },
     ]);
   };
@@ -3025,6 +3096,225 @@ function AddWord({
               : [{ en: "", ko: "" }],
         };
       })
+    );
+  };
+
+  const addStudyPointVariant = (pointIndex: number) => {
+    setStudyPoints((prev) =>
+      prev.map((point, i) =>
+        i === pointIndex
+          ? {
+              ...point,
+              variants: [
+                ...(point.variants ?? []),
+                { word: "", meanings: [{ pos: "명", items: [""], numbered: false }] },
+              ],
+            }
+          : point
+      )
+    );
+  };
+
+  const updateStudyPointVariantWord = (pointIndex: number, variantIndex: number, value: string) => {
+    setStudyPoints((prev) =>
+      prev.map((point, i) =>
+        i === pointIndex
+          ? {
+              ...point,
+              variants: (point.variants ?? []).map((variant, j) =>
+                j === variantIndex ? { ...variant, word: value } : variant
+              ),
+            }
+          : point
+      )
+    );
+  };
+
+  const updateStudyPointVariantMeaning = (
+    pointIndex: number,
+    variantIndex: number,
+    meaningIndex: number,
+    next: Partial<StudyPointVariantMeaning>
+  ) => {
+    setStudyPoints((prev) =>
+      prev.map((point, i) =>
+        i === pointIndex
+          ? {
+              ...point,
+              variants: (point.variants ?? []).map((variant, j) =>
+                j === variantIndex
+                  ? {
+                      ...variant,
+                      meanings: variant.meanings.map((meaning, k) =>
+                        k === meaningIndex ? { ...meaning, ...next } : meaning
+                      ),
+                    }
+                  : variant
+              ),
+            }
+          : point
+      )
+    );
+  };
+
+  const updateStudyPointVariantMeaningItem = (
+    pointIndex: number,
+    variantIndex: number,
+    meaningIndex: number,
+    itemIndex: number,
+    value: string
+  ) => {
+    setStudyPoints((prev) =>
+      prev.map((point, i) =>
+        i === pointIndex
+          ? {
+              ...point,
+              variants: (point.variants ?? []).map((variant, j) =>
+                j === variantIndex
+                  ? {
+                      ...variant,
+                      meanings: variant.meanings.map((meaning, k) =>
+                        k === meaningIndex
+                          ? {
+                              ...meaning,
+                              items: meaning.items.map((item, l) =>
+                                l === itemIndex ? value : item
+                              ),
+                            }
+                          : meaning
+                      ),
+                    }
+                  : variant
+              ),
+            }
+          : point
+      )
+    );
+  };
+
+  const addStudyPointVariantMeaning = (pointIndex: number, variantIndex: number) => {
+    setStudyPoints((prev) =>
+      prev.map((point, i) =>
+        i === pointIndex
+          ? {
+              ...point,
+              variants: (point.variants ?? []).map((variant, j) =>
+                j === variantIndex
+                  ? {
+                      ...variant,
+                      meanings: [
+                        ...variant.meanings,
+                        { pos: "명", items: [""], numbered: false },
+                      ],
+                    }
+                  : variant
+              ),
+            }
+          : point
+      )
+    );
+  };
+
+  const removeStudyPointVariantMeaning = (
+    pointIndex: number,
+    variantIndex: number,
+    meaningIndex: number
+  ) => {
+    setStudyPoints((prev) =>
+      prev.map((point, i) =>
+        i === pointIndex
+          ? {
+              ...point,
+              variants: (point.variants ?? []).map((variant, j) => {
+                if (j !== variantIndex) return variant;
+                return {
+                  ...variant,
+                  meanings:
+                    variant.meanings.length > 1
+                      ? variant.meanings.filter((_, k) => k !== meaningIndex)
+                      : [{ pos: "명", items: [""], numbered: false }],
+                };
+              }),
+            }
+          : point
+      )
+    );
+  };
+
+  const addStudyPointVariantMeaningItem = (
+    pointIndex: number,
+    variantIndex: number,
+    meaningIndex: number
+  ) => {
+    setStudyPoints((prev) =>
+      prev.map((point, i) =>
+        i === pointIndex
+          ? {
+              ...point,
+              variants: (point.variants ?? []).map((variant, j) =>
+                j === variantIndex
+                  ? {
+                      ...variant,
+                      meanings: variant.meanings.map((meaning, k) =>
+                        k === meaningIndex
+                          ? { ...meaning, items: [...meaning.items, ""], numbered: true }
+                          : meaning
+                      ),
+                    }
+                  : variant
+              ),
+            }
+          : point
+      )
+    );
+  };
+
+  const removeStudyPointVariantMeaningItem = (
+    pointIndex: number,
+    variantIndex: number,
+    meaningIndex: number,
+    itemIndex: number
+  ) => {
+    setStudyPoints((prev) =>
+      prev.map((point, i) =>
+        i === pointIndex
+          ? {
+              ...point,
+              variants: (point.variants ?? []).map((variant, j) =>
+                j === variantIndex
+                  ? {
+                      ...variant,
+                      meanings: variant.meanings.map((meaning, k) =>
+                        k === meaningIndex
+                          ? {
+                              ...meaning,
+                              items:
+                                meaning.items.length > 1
+                                  ? meaning.items.filter((_, l) => l !== itemIndex)
+                                  : [""],
+                              numbered: meaning.items.length > 2 ? meaning.numbered : false,
+                            }
+                          : meaning
+                      ),
+                    }
+                  : variant
+              ),
+            }
+          : point
+      )
+    );
+  };
+
+  const removeStudyPointVariant = (pointIndex: number, variantIndex: number) => {
+    setStudyPoints((prev) =>
+      prev.map((point, i) =>
+        i === pointIndex
+          ? {
+              ...point,
+              variants: (point.variants ?? []).filter((_, j) => j !== variantIndex),
+            }
+          : point
+      )
     );
   };
 
@@ -3327,6 +3617,166 @@ function AddWord({
                   className="mt-2 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
                 />
 
+                <div className="mt-3 rounded-2xl bg-[#f8fafc] p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="pl-1 text-[11px] font-bold text-[#596275]">변형/파생어</p>
+
+                    <button
+                      type="button"
+                      onClick={() => addStudyPointVariant(index)}
+                      className="rounded-full bg-[#eef2f8] px-3 py-1.5 text-[11px] font-bold text-[#0f2a5f]"
+                    >
+                      + 단어 추가
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {(point.variants ?? []).map((variant, variantIndex) => (
+                      <div key={variantIndex} className="rounded-xl border border-[#dce2ee] bg-white p-3">
+                        <div className="flex gap-2">
+                          <input
+                            value={variant.word}
+                            onChange={(e) =>
+                              updateStudyPointVariantWord(index, variantIndex, e.target.value)
+                            }
+                            placeholder="변형 단어 예: advanced, advance"
+                            className="h-10 min-w-0 flex-1 rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => removeStudyPointVariant(index, variantIndex)}
+                            className="h-10 w-10 rounded-xl border border-[#dce2ee] text-[13px] text-[#8a94a6]"
+                          >
+                            ×
+                          </button>
+                        </div>
+
+                        <div className="mt-3 space-y-3">
+                          {variant.meanings.map((meaning, meaningIndex) => (
+                            <div key={meaningIndex} className="rounded-xl bg-[#f5f6fa] p-3">
+                              <div className="flex gap-2">
+                                <div className="relative w-[66px] shrink-0">
+                                  <select
+                                    value={meaning.pos}
+                                    onChange={(e) =>
+                                      updateStudyPointVariantMeaning(index, variantIndex, meaningIndex, {
+                                        pos: e.target.value,
+                                      })
+                                    }
+                                    className="h-10 w-full appearance-none rounded-xl border border-[#dce2ee] pl-5 pr-7 text-[13px] outline-none"
+                                  >
+                                    <option value="동">동</option>
+                                    <option value="명">명</option>
+                                    <option value="형">형</option>
+                                    <option value="부">부</option>
+                                    <option value="전">전</option>
+                                    <option value="접">접</option>
+                                    <option value="대">대</option>
+                                    <option value="감">감</option>
+                                    <option value="숙">숙</option>
+                                    <option value="구">구</option>
+                                    <option value="한">한</option>
+                                  </select>
+
+                                  <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#8a94a6]">
+                                    <ChevronDownIcon />
+                                  </span>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateStudyPointVariantMeaning(index, variantIndex, meaningIndex, {
+                                      numbered: !meaning.numbered,
+                                    })
+                                  }
+                                  className={`h-10 flex-1 rounded-xl border text-[12px] font-bold ${
+                                    meaning.numbered
+                                      ? "border-[#0f2a5f] bg-[#eef2f8] text-[#0f2a5f]"
+                                      : "border-[#dce2ee] text-[#8a94a6]"
+                                  }`}
+                                >
+                                  <span className="tracking-[0.08em]">① ②</span>
+                                  <span className="ml-1">표시 {meaning.numbered ? "ON" : "OFF"}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    removeStudyPointVariantMeaning(index, variantIndex, meaningIndex)
+                                  }
+                                  className="h-10 w-10 rounded-xl border border-[#dce2ee] text-[13px] text-[#8a94a6]"
+                                >
+                                  ×
+                                </button>
+                              </div>
+
+                              <div className="mt-2 space-y-2">
+                                {meaning.items.map((item, itemIndex) => (
+                                  <div key={itemIndex} className="flex gap-2">
+                                    <input
+                                      value={item}
+                                      onChange={(e) =>
+                                        updateStudyPointVariantMeaningItem(
+                                          index,
+                                          variantIndex,
+                                          meaningIndex,
+                                          itemIndex,
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="뜻"
+                                      className="h-10 min-w-0 flex-1 rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
+                                    />
+
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        removeStudyPointVariantMeaningItem(
+                                          index,
+                                          variantIndex,
+                                          meaningIndex,
+                                          itemIndex
+                                        )
+                                      }
+                                      className="h-10 w-10 rounded-xl border border-[#dce2ee] text-[13px] text-[#8a94a6]"
+                                    >
+                                      −
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+
+                              <div className="mt-2 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    addStudyPointVariantMeaningItem(index, variantIndex, meaningIndex)
+                                  }
+                                  className="rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#0f2a5f]"
+                                >
+                                  + 뜻 추가
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-2 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => addStudyPointVariantMeaning(index, variantIndex)}
+                            className="rounded-full bg-[#eef2f8] px-3 py-1.5 text-[11px] font-bold text-[#0f2a5f]"
+                          >
+                            + 품사 추가
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="mt-3">
                   <div className="mb-2 flex items-center justify-between">
                     <p className="pl-1 text-[11px] font-bold text-[#596275]">예시</p>
@@ -3439,9 +3889,25 @@ function AddWord({
                     .filter((example) => example.en || example.ko);
                   const exampleEn = examples[0]?.en ?? "";
                   const exampleKo = examples[0]?.ko ?? "";
+                  const variants = (point.variants ?? [])
+                    .map((variant) => {
+                      const meanings = (variant.meanings ?? [])
+                        .map((meaning) => ({
+                          pos: (meaning.pos ?? "").trim(),
+                          items: (meaning.items ?? []).map((item) => item.trim()).filter(Boolean),
+                          numbered: meaning.numbered ?? false,
+                        }))
+                        .filter((meaning) => meaning.pos && meaning.items.length > 0);
+
+                      return {
+                        word: (variant.word ?? "").trim(),
+                        meanings,
+                      };
+                    })
+                    .filter((variant) => variant.word || variant.meanings.length > 0);
 
                   const hasContent =
-                    expression || description || related || examples.length > 0;
+                    expression || description || related || variants.length > 0 || examples.length > 0;
 
                   return {
                     category: category || (hasContent ? "기타" : ""),
@@ -3451,6 +3917,7 @@ function AddWord({
                     exampleEn,
                     exampleKo,
                     examples,
+                    variants,
                   };
                 })
                 .filter(
@@ -3460,7 +3927,8 @@ function AddWord({
                     point.description ||
                     point.related ||
                     point.exampleEn ||
-                    point.exampleKo
+                    point.exampleKo ||
+                    (point.variants?.length ?? 0) > 0
                 );
             
             onSave(dayId, {
