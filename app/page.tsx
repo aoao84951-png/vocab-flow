@@ -91,20 +91,19 @@ function StarIcon({ active = true, size = 15 }: StarIconProps) {
       height={size}
       viewBox="0 0 24 24"
       aria-hidden="true"
-      className={`shrink-0 drop-shadow-[0_1px_2px_rgba(245,158,11,0.22)] ${
-        active ? "text-[#f59e0b]" : "text-[#cbd5e1]"
+      className={`shrink-0 transition-all ${
+        active
+          ? "text-[#ef4444] drop-shadow-[0_2px_5px_rgba(239,68,68,0.18)]"
+          : "text-[#c7ceda]"
       }`}
     >
       <path
-        d="M12 2.85 14.82 8.7l6.45.88-4.68 4.53 1.15 6.4L12 17.45 6.26 20.51l1.15-6.4-4.68-4.53 6.45-.88L12 2.85Z"
-        fill="currentColor"
+        d="M12 3.15 14.67 8.84 20.9 9.6 16.32 13.9 17.52 20.08 12 17.02 6.48 20.08 7.68 13.9 3.1 9.6 9.33 8.84 12 3.15Z"
+        fill={active ? "currentColor" : "none"}
         stroke="currentColor"
-        strokeWidth="1.15"
+        strokeWidth="1.85"
+        strokeLinecap="round"
         strokeLinejoin="round"
-      />
-      <path
-        d="M12 5.35 13.97 9.45l4.48.61-3.25 3.15.79 4.45L12 15.52l-3.99 2.14.79-4.45-3.25-3.15 4.48-.61L12 5.35Z"
-        fill="rgba(255,255,255,0.28)"
       />
     </svg>
   );
@@ -120,7 +119,7 @@ function ImportanceStars({ count, size = 15 }: ImportanceStarsProps) {
   if (!safeCount) return null;
 
   return (
-    <span className="inline-flex items-center gap-[1px]" aria-label={`중요도 ${safeCount}개`}>
+    <span className="inline-flex items-center gap-[2px]" aria-label={`중요도 ${safeCount}단계`}>
       {Array.from({ length: safeCount }).map((_, index) => (
         <StarIcon key={index} size={size} />
       ))}
@@ -569,6 +568,20 @@ export default function Home() {
         ...word,
         memorized: !word.memorized,
       }))
+    );
+  };
+
+  const toggleImportant = (targetIndex: number) => {
+    saveBooks((prev) =>
+      updateWordInPath(prev, folderPath, selectedDayId, targetIndex, (word) => {
+        const current = Math.min(3, Math.max(0, word.importanceStars ?? 0));
+        const next = current >= 3 ? 0 : ((current + 1) as 1 | 2 | 3);
+
+        return {
+          ...word,
+          importanceStars: next,
+        };
+      })
     );
   };
 
@@ -1494,7 +1507,7 @@ const getDayProgress = (day: Day) => {
                   <div
                     key={item.id}
                     className={`relative overflow-hidden rounded-[18px] ${
-                      item.importanceStars ? "bg-[#fff7d6] ring-1 ring-[#f6d35f]" : "bg-[#f1f3f6]"
+                      item.importanceStars ? "bg-[#edf3ff] ring-1 ring-[#b9c9ed]" : "bg-[#f1f3f6]"
                     } ${item.memorized ? "opacity-45" : ""}`}
                   >
                     <div className="absolute inset-y-0 left-0 flex w-[145px] items-center justify-center gap-10 bg-[#eef0f3]">
@@ -1547,7 +1560,7 @@ const getDayProgress = (day: Day) => {
                       }}
                       className={`relative z-10 w-full rounded-[18px] border px-4 py-4 text-left shadow-[0_3px_10px_rgba(15,23,42,0.04)] transition-transform active:scale-[0.99] ${
                         item.importanceStars
-                          ? "border-[#f2cc45] bg-[#fffbea] shadow-[0_5px_16px_rgba(245,158,11,0.14)]"
+                          ? "border-[#b9c9ed] bg-[#f8fbff] shadow-[0_5px_16px_rgba(15,42,95,0.10)]"
                           : "border-[#e4e8f0] bg-white"
                       }`}
                       style={{ transform: `translateX(${getSwipeX(originalIndex)}px)` }}
@@ -1802,38 +1815,53 @@ const getDayProgress = (day: Day) => {
                 <section
                   className={`relative mt-3 flex h-[155px] shrink-0 items-center justify-center rounded-[22px] border ${
                     currentWord.importanceStars
-                      ? "border-[#f2cc45] bg-[#fffbea] shadow-[0_8px_22px_rgba(245,158,11,0.16)]"
+                      ? "border-[#b9c9ed] bg-[#f8fbff] shadow-[0_8px_22px_rgba(15,42,95,0.12)]"
                       : "border-[#dce2ee] bg-white"
                   }`}
                 >
-                {currentWord.importanceStars ? (
-                  <div className="absolute left-4 top-4">
-                    <ImportanceStars count={currentWord.importanceStars} size={17} />
-                  </div>
-                ) : null}
+                <div className="absolute right-4 top-4 flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleImportant(wordIndex);
+                    }}
+                    className="flex h-8 w-8 items-center justify-center rounded-full transition-transform active:scale-90"
+                    aria-label={`중요도 ${currentWord.importanceStars ?? 0}단계`}
+                    title="누를 때마다 중요도 1 → 2 → 3 → 해제로 변경"
+                  >
+                    <span className="relative flex h-7 w-7 items-center justify-center">
+                      <StarIcon active={Boolean(currentWord.importanceStars)} size={22} />
+                      {currentWord.importanceStars ? (
+                        <span className="absolute -right-1 -top-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#0f2a5f] px-[3px] text-[8px] font-black leading-none text-white">
+                          {currentWord.importanceStars}
+                        </span>
+                      ) : null}
+                    </span>
+                  </button>
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleMemorized(wordIndex);
-                  }}
-                  className={`absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
-                    currentWord.memorized
-                      ? "border-[#0f2a5f] bg-[#0f2a5f] shadow-[0_6px_14px_rgba(15,42,95,0.22)]"
-                      : "border-[#dce2ee] bg-[#f8fafc]"
-                  }`}
-                  aria-label="암기완료"
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M5.5 12.5L10 17L18.8 7.5"
-                      stroke={currentWord.memorized ? "white" : "#9aa3b2"}
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleMemorized(wordIndex);
+                    }}
+                    className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
+                      currentWord.memorized
+                        ? "border-[#0f2a5f] bg-[#0f2a5f] shadow-[0_6px_14px_rgba(15,42,95,0.22)]"
+                        : "border-[#dce2ee] bg-[#f8fafc]"
+                    }`}
+                    aria-label="암기완료"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M5.5 12.5L10 17L18.8 7.5"
+                        stroke={currentWord.memorized ? "white" : "#9aa3b2"}
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
 
                 <h2
                   className={`w-full min-w-0 px-6 text-center font-bold leading-tight tracking-tight ${
@@ -2878,10 +2906,6 @@ function AddWord({
 }) {
   const [dayId, setDayId] = useState(defaultDayId || book.days[0]?.id || "");
   const [word, setWord] = useState(initialWord?.word || "");
-  const [importanceStars, setImportanceStars] = useState<0 | 1 | 2 | 3>(
-    (initialWord?.importanceStars as 0 | 1 | 2 | 3) ?? 0
-  );
-
   const [meanings, setMeanings] = useState<Meaning[]>(
     initialWord?.meanings?.length
       ? initialWord.meanings
@@ -3442,33 +3466,6 @@ function AddWord({
         </label>
 
         <Input label="영어 단어" value={word} onChange={setWord} placeholder="prioritize" />
-
-        <div className="rounded-[18px] border border-[#e8ecf3] bg-white px-4 py-3 shadow-[0_3px_10px_rgba(15,23,42,0.03)]">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-[12px] font-bold text-[#596275]">중요도</p>
-            <button
-              type="button"
-              onClick={() => setImportanceStars(0)}
-              className="text-[11px] font-bold text-[#8a94a6]"
-            >
-              해제
-            </button>
-          </div>
-
-          <div className="grid grid-cols-3 items-center">
-            {[1, 2, 3].map((star) => (
-              <button
-                key={star}
-                type="button"
-                onClick={() => setImportanceStars(star as 1 | 2 | 3)}
-                className="group flex h-12 w-full items-center justify-center rounded-full transition-transform active:scale-95"
-                aria-label={`${star}개 중요 표시`}
-              >
-                <StarIcon active={importanceStars >= star} size={31} />
-              </button>
-            ))}
-          </div>
-        </div>
 
         <div>
           <div className="mb-2 flex items-center justify-between">
@@ -4037,7 +4034,7 @@ function AddWord({
               studyPoints: cleanedStudyPoints,
               memorized: initialWord?.memorized ?? false,
               highlightColor: initialWord?.highlightColor || "",
-              importanceStars,
+              importanceStars: initialWord?.importanceStars ?? 0,
               createdAt: initialWord?.createdAt || new Date().toISOString(),
             });
           }}
