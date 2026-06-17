@@ -79,6 +79,55 @@ type Folder = {
   days: Day[];
 };
 
+type StarIconProps = {
+  active?: boolean;
+  size?: number;
+};
+
+function StarIcon({ active = true, size = 15 }: StarIconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={`shrink-0 drop-shadow-[0_1px_2px_rgba(245,158,11,0.22)] ${
+        active ? "text-[#f59e0b]" : "text-[#cbd5e1]"
+      }`}
+    >
+      <path
+        d="M12 2.85 14.82 8.7l6.45.88-4.68 4.53 1.15 6.4L12 17.45 6.26 20.51l1.15-6.4-4.68-4.53 6.45-.88L12 2.85Z"
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth="1.15"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 5.35 13.97 9.45l4.48.61-3.25 3.15.79 4.45L12 15.52l-3.99 2.14.79-4.45-3.25-3.15 4.48-.61L12 5.35Z"
+        fill="rgba(255,255,255,0.28)"
+      />
+    </svg>
+  );
+}
+
+type ImportanceStarsProps = {
+  count?: number;
+  size?: number;
+};
+
+function ImportanceStars({ count, size = 15 }: ImportanceStarsProps) {
+  const safeCount = Math.min(3, Math.max(0, count ?? 0));
+  if (!safeCount) return null;
+
+  return (
+    <span className="inline-flex items-center gap-[1px]" aria-label={`중요도 ${safeCount}개`}>
+      {Array.from({ length: safeCount }).map((_, index) => (
+        <StarIcon key={index} size={size} />
+      ))}
+    </span>
+  );
+}
+
 type Book = Folder;
 
 
@@ -221,9 +270,7 @@ export default function Home() {
     wordViewMode === "all" ? true : !word.memorized
   );
 
-  const renderImportanceStars = (count?: number) =>
-    count ? "★".repeat(Math.min(3, Math.max(0, count))) : "";
-  
+
   const studyIndexes = words
     .map((word, originalIndex) => ({ word, originalIndex }))
     .filter(({ word }) => (wordViewMode === "all" ? true : !word.memorized));
@@ -439,26 +486,18 @@ export default function Home() {
   };
 
   const nextWord = () => {
-    if (wordViewMode === "all") {
-      setWordIndex((prev) => Math.min(prev + 1, Math.max(words.length - 1, 0)));
-      return;
-    }
-  
-    const currentPos = studyIndexes.findIndex((item) => item.originalIndex === wordIndex);
-    const next = studyIndexes[Math.min(currentPos + 1, studyIndexes.length - 1)];
-  
+    const currentPos = visibleSortedWords.findIndex((item) => item.originalIndex === wordIndex);
+    const safePos = currentPos === -1 ? 0 : currentPos;
+    const next = visibleSortedWords[Math.min(safePos + 1, visibleSortedWords.length - 1)];
+
     if (next) setWordIndex(next.originalIndex);
   };
-  
+
   const prevWord = () => {
-    if (wordViewMode === "all") {
-      setWordIndex((prev) => Math.max(prev - 1, 0));
-      return;
-    }
-  
-    const currentPos = studyIndexes.findIndex((item) => item.originalIndex === wordIndex);
-    const prev = studyIndexes[Math.max(currentPos - 1, 0)];
-  
+    const currentPos = visibleSortedWords.findIndex((item) => item.originalIndex === wordIndex);
+    const safePos = currentPos === -1 ? 0 : currentPos;
+    const prev = visibleSortedWords[Math.max(safePos - 1, 0)];
+
     if (prev) setWordIndex(prev.originalIndex);
   };
 
@@ -1516,8 +1555,8 @@ const getDayProgress = (day: Day) => {
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
                         {item.importanceStars ? (
-                          <span className="mb-1 inline-flex items-center rounded-full bg-[#f59e0b] px-2 py-[2px] text-[10px] font-black leading-none text-white shadow-[0_3px_8px_rgba(245,158,11,0.24)]">
-                            {renderImportanceStars(item.importanceStars)}
+                          <span className="mb-1 inline-flex items-center">
+                            <ImportanceStars count={item.importanceStars} size={13} />
                           </span>
                         ) : null}
                         <p
@@ -1620,9 +1659,7 @@ const getDayProgress = (day: Day) => {
 
               <p className="max-w-[160px] truncate text-center text-[11px] text-[#596275]">
                 {currentFolderTitle} 〉 {selectedDay.title} 〉{" "}
-                {wordViewMode === "all"
-                  ? `${words.length ? wordIndex + 1 : 0} / ${words.length}`
-                  : `${studyIndexes.findIndex((item) => item.originalIndex === wordIndex) + 1} / ${studyIndexes.length}`}
+                {`${visibleSortedWords.length ? visibleSortedWords.findIndex((item) => item.originalIndex === wordIndex) + 1 : 0} / ${visibleSortedWords.length}`}
               </p>
 
               <div className="flex items-center gap-1">
@@ -1770,8 +1807,8 @@ const getDayProgress = (day: Day) => {
                   }`}
                 >
                 {currentWord.importanceStars ? (
-                  <div className="absolute left-4 top-4 rounded-full bg-[#f59e0b] px-2.5 py-1 text-[12px] font-black leading-none text-white shadow-[0_4px_10px_rgba(245,158,11,0.28)]">
-                    {renderImportanceStars(currentWord.importanceStars)}
+                  <div className="absolute left-4 top-4">
+                    <ImportanceStars count={currentWord.importanceStars} size={17} />
                   </div>
                 ) : null}
 
@@ -3418,20 +3455,16 @@ function AddWord({
             </button>
           </div>
 
-          <div className="flex gap-2">
+          <div className="grid grid-cols-3 items-center">
             {[1, 2, 3].map((star) => (
               <button
                 key={star}
                 type="button"
                 onClick={() => setImportanceStars(star as 1 | 2 | 3)}
-                className={`flex h-10 flex-1 items-center justify-center rounded-xl border text-[18px] font-black transition-all ${
-                  importanceStars >= star
-                    ? "border-[#f2cc45] bg-[#fff3bd] text-[#f59e0b] shadow-[0_4px_10px_rgba(245,158,11,0.18)]"
-                    : "border-[#dce2ee] bg-[#f8fafc] text-[#c7cfdd]"
-                }`}
+                className="group flex h-12 w-full items-center justify-center rounded-full transition-transform active:scale-95"
                 aria-label={`${star}개 중요 표시`}
               >
-                ★
+                <StarIcon active={importanceStars >= star} size={31} />
               </button>
             ))}
           </div>
