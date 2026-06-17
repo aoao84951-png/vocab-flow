@@ -61,6 +61,7 @@ type Word = {
   studyPoints?: StudyPoint[];
   memorized?: boolean;
   highlightColor?: "red" | "blue" | "yellow" | "green" | "purple" | "";
+  importanceStars?: 0 | 1 | 2 | 3;
   createdAt?: string;
 };
 
@@ -219,6 +220,9 @@ export default function Home() {
   const visibleSortedWords = sortedWords.filter(({ word }) =>
     wordViewMode === "all" ? true : !word.memorized
   );
+
+  const renderImportanceStars = (count?: number) =>
+    count ? "★".repeat(Math.min(3, Math.max(0, count))) : "";
   
   const studyIndexes = words
     .map((word, originalIndex) => ({ word, originalIndex }))
@@ -1450,9 +1454,9 @@ const getDayProgress = (day: Day) => {
                 visibleSortedWords.map(({ word: item, originalIndex }) => (
                   <div
                     key={item.id}
-                    className={`relative overflow-hidden rounded-[18px] bg-[#f1f3f6] ${
-                      item.memorized ? "opacity-45" : ""
-                    }`}
+                    className={`relative overflow-hidden rounded-[18px] ${
+                      item.importanceStars ? "bg-[#fff7d6] ring-1 ring-[#f6d35f]" : "bg-[#f1f3f6]"
+                    } ${item.memorized ? "opacity-45" : ""}`}
                   >
                     <div className="absolute inset-y-0 left-0 flex w-[145px] items-center justify-center gap-10 bg-[#eef0f3]">
                       <button
@@ -1502,11 +1506,20 @@ const getDayProgress = (day: Day) => {
                         setDragX(0);
                         touchStartX.current = null;
                       }}
-                      className="relative z-10 w-full rounded-[18px] border border-[#e4e8f0] bg-white px-4 py-4 text-left shadow-[0_3px_10px_rgba(15,23,42,0.04)] transition-transform active:scale-[0.99]"
+                      className={`relative z-10 w-full rounded-[18px] border px-4 py-4 text-left shadow-[0_3px_10px_rgba(15,23,42,0.04)] transition-transform active:scale-[0.99] ${
+                        item.importanceStars
+                          ? "border-[#f2cc45] bg-[#fffbea] shadow-[0_5px_16px_rgba(245,158,11,0.14)]"
+                          : "border-[#e4e8f0] bg-white"
+                      }`}
                       style={{ transform: `translateX(${getSwipeX(originalIndex)}px)` }}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
+                        {item.importanceStars ? (
+                          <span className="mb-1 inline-flex items-center rounded-full bg-[#f59e0b] px-2 py-[2px] text-[10px] font-black leading-none text-white shadow-[0_3px_8px_rgba(245,158,11,0.24)]">
+                            {renderImportanceStars(item.importanceStars)}
+                          </span>
+                        ) : null}
                         <p
                           className={`truncate text-[17px] font-bold ${
                             item.highlightColor === "red"
@@ -1749,7 +1762,19 @@ const getDayProgress = (day: Day) => {
               <Empty text="이 Day에는 아직 단어가 없어." />
             ) : (
               <>
-                <section className="relative mt-3 flex h-[155px] shrink-0 items-center justify-center rounded-[22px] border border-[#dce2ee] bg-white">
+                <section
+                  className={`relative mt-3 flex h-[155px] shrink-0 items-center justify-center rounded-[22px] border ${
+                    currentWord.importanceStars
+                      ? "border-[#f2cc45] bg-[#fffbea] shadow-[0_8px_22px_rgba(245,158,11,0.16)]"
+                      : "border-[#dce2ee] bg-white"
+                  }`}
+                >
+                {currentWord.importanceStars ? (
+                  <div className="absolute left-4 top-4 rounded-full bg-[#f59e0b] px-2.5 py-1 text-[12px] font-black leading-none text-white shadow-[0_4px_10px_rgba(245,158,11,0.28)]">
+                    {renderImportanceStars(currentWord.importanceStars)}
+                  </div>
+                ) : null}
+
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1925,7 +1950,7 @@ const getDayProgress = (day: Day) => {
                                               {meaning.pos}
                                             </span>
 
-                                            <div className="mt-[1px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] leading-[1.45] text-[#596275]">
+                                            <div className="mt-[0.6px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] leading-[1.45] text-[#596275]">
                                               {(meaning.items ?? []).map((item, itemIndex) => (
                                                 <span
                                                   key={`${item}-${itemIndex}`}
@@ -2816,6 +2841,9 @@ function AddWord({
 }) {
   const [dayId, setDayId] = useState(defaultDayId || book.days[0]?.id || "");
   const [word, setWord] = useState(initialWord?.word || "");
+  const [importanceStars, setImportanceStars] = useState<0 | 1 | 2 | 3>(
+    (initialWord?.importanceStars as 0 | 1 | 2 | 3) ?? 0
+  );
 
   const [meanings, setMeanings] = useState<Meaning[]>(
     initialWord?.meanings?.length
@@ -3377,6 +3405,37 @@ function AddWord({
         </label>
 
         <Input label="영어 단어" value={word} onChange={setWord} placeholder="prioritize" />
+
+        <div className="rounded-[18px] border border-[#e8ecf3] bg-white px-4 py-3 shadow-[0_3px_10px_rgba(15,23,42,0.03)]">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-[12px] font-bold text-[#596275]">중요도</p>
+            <button
+              type="button"
+              onClick={() => setImportanceStars(0)}
+              className="text-[11px] font-bold text-[#8a94a6]"
+            >
+              해제
+            </button>
+          </div>
+
+          <div className="flex gap-2">
+            {[1, 2, 3].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setImportanceStars(star as 1 | 2 | 3)}
+                className={`flex h-10 flex-1 items-center justify-center rounded-xl border text-[18px] font-black transition-all ${
+                  importanceStars >= star
+                    ? "border-[#f2cc45] bg-[#fff3bd] text-[#f59e0b] shadow-[0_4px_10px_rgba(245,158,11,0.18)]"
+                    : "border-[#dce2ee] bg-[#f8fafc] text-[#c7cfdd]"
+                }`}
+                aria-label={`${star}개 중요 표시`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div>
           <div className="mb-2 flex items-center justify-between">
@@ -3945,6 +4004,7 @@ function AddWord({
               studyPoints: cleanedStudyPoints,
               memorized: initialWord?.memorized ?? false,
               highlightColor: initialWord?.highlightColor || "",
+              importanceStars,
               createdAt: initialWord?.createdAt || new Date().toISOString(),
             });
           }}
