@@ -24,6 +24,7 @@ type StudyPointVariantMeaning = {
 type StudyPointVariant = {
   word: string;
   meanings: StudyPointVariantMeaning[];
+  related?: string;
 };
 
 type StudyPoint = {
@@ -1980,18 +1981,6 @@ const getDayProgress = (day: Day) => {
                                 />
                               )}
 
-                              {point.related && (
-                                <div className="mt-2 flex items-center gap-2 pl-[7px]">
-                                  <span className="inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-[4px] bg-[#4b6cb7] px-[3px] text-[8px] font-bold text-white">
-                                    유
-                                  </span>
-
-                                  <p className="text-[12px] font-bold tracking-[-0.01em] text-[#4b6cb7]">
-                                    <HighlightedText text={point.related} keyword="" />
-                                  </p>
-                                </div>
-                              )}
-
                               {(point.variants ?? []).length > 0 && (
                                 <div className="mt-3 ml-[0px] space-y-2">
                                   {(point.variants ?? []).map((variant, variantIndex) => (
@@ -2033,6 +2022,18 @@ const getDayProgress = (day: Day) => {
                                           </div>
                                         ))}
                                       </div>
+
+                                      {variant.related && (
+                                        <div className="mt-2 flex items-start gap-1.5 pl-[1px]">
+                                          <span className="mt-[1px] text-[13px] font-bold leading-none text-[#4b6cb7]">
+                                            =
+                                          </span>
+
+                                          <p className="min-w-0 text-[11px] font-bold leading-[1.45] tracking-[-0.01em] text-[#4b6cb7]">
+                                            <HighlightedText text={variant.related} keyword="" />
+                                          </p>
+                                        </div>
+                                      )}
                                     </div>
                                   ))}
                                 </div>
@@ -2973,7 +2974,7 @@ function AddWord({
             ? [{ en: point.exampleEn ?? "", ko: point.exampleKo ?? "" }]
             : [{ en: "", ko: "" }],
           variants: point.variants?.length
-            ? point.variants.map((variant) => ({
+            ? point.variants.map((variant, variantIndex) => ({
                 word: variant.word ?? "",
                 meanings: variant.meanings?.length
                   ? variant.meanings.map((meaning) => ({
@@ -2982,7 +2983,10 @@ function AddWord({
                       numbered: meaning.numbered ?? false,
                     }))
                   : [{ pos: "명", items: [""], numbered: false }],
+                related: variant.related ?? (variantIndex === 0 ? point.related ?? "" : ""),
               }))
+            : point.related
+            ? [{ word: "", meanings: [{ pos: "명", items: [""], numbered: false }], related: point.related }]
             : [],
         }))
       : []
@@ -3200,7 +3204,7 @@ function AddWord({
               ...point,
               variants: [
                 ...(point.variants ?? []),
-                { word: "", meanings: [{ pos: "명", items: [""], numbered: false }] },
+                { word: "", meanings: [{ pos: "명", items: [""], numbered: false }], related: "" },
               ],
             }
           : point
@@ -3216,6 +3220,21 @@ function AddWord({
               ...point,
               variants: (point.variants ?? []).map((variant, j) =>
                 j === variantIndex ? { ...variant, word: value } : variant
+              ),
+            }
+          : point
+      )
+    );
+  };
+
+  const updateStudyPointVariantRelated = (pointIndex: number, variantIndex: number, value: string) => {
+    setStudyPoints((prev) =>
+      prev.map((point, i) =>
+        i === pointIndex
+          ? {
+              ...point,
+              variants: (point.variants ?? []).map((variant, j) =>
+                j === variantIndex ? { ...variant, related: value } : variant
               ),
             }
           : point
@@ -3703,13 +3722,6 @@ function AddWord({
                   />
                 </div>
 
-                <input
-                  value={point.related}
-                  onChange={(e) => updateStudyPoint(index, "related", e.target.value)}
-                  placeholder="유사 표현/동의어 예: on request, reply to, react to"
-                  className="mt-2 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
-                />
-
                 <div className="mt-3 rounded-2xl bg-[#f8fafc] p-3">
                   <div className="mb-2 flex items-center justify-between">
                     <p className="pl-1 text-[11px] font-bold text-[#596275]">변형/파생어</p>
@@ -3856,6 +3868,13 @@ function AddWord({
                           ))}
                         </div>
 
+                        <input
+                          value={variant.related ?? ""}
+                          onChange={(e) => updateStudyPointVariantRelated(index, variantIndex, e.target.value)}
+                          placeholder="유의어/동의어 예: on request, reply to, react to"
+                          className="mt-3 h-10 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
+                        />
+
                         <div className="mt-2 flex justify-end">
                           <button
                             type="button"
@@ -3966,7 +3985,7 @@ function AddWord({
                   const description = cleanEditorHtml(
                     studyDescriptionRefs.current[index]?.innerHTML ?? point.description ?? ""
                   );
-                  const related = (point.related ?? "").trim();
+                  const related = "";
                   const examples = (point.examples?.length
                     ? point.examples
                     : [{ en: point.exampleEn ?? "", ko: point.exampleKo ?? "" }]
@@ -3995,9 +4014,10 @@ function AddWord({
                       return {
                         word: (variant.word ?? "").trim(),
                         meanings,
+                        related: (variant.related ?? "").trim(),
                       };
                     })
-                    .filter((variant) => variant.word || variant.meanings.length > 0);
+                    .filter((variant) => variant.word || variant.meanings.length > 0 || variant.related);
 
                   const hasContent =
                     expression || description || related || variants.length > 0 || examples.length > 0;
