@@ -1925,7 +1925,7 @@ const getDayProgress = (day: Day) => {
                                               {meaning.pos}
                                             </span>
 
-                                            <div className="mt-[0.6px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] leading-[1.45] text-[#596275]">
+                                            <div className="mt-[1px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] leading-[1.45] text-[#596275]">
                                               {(meaning.items ?? []).map((item, itemIndex) => (
                                                 <span
                                                   key={`${item}-${itemIndex}`}
