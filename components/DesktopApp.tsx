@@ -1229,35 +1229,62 @@ export default function DesktopApp() {
   return (
     <main className="vocab-desktop-shell min-h-[100svh] bg-white text-[#111827]">
       <style>{`
-        @media (min-width: 768px) and (max-width: 1366px) {
+        @media (max-width: 1440px), (hover: none) and (pointer: coarse) {
           .vocab-desktop-shell .ipad-wide { max-width: none !important; }
-          .vocab-desktop-shell .ipad-title { font-size: 34px; }
-          .vocab-desktop-shell .ipad-action { font-size: 15px; }
-          .vocab-desktop-shell .ipad-list-row { min-height: 60px; }
-          .vocab-desktop-shell .ipad-list-primary { font-size: 20px; }
-          .vocab-desktop-shell .ipad-list-secondary { font-size: 14px; }
-          .vocab-desktop-shell .ipad-study-content { max-width: 960px !important; padding-left: 38px; padding-right: 38px; }
-          .vocab-desktop-shell .ipad-meaning-wrap { font-size: 21px; }
-          .vocab-desktop-shell .ipad-pos-badge { height: 30px; min-width: 30px; font-size: 15px; }
-          .vocab-desktop-shell .ipad-section-title { font-size: 17px; }
+          .vocab-desktop-shell .ipad-title { font-size: 36px; }
+          .vocab-desktop-shell .ipad-action { font-size: 16px; }
+          .vocab-desktop-shell .ipad-list-row { min-height: 66px; }
+          .vocab-desktop-shell .ipad-list-primary { font-size: 22px; }
+          .vocab-desktop-shell .ipad-list-secondary { font-size: 15px; }
+          .vocab-desktop-shell .ipad-study-content { max-width: 1040px !important; padding-left: 44px; padding-right: 44px; }
+          .vocab-desktop-shell .ipad-meaning-wrap { font-size: 23px; }
+          .vocab-desktop-shell .ipad-pos-badge { height: 32px; min-width: 32px; font-size: 16px; border-radius: 8px; }
+          .vocab-desktop-shell .ipad-section-title { font-size: 19px; }
           .vocab-desktop-shell .ipad-example-en,
           .vocab-desktop-shell .ipad-study-desc,
-          .vocab-desktop-shell .ipad-point-example-en { font-size: 18px; line-height: 1.78; }
+          .vocab-desktop-shell .ipad-point-example-en { font-size: 20px; line-height: 1.82; }
           .vocab-desktop-shell .ipad-example-ko,
-          .vocab-desktop-shell .ipad-point-example-ko { font-size: 16px; line-height: 1.72; }
-          .vocab-desktop-shell .ipad-chip { font-size: 16px; padding: 8px 13px; }
-          .vocab-desktop-shell .ipad-chip-label { height: 24px; font-size: 13px; padding-left: 8px; padding-right: 8px; }
-          .vocab-desktop-shell .ipad-point-category { font-size: 14px; padding: 6px 10px; }
+          .vocab-desktop-shell .ipad-point-example-ko { font-size: 18px; line-height: 1.78; }
+          .vocab-desktop-shell .ipad-chip { font-size: 18px; padding: 9px 15px; }
+          .vocab-desktop-shell .ipad-chip-label { height: 26px; font-size: 14px; padding-left: 9px; padding-right: 9px; }
+          .vocab-desktop-shell .ipad-point-category { font-size: 15px; padding: 7px 11px; }
           .vocab-desktop-shell .ipad-point-expression,
-          .vocab-desktop-shell .ipad-variant-word { font-size: 18px; }
+          .vocab-desktop-shell .ipad-variant-word { font-size: 20px; }
           .vocab-desktop-shell .ipad-variant-meaning,
-          .vocab-desktop-shell .ipad-variant-related { font-size: 16px; }
-          .vocab-desktop-shell .ipad-menu-title { font-size: 18px; }
-          .vocab-desktop-shell .ipad-menu-book { font-size: 16px; }
-          .vocab-desktop-shell .ipad-menu-book-option { font-size: 15px; }
-          .vocab-desktop-shell .ipad-menu-row { min-height: 48px; }
-          .vocab-desktop-shell .ipad-menu-text { font-size: 15px; }
-          .vocab-desktop-shell .ipad-menu-dot { font-size: 13px; }
+          .vocab-desktop-shell .ipad-variant-related { font-size: 18px; }
+          .vocab-desktop-shell .ipad-menu-title { font-size: 20px; }
+          .vocab-desktop-shell .ipad-menu-book { font-size: 18px; }
+          .vocab-desktop-shell .ipad-menu-book-option { font-size: 17px; }
+          .vocab-desktop-shell .ipad-menu-row { min-height: 54px; }
+          .vocab-desktop-shell .ipad-menu-text { font-size: 17px; }
+          .vocab-desktop-shell .ipad-menu-dot { font-size: 15px; }
+        }
+
+        @supports (-webkit-touch-callout: none) {
+          .vocab-desktop-shell .ipad-list-row { min-height: 66px; }
+          .vocab-desktop-shell .ipad-list-primary { font-size: 22px; }
+          .vocab-desktop-shell .ipad-list-secondary { font-size: 15px; }
+          .vocab-desktop-shell .ipad-study-content { max-width: 1040px !important; padding-left: 44px; padding-right: 44px; }
+          .vocab-desktop-shell .ipad-meaning-wrap { font-size: 23px; }
+          .vocab-desktop-shell .ipad-section-title { font-size: 19px; }
+          .vocab-desktop-shell .ipad-example-en,
+          .vocab-desktop-shell .ipad-study-desc,
+          .vocab-desktop-shell .ipad-point-example-en { font-size: 20px; line-height: 1.82; }
+          .vocab-desktop-shell .ipad-example-ko,
+          .vocab-desktop-shell .ipad-point-example-ko { font-size: 18px; line-height: 1.78; }
+          .vocab-desktop-shell .ipad-chip { font-size: 18px; padding: 9px 15px; }
+          .vocab-desktop-shell .ipad-chip-label { height: 26px; font-size: 14px; padding-left: 9px; padding-right: 9px; }
+          .vocab-desktop-shell .ipad-point-category { font-size: 15px; padding: 7px 11px; }
+          .vocab-desktop-shell .ipad-point-expression,
+          .vocab-desktop-shell .ipad-variant-word { font-size: 20px; }
+          .vocab-desktop-shell .ipad-variant-meaning,
+          .vocab-desktop-shell .ipad-variant-related { font-size: 18px; }
+          .vocab-desktop-shell .ipad-menu-title { font-size: 20px; }
+          .vocab-desktop-shell .ipad-menu-book { font-size: 18px; }
+          .vocab-desktop-shell .ipad-menu-book-option { font-size: 17px; }
+          .vocab-desktop-shell .ipad-menu-row { min-height: 54px; }
+          .vocab-desktop-shell .ipad-menu-text { font-size: 17px; }
+          .vocab-desktop-shell .ipad-menu-dot { font-size: 15px; }
         }
       `}</style>
       <section className="min-h-[100svh] w-full bg-white px-3 sm:px-5 md:px-6 lg:px-8">
@@ -4794,7 +4821,7 @@ function Block({ children, title }: { children: ReactNode; title?: string }) {
   return (
     <div className="border-b border-[#d7ddea] py-5 last:border-b-0">
       {title ? (
-        <div className="grid grid-cols-[96px_minmax(0,1fr)] items-start gap-x-6">
+        <div className="grid grid-cols-[112px_minmax(0,1fr)] items-start gap-x-6">
           <p
             className={`ipad-section-title pt-[1px] text-[14px] font-extrabold tracking-[-0.01em] text-[#7d8ca3] ${
               title === "반의어" ? "pl-[1px]" : ""
