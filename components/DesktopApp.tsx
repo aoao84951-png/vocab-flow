@@ -278,6 +278,13 @@ export default function DesktopApp() {
   );
   const words = selectedDay?.words ?? [];
   const currentWord = words[wordIndex];
+  const currentWordHasExtraDetails = Boolean(
+    currentWord &&
+    ((currentWord.examples ?? []).length > 0 ||
+      (currentWord.synonyms ?? []).length > 0 ||
+      (currentWord.antonyms ?? []).length > 0 ||
+      (currentWord.studyPoints ?? []).length > 0),
+  );
 
   const sortedWords = selectedDay
     ? selectedDay.words
@@ -544,7 +551,6 @@ export default function DesktopApp() {
         <HomeIcon />
       </button>,
     );
-
 
   const nextWord = () => {
     const currentPos = visibleSortedWords.findIndex(
@@ -1225,27 +1231,33 @@ export default function DesktopApp() {
       <style>{`
         @media (min-width: 768px) and (max-width: 1366px) {
           .vocab-desktop-shell .ipad-wide { max-width: none !important; }
-          .vocab-desktop-shell .ipad-title { font-size: 32px; }
-          .vocab-desktop-shell .ipad-action { font-size: 14px; }
-          .vocab-desktop-shell .ipad-list-row { min-height: 54px; }
-          .vocab-desktop-shell .ipad-list-primary { font-size: 18px; }
-          .vocab-desktop-shell .ipad-list-secondary { font-size: 13px; }
-          .vocab-desktop-shell .ipad-study-content { max-width: 920px !important; padding-left: 34px; padding-right: 34px; }
-          .vocab-desktop-shell .ipad-meaning-wrap { font-size: 19px; }
-          .vocab-desktop-shell .ipad-pos-badge { height: 28px; min-width: 28px; font-size: 14px; }
-          .vocab-desktop-shell .ipad-section-title { font-size: 16px; }
+          .vocab-desktop-shell .ipad-title { font-size: 34px; }
+          .vocab-desktop-shell .ipad-action { font-size: 15px; }
+          .vocab-desktop-shell .ipad-list-row { min-height: 60px; }
+          .vocab-desktop-shell .ipad-list-primary { font-size: 20px; }
+          .vocab-desktop-shell .ipad-list-secondary { font-size: 14px; }
+          .vocab-desktop-shell .ipad-study-content { max-width: 960px !important; padding-left: 38px; padding-right: 38px; }
+          .vocab-desktop-shell .ipad-meaning-wrap { font-size: 21px; }
+          .vocab-desktop-shell .ipad-pos-badge { height: 30px; min-width: 30px; font-size: 15px; }
+          .vocab-desktop-shell .ipad-section-title { font-size: 17px; }
           .vocab-desktop-shell .ipad-example-en,
           .vocab-desktop-shell .ipad-study-desc,
-          .vocab-desktop-shell .ipad-point-example-en { font-size: 16px; line-height: 1.75; }
+          .vocab-desktop-shell .ipad-point-example-en { font-size: 18px; line-height: 1.78; }
           .vocab-desktop-shell .ipad-example-ko,
-          .vocab-desktop-shell .ipad-point-example-ko { font-size: 14px; line-height: 1.7; }
-          .vocab-desktop-shell .ipad-chip { font-size: 14px; padding: 7px 12px; }
-          .vocab-desktop-shell .ipad-chip-label { height: 22px; font-size: 12px; }
-          .vocab-desktop-shell .ipad-point-category { font-size: 13px; }
+          .vocab-desktop-shell .ipad-point-example-ko { font-size: 16px; line-height: 1.72; }
+          .vocab-desktop-shell .ipad-chip { font-size: 16px; padding: 8px 13px; }
+          .vocab-desktop-shell .ipad-chip-label { height: 24px; font-size: 13px; padding-left: 8px; padding-right: 8px; }
+          .vocab-desktop-shell .ipad-point-category { font-size: 14px; padding: 6px 10px; }
           .vocab-desktop-shell .ipad-point-expression,
-          .vocab-desktop-shell .ipad-variant-word { font-size: 16px; }
+          .vocab-desktop-shell .ipad-variant-word { font-size: 18px; }
           .vocab-desktop-shell .ipad-variant-meaning,
-          .vocab-desktop-shell .ipad-variant-related { font-size: 14px; }
+          .vocab-desktop-shell .ipad-variant-related { font-size: 16px; }
+          .vocab-desktop-shell .ipad-menu-title { font-size: 18px; }
+          .vocab-desktop-shell .ipad-menu-book { font-size: 16px; }
+          .vocab-desktop-shell .ipad-menu-book-option { font-size: 15px; }
+          .vocab-desktop-shell .ipad-menu-row { min-height: 48px; }
+          .vocab-desktop-shell .ipad-menu-text { font-size: 15px; }
+          .vocab-desktop-shell .ipad-menu-dot { font-size: 13px; }
         }
       `}</style>
       <section className="min-h-[100svh] w-full bg-white px-3 sm:px-5 md:px-6 lg:px-8">
@@ -2020,7 +2032,9 @@ export default function DesktopApp() {
                   }`}
                 >
                   <div className="ipad-study-content mx-auto h-full w-full max-w-[760px] overflow-y-auto px-6 py-8">
-                    <div className="border-b border-[#d7ddea] pb-5">
+                    <div
+                      className={`${currentWordHasExtraDetails ? "border-b border-[#d7ddea]" : ""} pb-5`}
+                    >
                       <div className="ipad-meaning-wrap flex flex-col items-center gap-2 text-[17px] font-semibold leading-relaxed text-[#111827]">
                         {currentWord.meanings.map((group) => (
                           <div
@@ -2601,7 +2615,7 @@ export default function DesktopApp() {
               className="h-full w-[min(82vw,320px)] overflow-y-auto bg-white px-[18px] pt-5 pb-5 shadow-[16px_0_40px_rgba(15,23,42,0.12)] sm:w-[300px]"
             >
               <div className="flex items-start justify-between gap-3">
-                <h2 className="pt-1 text-[16px] font-extrabold tracking-[-0.05em] text-[#0f2a5f]">
+                <h2 className="ipad-menu-title pt-1 text-[16px] font-extrabold tracking-[-0.05em] text-[#0f2a5f]">
                   목차
                 </h2>
 
@@ -2645,7 +2659,7 @@ export default function DesktopApp() {
                       : "border-[#e0e5ef]"
                   }`}
                 >
-                  <span className="min-w-0 flex-1 truncate text-[14px] font-extrabold tracking-[-0.04em] text-[#0f2a5f]">
+                  <span className="ipad-menu-book min-w-0 flex-1 truncate text-[14px] font-extrabold tracking-[-0.04em] text-[#0f2a5f]">
                     {selectedBook.title}
                   </span>
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[#8a94a6] [&_svg]:h-3 [&_svg]:w-3">
@@ -2675,7 +2689,7 @@ export default function DesktopApp() {
                             }`}
                           >
                             <span
-                              className={`min-w-0 flex-1 truncate text-[13px] tracking-[-0.04em] ${isSelected ? "font-extrabold text-[#20242b]" : "font-bold text-[#30343b]"}`}
+                              className={`ipad-menu-book-option min-w-0 flex-1 truncate text-[13px] tracking-[-0.04em] ${isSelected ? "font-extrabold text-[#20242b]" : "font-bold text-[#30343b]"}`}
                             >
                               {book.title}
                             </span>
@@ -4780,7 +4794,7 @@ function Block({ children, title }: { children: ReactNode; title?: string }) {
   return (
     <div className="border-b border-[#d7ddea] py-5 last:border-b-0">
       {title ? (
-        <div className="grid grid-cols-[88px_minmax(0,1fr)] items-start gap-x-6">
+        <div className="grid grid-cols-[96px_minmax(0,1fr)] items-start gap-x-6">
           <p
             className={`ipad-section-title pt-[1px] text-[14px] font-extrabold tracking-[-0.01em] text-[#7d8ca3] ${
               title === "반의어" ? "pl-[1px]" : ""
@@ -5476,7 +5490,7 @@ function MenuContentFolder({
   return (
     <div>
       <div
-        className={`flex min-h-[42px] w-full items-center rounded-2xl px-3 py-2 transition active:scale-[0.99] ${isSelected ? "bg-[#f2f5fa]" : "bg-white"}`}
+        className={`ipad-menu-row flex min-h-[42px] w-full items-center rounded-2xl px-3 py-2 transition active:scale-[0.99] ${isSelected ? "bg-[#f2f5fa]" : "bg-white"}`}
         style={{ paddingLeft: `${12 + depth * 18}px` }}
       >
         <button
@@ -5499,7 +5513,7 @@ function MenuContentFolder({
         <button
           type="button"
           onClick={() => onSelectFolder(path)}
-          className={`min-w-0 flex-1 truncate text-left text-[13px] tracking-[-0.04em] ${isSelected ? "font-extrabold text-[#0f2a5f]" : "font-semibold text-[#47505f]"}`}
+          className={`ipad-menu-text min-w-0 flex-1 truncate text-left text-[13px] tracking-[-0.04em] ${isSelected ? "font-extrabold text-[#0f2a5f]" : "font-semibold text-[#47505f]"}`}
         >
           {folder.title}
         </button>
@@ -5552,14 +5566,14 @@ function MenuContentDay({
     <button
       type="button"
       onClick={onSelect}
-      className={`flex min-h-[42px] w-full items-center rounded-2xl pr-3 text-left transition active:scale-[0.99] ${selected ? "bg-[#f2f5fa]" : "bg-white"}`}
+      className={`ipad-menu-row flex min-h-[42px] w-full items-center rounded-2xl pr-3 text-left transition active:scale-[0.99] ${selected ? "bg-[#f2f5fa]" : "bg-white"}`}
       style={{ paddingLeft: `${12 + depth * 18}px` }}
     >
-      <span className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center text-[11px] font-black leading-none text-[#b3bccb]">
+      <span className="ipad-menu-dot mr-2 flex h-5 w-5 shrink-0 items-center justify-center text-[11px] font-black leading-none text-[#b3bccb]">
         •
       </span>
       <span
-        className={`min-w-0 flex-1 truncate text-[13px] tracking-[-0.04em] ${selected ? "font-extrabold text-[#0f2a5f]" : "font-semibold text-[#47505f]"}`}
+        className={`ipad-menu-text min-w-0 flex-1 truncate text-[13px] tracking-[-0.04em] ${selected ? "font-extrabold text-[#0f2a5f]" : "font-semibold text-[#47505f]"}`}
       >
         {day.title}
       </span>
