@@ -1746,11 +1746,11 @@ export default function DesktopApp() {
                                       key={`${group.pos}-${groupIndex}`}
                                       className="relative flex items-start gap-1.5"
                                     >
-                                      <span className="mt-[1px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-[4px] bg-[#0f2a5f] text-[9px] font-bold text-white">
+                                      <span className="mt-[1px] inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#0f2a5f] text-[10px] font-bold text-white">
                                         {group.pos}
                                       </span>
 
-                                      <div className="mt-[1px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] leading-[1.45] text-[#596275]">
+                                      <div className="mt-[1px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
                                         {(group.items ?? []).map(
                                           (meaning, index) => (
                                             <span
@@ -1758,7 +1758,7 @@ export default function DesktopApp() {
                                               className="inline-flex items-center gap-0.5"
                                             >
                                               {group.numbered && (
-                                                <span className="inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#9aa3b2] px-[3px] text-[8px] font-bold text-white">
+                                                <span className="inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-[#9aa3b2] px-[3px] text-[9px] font-bold text-white">
                                                   {index + 1}
                                                 </span>
                                               )}
@@ -2020,15 +2020,7 @@ export default function DesktopApp() {
                   </div>
 
                   <h2
-                    className={`w-full min-w-0 px-6 text-center font-bold leading-tight tracking-tight ${
-                      currentWord.word.includes(" ")
-                        ? "break-words text-[34px]"
-                        : currentWord.word.length >= 18
-                          ? "whitespace-nowrap text-[clamp(26px,8.2vw,34px)]"
-                          : currentWord.word.length >= 13
-                            ? "whitespace-nowrap text-[clamp(32px,9.6vw,40px)]"
-                            : "whitespace-nowrap text-[44px]"
-                    } ${
+                    className={`w-full min-w-0 break-words px-6 text-center text-[44px] font-bold leading-tight tracking-tight ${
                       currentWord.memorized
                         ? "text-[#b0b7c3]"
                         : "text-[#0f2a5f]"
@@ -2053,9 +2045,9 @@ export default function DesktopApp() {
                         {currentWord.meanings.map((group) => (
                           <div
                             key={`${group.pos}-${group.items.join("")}`}
-                            className="flex items-start gap-2 text-[14px] leading-relaxed"
+                            className="flex items-start gap-2 text-[15px] leading-relaxed"
                           >
-                            <span className="mt-[2px] inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[11px] font-bold text-white">
+                            <span className="mt-[2px] inline-flex h-[20px] min-w-[20px] items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[12px] font-bold text-white">
                               {group.pos}
                             </span>
 
@@ -2067,7 +2059,7 @@ export default function DesktopApp() {
                                       key={item}
                                       className="inline-flex items-center gap-[3px]"
                                     >
-                                      <span className="inline-flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#9aa3b2] text-[9px] font-bold text-white">
+                                      <span className="inline-flex h-[15px] w-[15px] items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
                                         {index + 1}
                                       </span>
                                       <span>{item}</span>
@@ -2090,14 +2082,14 @@ export default function DesktopApp() {
                         <div className="max-h-[190px] space-y-3 overflow-y-auto pr-1">
                           {currentWord.examples.map((ex, i) => (
                             <div key={`${ex.en}-${i}`} className="pl-[2px]">
-                              <p className="text-[13px] leading-relaxed">
+                              <p className="text-[14px] leading-relaxed">
                                 <HighlightedText
                                   text={ex.en}
                                   keyword={currentWord.word}
                                 />
                               </p>
                               {ex.ko && (
-                                <p className="mt-0.5 text-[11px] leading-relaxed text-[#8a94a6]">
+                                <p className="mt-0.5 text-[12px] leading-relaxed text-[#8a94a6]">
                                   {ex.ko}
                                 </p>
                               )}
@@ -2135,12 +2127,12 @@ export default function DesktopApp() {
                                 className="rounded-2xl bg-[#f5f6fa] px-3 py-3"
                               >
                                 <div className="flex items-center gap-2">
-                                  <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[10px] font-bold text-[#0f2a5f]">
+                                  <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#0f2a5f]">
                                     {point.category}
                                   </span>
 
                                   {point.expression && (
-                                    <p className="text-[13px] font-bold text-[#111827]">
+                                    <p className="text-[14px] font-bold text-[#111827]">
                                       <HighlightedText
                                         text={point.expression}
                                         keyword=""
@@ -2151,7 +2143,7 @@ export default function DesktopApp() {
 
                                 {point.description && (
                                   <div
-                                    className="mt-2 pl-[7px] whitespace-pre-wrap text-[12px] leading-relaxed text-[#596275]"
+                                    className="mt-2 pl-[7px] whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
                                     dangerouslySetInnerHTML={{
                                       __html: applyBracketHighlightToHtml(
                                         point.description,
@@ -2169,7 +2161,7 @@ export default function DesktopApp() {
                                           className="rounded-xl border border-[#e4e8f0] bg-white px-3 py-2"
                                         >
                                           {variant.word && (
-                                            <p className="mb-1.5 text-[13px] font-bold text-[#111827]">
+                                            <p className="mb-1.5 text-[14px] font-bold text-[#111827]">
                                               <HighlightedText
                                                 text={variant.word}
                                                 keyword=""
@@ -2184,11 +2176,11 @@ export default function DesktopApp() {
                                                   key={`${meaning.pos}-${meaningIndex}`}
                                                   className="flex items-start gap-1.5"
                                                 >
-                                                  <span className="mt-[1px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-[4px] bg-[#0f2a5f] text-[9px] font-bold text-white">
+                                                  <span className="mt-[1px] inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#0f2a5f] text-[10px] font-bold text-white">
                                                     {meaning.pos}
                                                   </span>
 
-                                                  <div className="mt-[0.6px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] leading-[1.45] text-[#596275]">
+                                                  <div className="mt-[0.6px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
                                                     {(meaning.items ?? []).map(
                                                       (item, itemIndex) => (
                                                         <span
@@ -2196,7 +2188,7 @@ export default function DesktopApp() {
                                                           className="inline-flex items-center gap-0.5"
                                                         >
                                                           {meaning.numbered && (
-                                                            <span className="inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#9aa3b2] px-[3px] text-[8px] font-bold text-white">
+                                                            <span className="inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-[#9aa3b2] px-[3px] text-[9px] font-bold text-white">
                                                               {itemIndex + 1}
                                                             </span>
                                                           )}
@@ -2219,7 +2211,7 @@ export default function DesktopApp() {
                                                 =
                                               </span>
 
-                                              <p className="min-w-0 text-[11px] font-bold leading-[1.45] tracking-[-0.01em] text-[#4b6cb7]">
+                                              <p className="min-w-0 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
                                                 <HighlightedText
                                                   text={variant.related}
                                                   keyword=""
@@ -2257,7 +2249,7 @@ export default function DesktopApp() {
                                           >
                                             {example.en && (
                                               <div
-                                                className="whitespace-pre-wrap text-[12px] leading-relaxed text-[#596275]"
+                                                className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
                                                 dangerouslySetInnerHTML={{
                                                   __html:
                                                     applyBracketHighlightToHtml(
@@ -2269,7 +2261,7 @@ export default function DesktopApp() {
 
                                             {example.ko && (
                                               <p
-                                                className={`${example.en ? "mt-1" : ""} text-[11px] leading-relaxed text-[#8a94a6]`}
+                                                className={`${example.en ? "mt-1" : ""} text-[12px] leading-relaxed text-[#8a94a6]`}
                                               >
                                                 <HighlightedText
                                                   text={example.ko}
@@ -4759,7 +4751,7 @@ function Block({ children, title }: { children: ReactNode; title?: string }) {
     <div className="py-3">
       {title && (
         <p
-          className={`mb-2 text-[11px] font-bold tracking-[-0.01em] text-[#8a94a6] ${
+          className={`mb-2 text-[12px] font-bold tracking-[-0.01em] text-[#8a94a6] ${
             title === "반의어" ? "pl-[1px]" : ""
           }`}
         >
@@ -4819,13 +4811,13 @@ function ChipList({
 
   const wordChipClass =
     tone === "red"
-      ? "rounded-full bg-[#fdeeee] px-3 py-1 text-[11px] leading-none text-[#b42318]"
-      : "rounded-full bg-[#eef2f8] px-3 py-1 text-[11px] leading-none text-[#0f2a5f]";
+      ? "rounded-full bg-[#fdeeee] px-3 py-1 text-[12px] leading-none text-[#b42318]"
+      : "rounded-full bg-[#eef2f8] px-3 py-1 text-[12px] leading-none text-[#0f2a5f]";
 
   const labelClass =
     tone === "red"
-      ? "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#b42318] px-1.5 text-[9px] font-bold leading-none text-white"
-      : "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#4b6cb7] px-1.5 text-[9px] font-bold leading-none text-white";
+      ? "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#b42318] px-1.5 text-[10px] font-bold leading-none text-white"
+      : "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#4b6cb7] px-1.5 text-[10px] font-bold leading-none text-white";
 
   return (
     <div className="space-y-2">
