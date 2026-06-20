@@ -1231,14 +1231,14 @@ export default function DesktopApp() {
       <style>{`
         @media (max-width: 1440px), (hover: none) and (pointer: coarse) {
           .vocab-desktop-shell .ipad-wide { max-width: none !important; }
-          .vocab-desktop-shell .ipad-title { font-size: 36px; }
-          .vocab-desktop-shell .ipad-action { font-size: 16px; }
-          .vocab-desktop-shell .ipad-list-row { min-height: 66px; }
-          .vocab-desktop-shell .ipad-list-primary { font-size: 22px; }
-          .vocab-desktop-shell .ipad-list-secondary { font-size: 15px; }
+          .vocab-desktop-shell .ipad-title { font-size: 30px; }
+          .vocab-desktop-shell .ipad-action { font-size: 13px; }
+          .vocab-desktop-shell .ipad-list-row { min-height: 54px; border: 1px solid #e4e8f0; border-radius: 18px; background: #fff; box-shadow: 0 3px 10px rgba(15,23,42,0.035); padding-left: 16px !important; padding-right: 14px !important; }
+          .vocab-desktop-shell .ipad-list-primary { font-size: 17px; }
+          .vocab-desktop-shell .ipad-list-secondary { font-size: 11px; }
           .vocab-desktop-shell .ipad-study-content { max-width: 1040px !important; padding-left: 44px; padding-right: 44px; }
           .vocab-desktop-shell .ipad-meaning-wrap { font-size: 23px; }
-          .vocab-desktop-shell .ipad-pos-badge { height: 32px; min-width: 32px; font-size: 16px; border-radius: 8px; }
+          .vocab-desktop-shell .ipad-pos-badge { height: 29px; min-width: 29px; font-size: 14px; border-radius: 7px; padding-left: 7px; padding-right: 7px; }
           .vocab-desktop-shell .ipad-section-title { font-size: 19px; }
           .vocab-desktop-shell .ipad-example-en,
           .vocab-desktop-shell .ipad-study-desc,
@@ -1252,18 +1252,18 @@ export default function DesktopApp() {
           .vocab-desktop-shell .ipad-variant-word { font-size: 20px; }
           .vocab-desktop-shell .ipad-variant-meaning,
           .vocab-desktop-shell .ipad-variant-related { font-size: 18px; }
-          .vocab-desktop-shell .ipad-menu-title { font-size: 20px; }
-          .vocab-desktop-shell .ipad-menu-book { font-size: 18px; }
-          .vocab-desktop-shell .ipad-menu-book-option { font-size: 17px; }
-          .vocab-desktop-shell .ipad-menu-row { min-height: 54px; }
-          .vocab-desktop-shell .ipad-menu-text { font-size: 17px; }
-          .vocab-desktop-shell .ipad-menu-dot { font-size: 15px; }
+          .vocab-desktop-shell .ipad-menu-title { font-size: 17px; }
+          .vocab-desktop-shell .ipad-menu-book { font-size: 15px; }
+          .vocab-desktop-shell .ipad-menu-book-option { font-size: 14px; }
+          .vocab-desktop-shell .ipad-menu-row { min-height: 48px; }
+          .vocab-desktop-shell .ipad-menu-text { font-size: 15px; }
+          .vocab-desktop-shell .ipad-menu-dot { font-size: 13px; }
         }
 
         @supports (-webkit-touch-callout: none) {
-          .vocab-desktop-shell .ipad-list-row { min-height: 66px; }
-          .vocab-desktop-shell .ipad-list-primary { font-size: 22px; }
-          .vocab-desktop-shell .ipad-list-secondary { font-size: 15px; }
+          .vocab-desktop-shell .ipad-list-row { min-height: 54px; border: 1px solid #e4e8f0; border-radius: 18px; background: #fff; box-shadow: 0 3px 10px rgba(15,23,42,0.035); padding-left: 16px !important; padding-right: 14px !important; }
+          .vocab-desktop-shell .ipad-list-primary { font-size: 17px; }
+          .vocab-desktop-shell .ipad-list-secondary { font-size: 11px; }
           .vocab-desktop-shell .ipad-study-content { max-width: 1040px !important; padding-left: 44px; padding-right: 44px; }
           .vocab-desktop-shell .ipad-meaning-wrap { font-size: 23px; }
           .vocab-desktop-shell .ipad-section-title { font-size: 19px; }
@@ -1279,12 +1279,12 @@ export default function DesktopApp() {
           .vocab-desktop-shell .ipad-variant-word { font-size: 20px; }
           .vocab-desktop-shell .ipad-variant-meaning,
           .vocab-desktop-shell .ipad-variant-related { font-size: 18px; }
-          .vocab-desktop-shell .ipad-menu-title { font-size: 20px; }
-          .vocab-desktop-shell .ipad-menu-book { font-size: 18px; }
-          .vocab-desktop-shell .ipad-menu-book-option { font-size: 17px; }
-          .vocab-desktop-shell .ipad-menu-row { min-height: 54px; }
-          .vocab-desktop-shell .ipad-menu-text { font-size: 17px; }
-          .vocab-desktop-shell .ipad-menu-dot { font-size: 15px; }
+          .vocab-desktop-shell .ipad-menu-title { font-size: 17px; }
+          .vocab-desktop-shell .ipad-menu-book { font-size: 15px; }
+          .vocab-desktop-shell .ipad-menu-book-option { font-size: 14px; }
+          .vocab-desktop-shell .ipad-menu-row { min-height: 48px; }
+          .vocab-desktop-shell .ipad-menu-text { font-size: 15px; }
+          .vocab-desktop-shell .ipad-menu-dot { font-size: 13px; }
         }
       `}</style>
       <section className="min-h-[100svh] w-full bg-white px-3 sm:px-5 md:px-6 lg:px-8">
@@ -1501,7 +1501,7 @@ export default function DesktopApp() {
               {renderHomeTopBar(currentFolderTitle, goBackFromDay)}
             </div>
 
-            <div className="ipad-wide mx-auto mt-6 flex w-full max-w-none items-center justify-between px-0">
+            <div className="ipad-wide mx-auto mt-6 flex w-full max-w-none items-center justify-between px-5">
               <h1 className="ipad-title text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                 {activeFolder.title}
               </h1>
@@ -1523,7 +1523,7 @@ export default function DesktopApp() {
               </div>
             </div>
 
-            <div className="ipad-wide mx-auto mt-5 w-full max-w-none space-y-1 px-0">
+            <div className="ipad-wide mx-auto mt-5 w-full max-w-none space-y-2 px-5">
               {activeFolder.folders.length > 0 && (
                 <FolderTreeRows
                   folders={activeFolder.folders}
@@ -1583,7 +1583,7 @@ export default function DesktopApp() {
                     e.preventDefault();
                     setActionDayId(day.id);
                   }}
-                  className="ipad-list-row flex h-[46px] w-full touch-none select-none items-center bg-white pl-1 pr-1 text-left active:bg-[#f7f8fb]"
+                  className="ipad-list-row flex w-full touch-none select-none items-center text-left active:bg-[#f7f8fb]"
                 >
                   <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
                     <div className="min-w-0">
@@ -1631,7 +1631,7 @@ export default function DesktopApp() {
               )}
             </div>
 
-            <div className="ipad-wide mx-auto mt-6 flex w-full max-w-none items-center justify-between px-0">
+            <div className="ipad-wide mx-auto mt-6 flex w-full max-w-none items-center justify-between px-5">
               <div>
                 <h1 className="ipad-title text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                   {selectedDay.title}
@@ -1695,7 +1695,7 @@ export default function DesktopApp() {
               </div>
             </div>
 
-            <div className="ipad-wide mx-auto mt-4 flex w-full max-w-none rounded-full bg-[#f5f6fa] p-1">
+            <div className="ipad-wide mx-auto mt-4 flex w-full max-w-none rounded-full bg-[#f5f6fa] p-1 px-1">
               <button
                 onClick={() => setWordViewMode("all")}
                 className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
@@ -1721,12 +1721,12 @@ export default function DesktopApp() {
 
             <button
               onClick={() => setShowListMeanings((prev) => !prev)}
-              className="ipad-wide mx-auto mt-2 block h-9 w-full max-w-none rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275] ipad-action"
+              className="ipad-wide mx-auto mt-2 block h-9 w-[calc(100%-40px)] max-w-none rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275] ipad-action"
             >
               {showListMeanings ? "뜻 숨기기" : "뜻 보기"}
             </button>
 
-            <div className="ipad-wide mx-auto mt-5 w-full max-w-none space-y-1 px-0">
+            <div className="ipad-wide mx-auto mt-5 w-full max-w-none space-y-2 px-5">
               {visibleSortedWords.length === 0 ? (
                 <Empty text="이 Day에는 아직 단어가 없어." />
               ) : (
@@ -5397,10 +5397,8 @@ function FolderTreeRows({
             }
           >
             <div
-              className={`ipad-list-row flex h-[46px] items-center bg-white active:bg-[#f7f8fb] ${
-                depth > 0 ? "border-t border-[#e5e7eb]" : ""
-              }`}
-              style={{ paddingLeft: 4 + depth * 18, paddingRight: 4 }}
+              className="ipad-list-row flex items-center active:bg-[#f7f8fb]"
+              style={{ paddingLeft: 16 + depth * 18, paddingRight: 14 }}
             >
               <button
                 onClick={() => {
