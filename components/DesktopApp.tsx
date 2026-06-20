@@ -2045,15 +2045,15 @@ export default function DesktopApp() {
                         {currentWord.meanings.map((group) => (
                           <div
                             key={`${group.pos}-${group.items.join("")}`}
-                            className="flex items-start gap-2 text-[15px] leading-relaxed"
+                            className="flex items-start justify-center gap-2 text-center text-[15px] leading-relaxed"
                           >
                             <span className="mt-[2px] inline-flex h-[20px] min-w-[20px] items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[12px] font-bold text-white">
                               {group.pos}
                             </span>
 
-                            <div className="min-w-0 flex-1">
+                            <div className="min-w-0 flex-none">
                               {group.numbered ? (
-                                <div className="flex flex-wrap items-center gap-x-[7px] gap-y-1">
+                                <div className="flex flex-wrap items-center justify-center gap-x-[7px] gap-y-1">
                                   {group.items.map((item, index) => (
                                     <span
                                       key={item}
@@ -2067,7 +2067,7 @@ export default function DesktopApp() {
                                   ))}
                                 </div>
                               ) : (
-                                <p className="break-keep">
+                                <p className="break-keep text-center">
                                   {group.items.join(", ")}
                                 </p>
                               )}
