@@ -1324,7 +1324,7 @@ export default function DesktopApp() {
                           +
                         </span>
 
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 text-center">
                           <span className="truncate text-[16px] font-medium tracking-[-0.03em] text-[#303236]">
                             {book.title}
                           </span>
@@ -2039,19 +2039,20 @@ export default function DesktopApp() {
                       : "pointer-events-none opacity-0"
                   }`}
                 >
-                  <div className="h-full overflow-y-auto px-3 pb-4">
+                  <div className="mx-auto h-full w-full max-w-[560px] overflow-y-auto px-3 pb-4">
                     <Block>
                       <div className="space-y-2">
                         {currentWord.meanings.map((group) => (
                           <div
                             key={`${group.pos}-${group.items.join("")}`}
-                            className="flex items-start justify-center gap-2 text-center text-[15px] leading-relaxed"
+                            className="flex justify-center text-center text-[15px] leading-relaxed"
                           >
-                            <span className="mt-[2px] inline-flex h-[20px] min-w-[20px] items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[12px] font-bold text-white">
-                              {group.pos}
-                            </span>
+                            <div className="inline-flex max-w-full items-start justify-center gap-2">
+                              <span className="mt-[2px] inline-flex h-[20px] min-w-[20px] shrink-0 items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[12px] font-bold text-white">
+                                {group.pos}
+                              </span>
 
-                            <div className="min-w-0 flex-none">
+                              <div className="min-w-0 text-center">
                               {group.numbered ? (
                                 <div className="flex flex-wrap items-center justify-center gap-x-[7px] gap-y-1">
                                   {group.items.map((item, index) => (
@@ -2067,10 +2068,11 @@ export default function DesktopApp() {
                                   ))}
                                 </div>
                               ) : (
-                                <p className="break-keep text-center">
+                                <p className="break-keep">
                                   {group.items.join(", ")}
                                 </p>
                               )}
+                              </div>
                             </div>
                           </div>
                         ))}
