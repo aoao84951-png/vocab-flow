@@ -1221,7 +1221,33 @@ export default function DesktopApp() {
   };
 
   return (
-    <main className="min-h-[100svh] bg-white text-[#111827]">
+    <main className="vocab-desktop-shell min-h-[100svh] bg-white text-[#111827]">
+      <style>{`
+        @media (min-width: 768px) and (max-width: 1366px) {
+          .vocab-desktop-shell .ipad-wide { max-width: none !important; }
+          .vocab-desktop-shell .ipad-title { font-size: 32px; }
+          .vocab-desktop-shell .ipad-action { font-size: 14px; }
+          .vocab-desktop-shell .ipad-list-row { min-height: 54px; }
+          .vocab-desktop-shell .ipad-list-primary { font-size: 18px; }
+          .vocab-desktop-shell .ipad-list-secondary { font-size: 13px; }
+          .vocab-desktop-shell .ipad-study-content { max-width: 920px !important; padding-left: 34px; padding-right: 34px; }
+          .vocab-desktop-shell .ipad-meaning-wrap { font-size: 19px; }
+          .vocab-desktop-shell .ipad-pos-badge { height: 28px; min-width: 28px; font-size: 14px; }
+          .vocab-desktop-shell .ipad-section-title { font-size: 16px; }
+          .vocab-desktop-shell .ipad-example-en,
+          .vocab-desktop-shell .ipad-study-desc,
+          .vocab-desktop-shell .ipad-point-example-en { font-size: 16px; line-height: 1.75; }
+          .vocab-desktop-shell .ipad-example-ko,
+          .vocab-desktop-shell .ipad-point-example-ko { font-size: 14px; line-height: 1.7; }
+          .vocab-desktop-shell .ipad-chip { font-size: 14px; padding: 7px 12px; }
+          .vocab-desktop-shell .ipad-chip-label { height: 22px; font-size: 12px; }
+          .vocab-desktop-shell .ipad-point-category { font-size: 13px; }
+          .vocab-desktop-shell .ipad-point-expression,
+          .vocab-desktop-shell .ipad-variant-word { font-size: 16px; }
+          .vocab-desktop-shell .ipad-variant-meaning,
+          .vocab-desktop-shell .ipad-variant-related { font-size: 14px; }
+        }
+      `}</style>
       <section className="min-h-[100svh] w-full bg-white px-3 sm:px-5 md:px-6 lg:px-8">
         {isStandalone && (
           <button
@@ -1272,7 +1298,7 @@ export default function DesktopApp() {
               </p>
 
               <div className="mt-2 flex items-center justify-between">
-                <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
+                <h1 className="ipad-title text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                   단어장
                 </h1>
 
@@ -1434,29 +1460,29 @@ export default function DesktopApp() {
           <div className="-mx-3 min-h-dvh bg-white px-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8">
             {renderHomeTopBar(currentFolderTitle, goBackFromDay)}
 
-            <div className="mx-auto mt-6 flex w-full max-w-[980px] items-center justify-between px-5">
-              <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
+            <div className="ipad-wide mx-auto mt-6 flex w-full max-w-none items-center justify-between px-5">
+              <h1 className="ipad-title text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                 {activeFolder.title}
               </h1>
 
               <div className="flex gap-2">
                 <button
                   onClick={() => setStep("addFolder")}
-                  className="rounded-full bg-[#eef2f8] px-4 py-2 text-[12px] font-bold text-[#0f2a5f]"
+                  className="ipad-action rounded-full bg-[#eef2f8] px-4 py-2 text-[12px] font-bold text-[#0f2a5f]"
                 >
                   + Folder
                 </button>
 
                 <button
                   onClick={() => setStep("addDay")}
-                  className="rounded-full bg-[#0f2a5f] px-4 py-2 text-[12px] font-bold text-white"
+                  className="ipad-action rounded-full bg-[#0f2a5f] px-4 py-2 text-[12px] font-bold text-white"
                 >
                   + Day
                 </button>
               </div>
             </div>
 
-            <div className="mx-auto mt-5 w-full max-w-[980px] space-y-1 px-5">
+            <div className="ipad-wide mx-auto mt-5 w-full max-w-none space-y-1 px-0">
               {activeFolder.folders.length > 0 && (
                 <FolderTreeRows
                   folders={activeFolder.folders}
@@ -1516,17 +1542,17 @@ export default function DesktopApp() {
                     e.preventDefault();
                     setActionDayId(day.id);
                   }}
-                  className="flex h-[46px] w-full touch-none select-none items-center bg-white pl-1 pr-1 text-left active:bg-[#f7f8fb]"
+                  className="ipad-list-row flex h-[46px] w-full touch-none select-none items-center bg-white pl-1 pr-1 text-left active:bg-[#f7f8fb]"
                 >
                   <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex min-w-0 items-center gap-2">
-                        <p className="truncate text-[15px] font-semibold tracking-[-0.03em] text-[#303236]">
+                        <p className="ipad-list-primary truncate text-[15px] font-semibold tracking-[-0.03em] text-[#303236]">
                           {day.title}
                         </p>
 
                         <span
-                          className="shrink-0 translate-y-[1px] text-[10px] font-semibold leading-none tracking-[-0.02em] text-[#c4c6cc]"
+                          className="ipad-list-secondary shrink-0 translate-y-[1px] text-[10px] font-semibold leading-none tracking-[-0.02em] text-[#c4c6cc]"
                           style={{
                             fontFamily:
                               '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", sans-serif',
@@ -1562,9 +1588,9 @@ export default function DesktopApp() {
               () => setStep("day"),
             )}
 
-            <div className="mx-auto mt-6 flex w-full max-w-[980px] items-center justify-between px-5">
+            <div className="ipad-wide mx-auto mt-6 flex w-full max-w-none items-center justify-between px-5">
               <div>
-                <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
+                <h1 className="ipad-title text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                   {selectedDay.title}
                 </h1>
               </div>
@@ -1619,14 +1645,14 @@ export default function DesktopApp() {
 
                 <button
                   onClick={() => setStep("addWord")}
-                  className="rounded-full bg-[#0f2a5f] px-4 py-2 text-[12px] font-bold text-white"
+                  className="ipad-action rounded-full bg-[#0f2a5f] px-4 py-2 text-[12px] font-bold text-white"
                 >
                   + 단어
                 </button>
               </div>
             </div>
 
-            <div className="mx-auto mt-4 flex w-full max-w-[980px] rounded-full bg-[#f5f6fa] p-1">
+            <div className="ipad-wide mx-auto mt-4 flex w-full max-w-none rounded-full bg-[#f5f6fa] p-1">
               <button
                 onClick={() => setWordViewMode("all")}
                 className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
@@ -1652,12 +1678,12 @@ export default function DesktopApp() {
 
             <button
               onClick={() => setShowListMeanings((prev) => !prev)}
-              className="mx-auto mt-2 block h-8 w-full max-w-[980px] rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275]"
+              className="ipad-wide mx-auto mt-2 block h-9 w-full max-w-none rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275] ipad-action"
             >
               {showListMeanings ? "뜻 숨기기" : "뜻 보기"}
             </button>
 
-            <div className="mx-auto mt-5 w-full max-w-[980px] space-y-1 px-5">
+            <div className="ipad-wide mx-auto mt-5 w-full max-w-none space-y-1 px-0">
               {visibleSortedWords.length === 0 ? (
                 <Empty text="이 Day에는 아직 단어가 없어." />
               ) : (
@@ -1742,7 +1768,7 @@ export default function DesktopApp() {
                             </span>
                           ) : null}
                           <p
-                            className={`truncate text-[17px] font-bold ${
+                            className={`ipad-list-primary truncate text-[17px] font-bold ${
                               item.highlightColor === "red"
                                 ? "text-[#ef4444]"
                                 : item.highlightColor === "blue"
@@ -1766,7 +1792,7 @@ export default function DesktopApp() {
                                         {group.pos}
                                       </span>
 
-                                      <div className="mt-[1px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
+                                      <div className="ipad-variant-meaning mt-[1px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
                                         {(group.items ?? []).map(
                                           (meaning, index) => (
                                             <span
@@ -1989,15 +2015,15 @@ export default function DesktopApp() {
                       : "pointer-events-none opacity-0"
                   }`}
                 >
-                  <div className="mx-auto h-full w-full max-w-[760px] overflow-y-auto px-6 py-8">
+                  <div className="ipad-study-content mx-auto h-full w-full max-w-[760px] overflow-y-auto px-6 py-8">
                     <div className="border-b border-[#d7ddea] pb-5">
-                      <div className="flex flex-col items-center gap-2 text-[17px] font-semibold leading-relaxed text-[#111827]">
+                      <div className="ipad-meaning-wrap flex flex-col items-center gap-2 text-[17px] font-semibold leading-relaxed text-[#111827]">
                         {currentWord.meanings.map((group) => (
                           <div
                             key={`${group.pos}-${group.items.join("")}`}
                             className="flex w-fit max-w-full items-start gap-2"
                           >
-                            <span className="inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#0f2a5f] px-[6px] text-[13px] font-bold text-white">
+                            <span className="ipad-pos-badge inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#0f2a5f] px-[6px] text-[13px] font-bold text-white">
                               {group.pos}
                             </span>
 
@@ -2032,14 +2058,14 @@ export default function DesktopApp() {
                         <div className="max-h-[190px] space-y-3 overflow-y-auto pr-1">
                           {currentWord.examples.map((ex, i) => (
                             <div key={`${ex.en}-${i}`} className="pl-[2px]">
-                              <p className="text-[14px] leading-relaxed">
+                              <p className="ipad-example-en text-[14px] leading-relaxed">
                                 <HighlightedText
                                   text={ex.en}
                                   keyword={currentWord.word}
                                 />
                               </p>
                               {ex.ko && (
-                                <p className="mt-0.5 text-[12px] leading-relaxed text-[#8a94a6]">
+                                <p className="ipad-example-ko mt-0.5 text-[12px] leading-relaxed text-[#8a94a6]">
                                   {ex.ko}
                                 </p>
                               )}
@@ -2077,12 +2103,12 @@ export default function DesktopApp() {
                                 className="px-0 py-4 first:pt-0 last:pb-0"
                               >
                                 <div className="flex items-center gap-2">
-                                  <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#0f2a5f]">
+                                  <span className="ipad-point-category rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#0f2a5f]">
                                     {point.category}
                                   </span>
 
                                   {point.expression && (
-                                    <p className="text-[14px] font-bold text-[#111827]">
+                                    <p className="ipad-point-expression text-[14px] font-bold text-[#111827]">
                                       <HighlightedText
                                         text={point.expression}
                                         keyword=""
@@ -2093,7 +2119,7 @@ export default function DesktopApp() {
 
                                 {point.description && (
                                   <div
-                                    className="mt-2 pl-[7px] whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
+                                    className="ipad-study-desc mt-2 pl-[7px] whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
                                     dangerouslySetInnerHTML={{
                                       __html: applyBracketHighlightToHtml(
                                         point.description,
@@ -2111,7 +2137,7 @@ export default function DesktopApp() {
                                           className="rounded-xl border border-[#e4e8f0] bg-white px-3 py-2"
                                         >
                                           {variant.word && (
-                                            <p className="mb-1.5 text-[14px] font-bold text-[#111827]">
+                                            <p className="ipad-variant-word mb-1.5 text-[14px] font-bold text-[#111827]">
                                               <HighlightedText
                                                 text={variant.word}
                                                 keyword=""
@@ -2130,7 +2156,7 @@ export default function DesktopApp() {
                                                     {meaning.pos}
                                                   </span>
 
-                                                  <div className="mt-[0.6px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
+                                                  <div className="ipad-variant-meaning mt-[0.6px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
                                                     {(meaning.items ?? []).map(
                                                       (item, itemIndex) => (
                                                         <span
@@ -2161,7 +2187,7 @@ export default function DesktopApp() {
                                                 =
                                               </span>
 
-                                              <p className="min-w-0 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
+                                              <p className="ipad-variant-related min-w-0 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
                                                 <HighlightedText
                                                   text={variant.related}
                                                   keyword=""
@@ -2199,7 +2225,7 @@ export default function DesktopApp() {
                                           >
                                             {example.en && (
                                               <div
-                                                className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
+                                                className="ipad-point-example-en whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
                                                 dangerouslySetInnerHTML={{
                                                   __html:
                                                     applyBracketHighlightToHtml(
@@ -2211,7 +2237,7 @@ export default function DesktopApp() {
 
                                             {example.ko && (
                                               <p
-                                                className={`${example.en ? "mt-1" : ""} text-[12px] leading-relaxed text-[#8a94a6]`}
+                                                className={`${example.en ? "mt-1" : ""} ipad-point-example-ko text-[12px] leading-relaxed text-[#8a94a6]`}
                                               >
                                                 <HighlightedText
                                                   text={example.ko}
@@ -4752,7 +4778,7 @@ function Block({ children, title }: { children: ReactNode; title?: string }) {
       {title ? (
         <div className="grid grid-cols-[88px_minmax(0,1fr)] items-start gap-x-6">
           <p
-            className={`pt-[1px] text-[14px] font-extrabold tracking-[-0.01em] text-[#7d8ca3] ${
+            className={`ipad-section-title pt-[1px] text-[14px] font-extrabold tracking-[-0.01em] text-[#7d8ca3] ${
               title === "반의어" ? "pl-[1px]" : ""
             }`}
           >
@@ -4815,13 +4841,13 @@ function ChipList({
 
   const wordChipClass =
     tone === "red"
-      ? "rounded-full bg-[#fdeeee] px-3 py-1 text-[12px] leading-none text-[#b42318]"
-      : "rounded-full bg-[#eef2f8] px-3 py-1 text-[12px] leading-none text-[#0f2a5f]";
+      ? "rounded-full bg-[#fdeeee] px-3 py-1 text-[12px] leading-none text-[#b42318] ipad-chip"
+      : "rounded-full bg-[#eef2f8] px-3 py-1 text-[12px] leading-none text-[#0f2a5f] ipad-chip";
 
   const labelClass =
     tone === "red"
-      ? "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#b42318] px-1.5 text-[10px] font-bold leading-none text-white"
-      : "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#4b6cb7] px-1.5 text-[10px] font-bold leading-none text-white";
+      ? "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#b42318] px-1.5 text-[10px] font-bold leading-none text-white ipad-chip-label"
+      : "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#4b6cb7] px-1.5 text-[10px] font-bold leading-none text-white ipad-chip-label";
 
   return (
     <div className="space-y-2">
@@ -5326,7 +5352,7 @@ function FolderTreeRows({
             }
           >
             <div
-              className={`flex h-[46px] items-center bg-white active:bg-[#f7f8fb] ${
+              className={`ipad-list-row flex h-[46px] items-center bg-white active:bg-[#f7f8fb] ${
                 depth > 0 ? "border-t border-[#e5e7eb]" : ""
               }`}
               style={{ paddingLeft: 4 + depth * 18, paddingRight: 4 }}
@@ -5372,8 +5398,8 @@ function FolderTreeRows({
                 <span
                   className={`truncate tracking-[-0.03em] ${
                     depth === 0
-                      ? "text-[15px] font-semibold text-[#303236]"
-                      : "text-[14px] font-medium text-[#666a70]"
+                      ? "ipad-list-primary text-[15px] font-semibold text-[#303236]"
+                      : "ipad-list-primary text-[14px] font-medium text-[#666a70]"
                   }`}
                 >
                   {folder.title}
