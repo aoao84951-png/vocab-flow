@@ -499,10 +499,52 @@ export default function DesktopApp() {
 
   const startStudy = (index: number) => {
     setWordIndex(index);
-    setShowMeaning(false);
     setActionWordIndex(null);
     setStep("study");
   };
+
+  const renderTopBar = (
+    title: ReactNode,
+    onBack: () => void,
+    rightContent?: ReactNode,
+  ) => (
+    <header
+      onClick={(e) => e.stopPropagation()}
+      className="sticky top-0 z-20 flex h-[76px] shrink-0 items-center justify-between border-b border-[#d7ddea] bg-[#f8fafc]/95 px-5 shadow-[0_1px_0_rgba(15,42,95,0.03)] backdrop-blur"
+    >
+      <div className="flex w-[82px] items-center justify-start">
+        <button
+          onClick={onBack}
+          className="flex h-9 w-9 items-center justify-center pt-[2px] text-[#0f2a5f]"
+          aria-label="뒤로가기"
+        >
+          <ChevronLeft />
+        </button>
+      </div>
+
+      <p className="min-w-0 flex-1 truncate px-3 text-center text-[12px] font-semibold tracking-[-0.01em] text-[#596275]">
+        {title}
+      </p>
+
+      <div className="flex w-[82px] items-center justify-end gap-1">
+        {rightContent}
+      </div>
+    </header>
+  );
+
+  const renderHomeTopBar = (title: ReactNode, onBack: () => void) =>
+    renderTopBar(
+      title,
+      onBack,
+      <button
+        onClick={goHome}
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f5f6fa] text-[#596275] active:scale-95"
+        aria-label="홈"
+      >
+        <HomeIcon />
+      </button>,
+    );
+
 
   const nextWord = () => {
     const currentPos = visibleSortedWords.findIndex(
@@ -512,7 +554,10 @@ export default function DesktopApp() {
     const next =
       visibleSortedWords[Math.min(safePos + 1, visibleSortedWords.length - 1)];
 
-    if (next) setWordIndex(next.originalIndex);
+    if (next) {
+      setWordIndex(next.originalIndex);
+      setActionWordIndex(null);
+    }
   };
 
   const prevWord = () => {
@@ -522,7 +567,10 @@ export default function DesktopApp() {
     const safePos = currentPos === -1 ? 0 : currentPos;
     const prev = visibleSortedWords[Math.max(safePos - 1, 0)];
 
-    if (prev) setWordIndex(prev.originalIndex);
+    if (prev) {
+      setWordIndex(prev.originalIndex);
+      setActionWordIndex(null);
+    }
   };
 
   const handleStudyPointerDown = (e: PointerEvent<HTMLDivElement>) => {
@@ -552,24 +600,7 @@ export default function DesktopApp() {
       return;
     }
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    if (y < 58) {
-      studyTapStart.current = null;
-      return;
-    }
-
-    const third = rect.width / 3;
-
-    if (x < third) {
-      prevWord();
-    } else if (x > third * 2) {
-      nextWord();
-    } else {
-      setShowMeaning((prev) => !prev);
-    }
+    setShowMeaning((prev) => !prev);
 
     studyTapStart.current = null;
   };
@@ -1324,7 +1355,7 @@ export default function DesktopApp() {
                           +
                         </span>
 
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 max-w-[calc(100%-33px)]">
                           <span className="truncate text-[16px] font-medium tracking-[-0.03em] text-[#303236]">
                             {book.title}
                           </span>
@@ -1400,20 +1431,10 @@ export default function DesktopApp() {
         )}
 
         {step === "day" && activeFolder && (
-          <div className="min-h-dvh px-5 pt-7 pb-6">
-            <div className="flex items-center justify-between">
-              <BackButton onClick={goBackFromDay} label="뒤로" />
+          <div className="-mx-3 min-h-dvh bg-white px-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8">
+            {renderHomeTopBar(currentFolderTitle, goBackFromDay)}
 
-              <button
-                onClick={goHome}
-                className="mr-1.5 text-[#8a94a6]"
-                aria-label="홈"
-              >
-                <HomeIcon />
-              </button>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between">
+            <div className="mx-auto mt-6 flex w-full max-w-[980px] items-center justify-between px-5">
               <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                 {activeFolder.title}
               </h1>
@@ -1435,7 +1456,7 @@ export default function DesktopApp() {
               </div>
             </div>
 
-            <div className="mt-5 space-y-1">
+            <div className="mx-auto mt-5 w-full max-w-[980px] space-y-1 px-5">
               {activeFolder.folders.length > 0 && (
                 <FolderTreeRows
                   folders={activeFolder.folders}
@@ -1533,20 +1554,15 @@ export default function DesktopApp() {
         )}
 
         {step === "wordList" && selectedBook && selectedDay && (
-          <div className="min-h-dvh px-5 pt-7 pb-6">
-            <div className="flex items-center justify-between">
-              <BackButton onClick={() => setStep("day")} label="Day 목록" />
+          <div className="-mx-3 min-h-dvh bg-white px-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8">
+            {renderHomeTopBar(
+              <>
+                {currentFolderTitle} 〉 {selectedDay.title}
+              </>,
+              () => setStep("day"),
+            )}
 
-              <button
-                onClick={goHome}
-                className="mr-1.5 text-[#8a94a6]"
-                aria-label="홈"
-              >
-                <HomeIcon />
-              </button>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between">
+            <div className="mx-auto mt-6 flex w-full max-w-[980px] items-center justify-between px-5">
               <div>
                 <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                   {selectedDay.title}
@@ -1610,7 +1626,7 @@ export default function DesktopApp() {
               </div>
             </div>
 
-            <div className="mt-4 flex rounded-full bg-[#f5f6fa] p-1">
+            <div className="mx-auto mt-4 flex w-full max-w-[980px] rounded-full bg-[#f5f6fa] p-1">
               <button
                 onClick={() => setWordViewMode("all")}
                 className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
@@ -1636,12 +1652,12 @@ export default function DesktopApp() {
 
             <button
               onClick={() => setShowListMeanings((prev) => !prev)}
-              className="mt-2 h-8 w-full rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275]"
+              className="mx-auto mt-2 block h-8 w-full max-w-[980px] rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275]"
             >
               {showListMeanings ? "뜻 숨기기" : "뜻 보기"}
             </button>
 
-            <div className="mt-5 space-y-1">
+            <div className="mx-auto mt-5 w-full max-w-[980px] space-y-1 px-5">
               {visibleSortedWords.length === 0 ? (
                 <Empty text="이 Day에는 아직 단어가 없어." />
               ) : (
@@ -1799,23 +1815,15 @@ export default function DesktopApp() {
 
         {step === "study" && selectedBook && selectedDay && (
           <div
-            className="relative flex min-h-[100svh] flex-col px-4 pt-4 pb-6"
+            className="relative -mx-3 flex min-h-[100svh] flex-col bg-white px-0 pt-0 pb-[calc(86px+env(safe-area-inset-bottom))] sm:-mx-5 md:-mx-6 lg:-mx-8"
             onPointerDown={handleStudyPointerDown}
             onPointerUp={handleStudyPointerUp}
           >
             <header
               onClick={(e) => e.stopPropagation()}
-              className="flex h-10 shrink-0 items-center justify-between"
+              className="sticky top-0 z-20 flex h-[76px] shrink-0 items-center justify-between border-b border-[#d7ddea] bg-[#f8fafc]/95 px-5 shadow-[0_1px_0_rgba(15,42,95,0.03)] backdrop-blur"
             >
               <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setMenuOpen(true)}
-                  className="h-9 w-9 text-[20px] text-[#0f2a5f]"
-                  aria-label="메뉴"
-                >
-                  ☰
-                </button>
-
                 <button
                   onClick={() => setStep("wordList")}
                   className="flex h-9 w-9 items-center justify-center pt-[2px] text-[#0f2a5f]"
@@ -1825,7 +1833,7 @@ export default function DesktopApp() {
                 </button>
               </div>
 
-              <p className="max-w-[160px] truncate text-center text-[11px] text-[#596275]">
+              <p className="min-w-0 flex-1 truncate px-3 text-center text-[12px] font-semibold tracking-[-0.01em] text-[#596275]">
                 {currentFolderTitle} 〉 {selectedDay.title} 〉{" "}
                 {`${visibleSortedWords.length ? visibleSortedWords.findIndex((item) => item.originalIndex === wordIndex) + 1 : 0} / ${visibleSortedWords.length}`}
               </p>
@@ -1877,80 +1885,24 @@ export default function DesktopApp() {
                 </button>
 
                 <button
-                  onClick={() => setStep("editWord")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActionWordIndex(wordIndex);
+                  }}
                   className="flex h-9 w-9 items-center justify-center rounded-full text-[#0f2a5f] active:scale-95"
-                  aria-label="수정"
+                  aria-label="단어 메뉴"
                 >
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M4.5 19.5L8.8 18.6L18.9 8.5C19.5 7.9 19.5 6.9 18.9 6.3L17.7 5.1C17.1 4.5 16.1 4.5 15.5 5.1L5.4 15.2L4.5 19.5Z"
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9.2"
                       stroke="currentColor"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                      strokeWidth="1.8"
                     />
-                    <path
-                      d="M14.4 6.2L17.8 9.6"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </button>
-
-                <button
-                  onClick={() => deleteWord(wordIndex)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-[#cf231c] active:scale-95"
-                  aria-label="삭제"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    {/* 손잡이 */}
-                    <rect
-                      x="9"
-                      y="3.8"
-                      width="6"
-                      height="2.2"
-                      rx="1.1"
-                      fill="currentColor"
-                    />
-
-                    {/* 뚜껑 */}
-                    <rect
-                      x="4"
-                      y="6.2"
-                      width="16"
-                      height="2.4"
-                      rx="1.2"
-                      fill="currentColor"
-                    />
-
-                    {/* 몸통 */}
-                    <path
-                      d="M7.3 9.2H16.7L15.9 19C15.82 19.95 15.03 20.7 14.08 20.7H9.92C8.97 20.7 8.18 19.95 8.1 19L7.3 9.2Z"
-                      stroke="currentColor"
-                      strokeWidth="2.3"
-                      strokeLinejoin="round"
-                      fill="white"
-                    />
-
-                    {/* 내부선 */}
-                    <rect
-                      x="9.5"
-                      y="11.4"
-                      width="1.9"
-                      height="5.8"
-                      rx="0.95"
-                      fill="currentColor"
-                    />
-
-                    <rect
-                      x="12.6"
-                      y="11.4"
-                      width="1.9"
-                      height="5.8"
-                      rx="0.95"
-                      fill="currentColor"
-                    />
+                    <circle cx="8.5" cy="12" r="1.15" fill="currentColor" />
+                    <circle cx="12" cy="12" r="1.15" fill="currentColor" />
+                    <circle cx="15.5" cy="12" r="1.15" fill="currentColor" />
                   </svg>
                 </button>
               </div>
@@ -1961,13 +1913,11 @@ export default function DesktopApp() {
             ) : (
               <>
                 <section
-                  className={`relative mt-3 flex h-[155px] shrink-0 items-center justify-center rounded-[16px] border ${
-                    currentWord.importanceStars
-                      ? "border-[#b9c9ed] bg-[#f8fbff] shadow-[0_8px_22px_rgba(15,42,95,0.12)]"
-                      : "border-[#dce2ee] bg-white"
+                  className={`relative flex min-h-[220px] shrink-0 flex-col items-center justify-center border-b border-[#d7ddea] px-5 py-9 ${
+                    currentWord.importanceStars ? "bg-[#f8fbff]" : "bg-white"
                   }`}
                 >
-                  <div className="absolute right-4 top-4 flex items-center gap-2">
+                  <div className="absolute right-5 top-5 flex items-center gap-2">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -2020,7 +1970,7 @@ export default function DesktopApp() {
                   </div>
 
                   <h2
-                    className={`w-full min-w-0 break-words px-6 text-center text-[44px] font-bold leading-tight tracking-tight ${
+                    className={`w-full min-w-0 break-words px-10 text-center text-[52px] font-black leading-tight tracking-[-0.045em] ${
                       currentWord.memorized
                         ? "text-[#b0b7c3]"
                         : "text-[#0f2a5f]"
@@ -2031,7 +1981,7 @@ export default function DesktopApp() {
                 </section>
 
                 <section
-                  className={`relative z-[2] mt-4 min-h-0 flex-1 overflow-hidden transition-opacity duration-200 ${
+                  className={`relative z-[2] min-h-0 flex-1 overflow-hidden transition-opacity duration-200 ${
                     showMeaning
                       ? currentWord.memorized
                         ? "pointer-events-auto opacity-45"
@@ -2039,27 +1989,27 @@ export default function DesktopApp() {
                       : "pointer-events-none opacity-0"
                   }`}
                 >
-                  <div className="mx-auto h-full w-full max-w-[560px] overflow-y-auto px-3 pb-4">
-                    <Block>
-                      <div className="space-y-2">
+                  <div className="mx-auto h-full w-full max-w-[760px] overflow-y-auto px-6 py-8">
+                    <div className="border-b border-[#d7ddea] pb-5">
+                      <div className="flex flex-col items-center gap-2 text-[17px] font-semibold leading-relaxed text-[#111827]">
                         {currentWord.meanings.map((group) => (
                           <div
                             key={`${group.pos}-${group.items.join("")}`}
-                            className="flex items-start gap-2 text-[15px] leading-relaxed"
+                            className="flex w-fit max-w-full items-start gap-2"
                           >
-                            <span className="mt-[2px] inline-flex h-[20px] min-w-[20px] items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[12px] font-bold text-white">
+                            <span className="inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#0f2a5f] px-[6px] text-[13px] font-bold text-white">
                               {group.pos}
                             </span>
 
-                            <div className="min-w-0 flex-1">
+                            <div className="min-w-0 max-w-[calc(100%-33px)]">
                               {group.numbered ? (
-                                <div className="flex flex-wrap items-center gap-x-[7px] gap-y-1">
+                                <div className="flex flex-wrap items-start justify-start gap-x-[8px] gap-y-1">
                                   {group.items.map((item, index) => (
                                     <span
                                       key={item}
-                                      className="inline-flex items-center gap-[3px]"
+                                      className="inline-flex items-center gap-[4px]"
                                     >
-                                      <span className="inline-flex h-[15px] w-[15px] items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
+                                      <span className="inline-flex h-[17px] w-[17px] items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
                                         {index + 1}
                                       </span>
                                       <span>{item}</span>
@@ -2067,7 +2017,7 @@ export default function DesktopApp() {
                                   ))}
                                 </div>
                               ) : (
-                                <p className="break-keep">
+                                <p className="break-keep text-left">
                                   {group.items.join(", ")}
                                 </p>
                               )}
@@ -2075,7 +2025,7 @@ export default function DesktopApp() {
                           </div>
                         ))}
                       </div>
-                    </Block>
+                    </div>
 
                     {currentWord.examples.length > 0 && (
                       <Block title="예문">
@@ -2118,13 +2068,13 @@ export default function DesktopApp() {
                       </Block>
                     )}
                     {(currentWord.studyPoints ?? []).length > 0 && (
-                      <Block>
-                        <div className="space-y-3">
+                      <Block title="학습포인트">
+                        <div className="divide-y divide-[#d7ddea]">
                           {(currentWord.studyPoints ?? []).map(
                             (point, index) => (
                               <div
                                 key={index}
-                                className="rounded-2xl bg-[#f5f6fa] px-3 py-3"
+                                className="px-0 py-4 first:pt-0 last:pb-0"
                               >
                                 <div className="flex items-center gap-2">
                                   <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#0f2a5f]">
@@ -2283,6 +2233,56 @@ export default function DesktopApp() {
                     )}
                   </div>
                 </section>
+
+                <footer
+                  onClick={(e) => e.stopPropagation()}
+                  className="fixed inset-x-0 bottom-0 z-20 border-t border-[#d7ddea] bg-[#f8fafc]/95 px-6 py-4 pb-[calc(16px+env(safe-area-inset-bottom))] shadow-[0_-1px_0_rgba(15,42,95,0.03)] backdrop-blur"
+                >
+                  <div className="mx-auto flex max-w-[820px] items-center justify-between gap-4">
+                    <button
+                      onClick={prevWord}
+                      className="flex h-12 min-w-[150px] items-center justify-center gap-2 rounded-[14px] border border-[#d7ddea] bg-white text-[15px] font-bold text-[#0f2a5f] shadow-[0_4px_12px_rgba(15,42,95,0.08)] active:scale-[0.98]"
+                    >
+                      ← 이전
+                    </button>
+
+                    <button
+                      onClick={() => setMenuOpen(true)}
+                      className="flex h-12 items-center justify-center gap-2 px-4 text-[14px] font-bold text-[#26364f] active:scale-[0.98]"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <rect
+                          x="4"
+                          y="4"
+                          width="16"
+                          height="16"
+                          rx="2.5"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        />
+                        <path
+                          d="M8 8H9.5M8 12H9.5M8 16H9.5M12 8H16M12 12H16M12 16H16"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      단어장
+                    </button>
+
+                    <button
+                      onClick={nextWord}
+                      className="flex h-12 min-w-[150px] items-center justify-center gap-2 rounded-[14px] bg-[#0f2a5f] text-[15px] font-bold text-white shadow-[0_5px_14px_rgba(15,42,95,0.26)] active:scale-[0.98]"
+                    >
+                      다음 →
+                    </button>
+                  </div>
+                </footer>
               </>
             )}
           </div>
@@ -2731,42 +2731,42 @@ export default function DesktopApp() {
         {actionWordIndex !== null && selectedDay && (
           <div
             onClick={() => setActionWordIndex(null)}
-            className="fixed inset-0 z-30 flex items-end bg-black/25"
+            className="fixed inset-0 z-30 flex items-end bg-black/20 px-3 pb-[calc(10px+env(safe-area-inset-bottom))] backdrop-blur-[1px]"
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="mx-auto w-full max-w-[430px] rounded-t-[24px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
+              className="mx-auto w-full max-w-[430px] space-y-2"
             >
-              <p className="text-[16px] font-bold text-[#111827]">
-                {selectedDay.words[actionWordIndex]?.word}
-              </p>
+              <div className="overflow-hidden rounded-[14px] bg-white/95 shadow-[0_18px_45px_rgba(15,42,95,0.18)] backdrop-blur-xl">
+                <div className="border-b border-[#e5e8ef] px-4 py-3 text-center text-[12px] font-semibold text-[#8a94a6]">
+                  {selectedDay.words[actionWordIndex]?.word}
+                </div>
 
-              <div className="mt-4 space-y-2">
                 <button
                   onClick={() => {
                     setWordIndex(actionWordIndex);
                     setActionWordIndex(null);
                     setStep("editWord");
                   }}
-                  className="h-12 w-full rounded-2xl bg-[#eef2f8] text-[13px] font-bold text-[#0f2a5f]"
+                  className="h-[54px] w-full border-b border-[#e5e8ef] text-center text-[18px] font-normal text-[#007aff] active:bg-[#eef2f8]"
                 >
                   수정
                 </button>
 
                 <button
                   onClick={() => deleteWord(actionWordIndex)}
-                  className="h-12 w-full rounded-2xl bg-[#fdeeee] text-[13px] font-bold text-[#b42318]"
+                  className="h-[54px] w-full text-center text-[18px] font-normal text-[#ff3b30] active:bg-[#fdeeee]"
                 >
                   삭제
                 </button>
-
-                <button
-                  onClick={() => setActionWordIndex(null)}
-                  className="h-12 w-full rounded-2xl border border-[#dce2ee] text-[13px] text-[#596275]"
-                >
-                  취소
-                </button>
               </div>
+
+              <button
+                onClick={() => setActionWordIndex(null)}
+                className="h-[54px] w-full rounded-[14px] bg-white/95 text-center text-[18px] font-semibold text-[#007aff] shadow-[0_12px_28px_rgba(15,42,95,0.12)] active:bg-[#eef2f8]"
+              >
+                취소
+              </button>
             </div>
           </div>
         )}
@@ -4748,18 +4748,22 @@ function Empty({ text }: { text: string }) {
 
 function Block({ children, title }: { children: ReactNode; title?: string }) {
   return (
-    <div className="py-3">
-      {title && (
-        <p
-          className={`mb-2 text-[12px] font-bold tracking-[-0.01em] text-[#8a94a6] ${
-            title === "반의어" ? "pl-[1px]" : ""
-          }`}
-        >
-          {title}
-        </p>
-      )}
+    <div className="border-b border-[#d7ddea] py-5 last:border-b-0">
+      {title ? (
+        <div className="grid grid-cols-[88px_minmax(0,1fr)] items-start gap-x-6">
+          <p
+            className={`pt-[1px] text-[14px] font-extrabold tracking-[-0.01em] text-[#7d8ca3] ${
+              title === "반의어" ? "pl-[1px]" : ""
+            }`}
+          >
+            {title}
+          </p>
 
-      <div>{children}</div>
+          <div className="min-w-0">{children}</div>
+        </div>
+      ) : (
+        <div>{children}</div>
+      )}
     </div>
   );
 }
@@ -5521,7 +5525,9 @@ function MenuContentDay({
       className={`flex min-h-[42px] w-full items-center rounded-2xl pr-3 text-left transition active:scale-[0.99] ${selected ? "bg-[#f2f5fa]" : "bg-white"}`}
       style={{ paddingLeft: `${12 + depth * 18}px` }}
     >
-      <span className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center text-[11px] font-black leading-none text-[#b3bccb]">•</span>
+      <span className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center text-[11px] font-black leading-none text-[#b3bccb]">
+        •
+      </span>
       <span
         className={`min-w-0 flex-1 truncate text-[13px] tracking-[-0.04em] ${selected ? "font-extrabold text-[#0f2a5f]" : "font-semibold text-[#47505f]"}`}
       >
