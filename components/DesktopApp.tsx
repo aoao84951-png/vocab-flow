@@ -273,6 +273,16 @@ export default function DesktopApp() {
   const activeFolder = getCurrentFolder(books, folderPath);
   const selectedBook = books.find((book) => book.id === selectedBookId);
   const currentFolderTitle = activeFolder?.title || selectedBook?.title || "";
+  const folderBreadcrumbTitles = folderPath.reduce<string[]>((titles, id, index) => {
+    const parent = index === 0 ? undefined : getCurrentFolder(books, folderPath.slice(0, index));
+    const list = parent ? parent.folders : books;
+    const folder = list.find((item) => item.id === id);
+
+    if (folder) titles.push(folder.title);
+
+    return titles;
+  }, []);
+  const folderBreadcrumb = folderBreadcrumbTitles.join(" > ");
   const selectedDay = activeFolder?.days.find(
     (day) => day.id === selectedDayId,
   );
@@ -517,7 +527,7 @@ export default function DesktopApp() {
   ) => (
     <header
       onClick={(e) => e.stopPropagation()}
-      className="sticky top-0 z-20 flex h-[76px] shrink-0 items-center justify-between border-b border-[#d7ddea] bg-[#f8fafc]/95 px-5 shadow-[0_1px_0_rgba(15,42,95,0.03)] backdrop-blur"
+      className="sticky top-0 z-20 flex h-[76px] shrink-0 items-center justify-between bg-white px-5"
     >
       <div className="flex w-[82px] items-center justify-start">
         <button
@@ -1457,7 +1467,7 @@ export default function DesktopApp() {
 
         {step === "day" && activeFolder && (
           <div className="-mx-3 min-h-dvh bg-white px-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8">
-            {renderHomeTopBar(currentFolderTitle, goBackFromDay)}
+            {renderHomeTopBar(folderBreadcrumb, goBackFromDay)}
 
             <div className="mt-6 flex w-full items-center justify-between px-8 sm:px-10 md:px-11 lg:px-[52px]">
               <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
@@ -1582,7 +1592,7 @@ export default function DesktopApp() {
           <div className="-mx-3 min-h-dvh bg-white px-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8">
             {renderHomeTopBar(
               <>
-                {currentFolderTitle} 〉 {selectedDay.title}
+                {folderBreadcrumb} &gt; {selectedDay.title}
               </>,
               () => setStep("day"),
             )}
