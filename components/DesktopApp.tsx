@@ -1233,17 +1233,18 @@ export default function DesktopApp() {
           @media (pointer: coarse) and (min-width: 768px) {
             .ipad-list-text { font-size: 18px; line-height: 1.45; }
             .ipad-list-subtext { font-size: 17px; line-height: 1.45; }
-            .ipad-word-title { font-size: 21px; line-height: 1.35; }
+            .ipad-word-title { font-size: 22px; line-height: 1.35; }
             .ipad-word-meaning { font-size: 15px; line-height: 1.55; }
             .ipad-pos-badge { height: 18px; min-width: 18px; font-size: 11px; }
-            .ipad-detail-meaning { font-size: 18px; line-height: 1.65; }
-            .ipad-detail-pos { height: 25px; min-width: 25px; font-size: 13px; }
-            .ipad-block-title { font-size: 15px; }
-            .ipad-example-en { font-size: 16px; line-height: 1.65; }
-            .ipad-example-ko { font-size: 14px; line-height: 1.65; }
-            .ipad-chip { font-size: 14px; padding-top: 6px; padding-bottom: 6px; }
-            .ipad-study-main { font-size: 15px; line-height: 1.65; }
-            .ipad-study-sub { font-size: 14px; line-height: 1.65; }
+            .ipad-study-word { font-size: 58px; line-height: 1.1; }
+            .ipad-detail-meaning { font-size: 19px; line-height: 1.65; }
+            .ipad-detail-pos { height: 26px; min-width: 26px; font-size: 13px; }
+            .ipad-block-title { font-size: 16px; }
+            .ipad-example-en { font-size: 17px; line-height: 1.68; }
+            .ipad-example-ko { font-size: 15px; line-height: 1.68; }
+            .ipad-chip { font-size: 15px; padding-top: 6px; padding-bottom: 6px; }
+            .ipad-study-main { font-size: 16px; line-height: 1.68; }
+            .ipad-study-sub { font-size: 15px; line-height: 1.68; }
           }
         `}</style>
       <section className="min-h-[100svh] w-full bg-white px-3 sm:px-5 md:px-6 lg:px-8">
@@ -1458,7 +1459,7 @@ export default function DesktopApp() {
           <div className="-mx-3 min-h-dvh bg-white px-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8">
             {renderHomeTopBar(currentFolderTitle, goBackFromDay)}
 
-            <div className="mt-6 flex w-full items-center justify-between px-5">
+            <div className="mt-6 flex w-full items-center justify-between px-8 sm:px-10 md:px-11 lg:px-[52px]">
               <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                 {activeFolder.title}
               </h1>
@@ -1480,7 +1481,7 @@ export default function DesktopApp() {
               </div>
             </div>
 
-            <div className="mt-5 w-full space-y-1 px-5">
+            <div className="mt-5 w-full space-y-1 px-8 sm:px-10 md:px-11 lg:px-[52px]">
               {activeFolder.folders.length > 0 && (
                 <FolderTreeRows
                   folders={activeFolder.folders}
@@ -1586,7 +1587,7 @@ export default function DesktopApp() {
               () => setStep("day"),
             )}
 
-            <div className="mt-6 flex w-full items-center justify-between px-5">
+            <div className="mt-6 flex w-full items-center justify-between px-8 sm:px-10 md:px-11 lg:px-[52px]">
               <div>
                 <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                   {selectedDay.title}
@@ -1650,7 +1651,7 @@ export default function DesktopApp() {
               </div>
             </div>
 
-            <div className="mx-5 mt-4 flex rounded-full bg-[#f5f6fa] p-1">
+            <div className="mx-8 mt-4 flex rounded-full bg-[#f5f6fa] p-1 sm:mx-10 md:mx-11 lg:mx-[52px]">
               <button
                 onClick={() => setWordViewMode("all")}
                 className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
@@ -1676,12 +1677,12 @@ export default function DesktopApp() {
 
             <button
               onClick={() => setShowListMeanings((prev) => !prev)}
-              className="mx-5 mt-2 block h-8 w-[calc(100%-40px)] rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275]"
+              className="mx-8 mt-2 block h-8 w-[calc(100%-64px)] rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275] sm:mx-10 sm:w-[calc(100%-80px)] md:mx-11 md:w-[calc(100%-88px)] lg:mx-[52px] lg:w-[calc(100%-104px)]"
             >
               {showListMeanings ? "뜻 숨기기" : "뜻 보기"}
             </button>
 
-            <div className="mt-5 w-full space-y-1 px-5">
+            <div className="mt-5 w-full space-y-1 px-8 sm:px-10 md:px-11 lg:px-[52px]">
               {visibleSortedWords.length === 0 ? (
                 <Empty text="이 Day에는 아직 단어가 없어." />
               ) : (
@@ -1994,7 +1995,7 @@ export default function DesktopApp() {
                   </div>
 
                   <h2
-                    className={`w-full min-w-0 break-words px-10 text-center text-[52px] font-black leading-tight tracking-[-0.045em] ${
+                    className={`ipad-study-word w-full min-w-0 break-words px-10 text-center text-[52px] font-black leading-tight tracking-[-0.045em] ${
                       currentWord.memorized
                         ? "text-[#b0b7c3]"
                         : "text-[#0f2a5f]"
@@ -2013,7 +2014,7 @@ export default function DesktopApp() {
                       : "pointer-events-none opacity-0"
                   }`}
                 >
-                  <div className="mx-auto h-full w-full max-w-[760px] overflow-y-auto px-6 py-8">
+                  <div className="mx-auto h-full w-full max-w-[760px] overflow-y-auto px-8 py-8 sm:px-10 md:px-11 lg:px-[52px]">
                     <div className={currentWordHasExtraContent ? "border-b border-[#d7ddea] pb-5" : ""}>
                       <div className="ipad-detail-meaning flex flex-col items-center gap-2 text-[17px] font-semibold leading-relaxed text-[#111827]">
                         {currentWord.meanings.map((group) => (
