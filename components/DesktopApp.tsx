@@ -1457,10 +1457,12 @@ export default function DesktopApp() {
         )}
 
         {step === "day" && activeFolder && (
-          <div className="-mx-3 min-h-dvh bg-white px-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8">
-            {renderHomeTopBar(currentFolderTitle, goBackFromDay)}
+          <div className="min-h-dvh bg-white pb-6">
+            <div className="-mx-3 sm:-mx-5 md:-mx-6 lg:-mx-8">
+              {renderHomeTopBar(currentFolderTitle, goBackFromDay)}
+            </div>
 
-            <div className="ipad-wide mx-auto mt-6 flex w-full max-w-none items-center justify-between px-5">
+            <div className="ipad-wide mx-auto mt-6 flex w-full max-w-none items-center justify-between px-0">
               <h1 className="ipad-title text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                 {activeFolder.title}
               </h1>
@@ -1580,15 +1582,17 @@ export default function DesktopApp() {
         )}
 
         {step === "wordList" && selectedBook && selectedDay && (
-          <div className="-mx-3 min-h-dvh bg-white px-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8">
-            {renderHomeTopBar(
-              <>
-                {currentFolderTitle} 〉 {selectedDay.title}
-              </>,
-              () => setStep("day"),
-            )}
+          <div className="min-h-dvh bg-white pb-6">
+            <div className="-mx-3 sm:-mx-5 md:-mx-6 lg:-mx-8">
+              {renderHomeTopBar(
+                <>
+                  {currentFolderTitle} 〉 {selectedDay.title}
+                </>,
+                () => setStep("day"),
+              )}
+            </div>
 
-            <div className="ipad-wide mx-auto mt-6 flex w-full max-w-none items-center justify-between px-5">
+            <div className="ipad-wide mx-auto mt-6 flex w-full max-w-none items-center justify-between px-0">
               <div>
                 <h1 className="ipad-title text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                   {selectedDay.title}
