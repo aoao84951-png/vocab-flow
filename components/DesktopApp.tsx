@@ -1324,7 +1324,7 @@ export default function DesktopApp() {
                           +
                         </span>
 
-                        <div className="min-w-0 flex-1 text-center">
+                        <div className="min-w-0 flex-1">
                           <span className="truncate text-[16px] font-medium tracking-[-0.03em] text-[#303236]">
                             {book.title}
                           </span>
@@ -2045,16 +2045,15 @@ export default function DesktopApp() {
                         {currentWord.meanings.map((group) => (
                           <div
                             key={`${group.pos}-${group.items.join("")}`}
-                            className="flex justify-center text-center text-[15px] leading-relaxed"
+                            className="flex items-start gap-2 text-[15px] leading-relaxed"
                           >
-                            <div className="inline-flex max-w-full items-start justify-center gap-2">
-                              <span className="mt-[2px] inline-flex h-[20px] min-w-[20px] shrink-0 items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[12px] font-bold text-white">
-                                {group.pos}
-                              </span>
+                            <span className="mt-[2px] inline-flex h-[20px] min-w-[20px] items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[12px] font-bold text-white">
+                              {group.pos}
+                            </span>
 
-                              <div className="min-w-0 text-center">
+                            <div className="min-w-0 flex-1">
                               {group.numbered ? (
-                                <div className="flex flex-wrap items-center justify-center gap-x-[7px] gap-y-1">
+                                <div className="flex flex-wrap items-center gap-x-[7px] gap-y-1">
                                   {group.items.map((item, index) => (
                                     <span
                                       key={item}
@@ -2072,7 +2071,6 @@ export default function DesktopApp() {
                                   {group.items.join(", ")}
                                 </p>
                               )}
-                              </div>
                             </div>
                           </div>
                         ))}
