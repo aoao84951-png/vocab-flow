@@ -1801,7 +1801,7 @@ export default function DesktopApp() {
                                         {group.pos}
                                       </span>
 
-                                      <div className="ipad-word-meaning relative -top-[0.5px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
+                                      <div className="ipad-word-meaning relative -top-[1px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
                                         {(group.items ?? []).map(
                                           (meaning, index) => (
                                             <span
@@ -2036,7 +2036,7 @@ export default function DesktopApp() {
                               {group.pos}
                             </span>
 
-                            <div className="min-w-0 relative -top-[1px]">
+                            <div className="min-w-0 relative -top-[2px]">
                               {group.numbered ? (
                                 <div className="flex flex-wrap items-start justify-start gap-x-[8px] gap-y-1">
                                   {group.items.map((item, index) => (
