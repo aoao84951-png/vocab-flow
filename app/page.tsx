@@ -10,7 +10,7 @@ export default function Home() {
 
   useEffect(() => {
     const checkScreen = () => {
-      setIsDesktop(window.innerWidth >= 1024);
+      setIsDesktop(window.innerWidth >= 600);
     };
 
     checkScreen();
