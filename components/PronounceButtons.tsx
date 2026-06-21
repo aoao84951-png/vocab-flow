@@ -107,7 +107,9 @@ export default function PronounceButtons({
 }: PronounceButtonsProps) {
   const [loadingAccent, setLoadingAccent] = useState<Accent | null>(null);
 
-  const cleanedText = normalizeText(text);
+  const cleanedText = normalizeText(
+    text.replace(/\[\[(.*?)\]\]/g, "$1")
+  );
 
   if (!cleanedText) return null;
 
