@@ -2164,7 +2164,7 @@ export default function DesktopApp() {
                                         key={`${item}-${index}`}
                                         className="inline-flex max-w-full items-start gap-[4px]"
                                       >
-                                        <span className="mt-[4px] inline-flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
+                                        <span className="mt-[6px] inline-flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
                                           {index + 1}
                                         </span>
                                         <span className="min-w-0 break-keep">
