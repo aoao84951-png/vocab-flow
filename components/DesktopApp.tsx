@@ -284,7 +284,12 @@ export default function DesktopApp() {
     HTMLMediaElement.prototype.play = function patchedPlay() {
       const activeAudio = audioWindow.__vocabFlowActiveAudio;
 
-      if (activeAudio && activeAudio !== this && !activeAudio.paused && !activeAudio.ended) {
+      if (
+        activeAudio &&
+        activeAudio !== this &&
+        !activeAudio.paused &&
+        !activeAudio.ended
+      ) {
         stopAudio(activeAudio);
       }
 
@@ -307,7 +312,6 @@ export default function DesktopApp() {
       return playResult;
     };
   }, []);
-
 
   const [swipedIndex, setSwipedIndex] = useState<number | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
@@ -359,15 +363,21 @@ export default function DesktopApp() {
   const activeFolder = getCurrentFolder(books, folderPath);
   const selectedBook = books.find((book) => book.id === selectedBookId);
   const currentFolderTitle = activeFolder?.title || selectedBook?.title || "";
-  const folderBreadcrumbTitles = folderPath.reduce<string[]>((titles, id, index) => {
-    const parent = index === 0 ? undefined : getCurrentFolder(books, folderPath.slice(0, index));
-    const list = parent ? parent.folders : books;
-    const folder = list.find((item) => item.id === id);
+  const folderBreadcrumbTitles = folderPath.reduce<string[]>(
+    (titles, id, index) => {
+      const parent =
+        index === 0
+          ? undefined
+          : getCurrentFolder(books, folderPath.slice(0, index));
+      const list = parent ? parent.folders : books;
+      const folder = list.find((item) => item.id === id);
 
-    if (folder) titles.push(folder.title);
+      if (folder) titles.push(folder.title);
 
-    return titles;
-  }, []);
+      return titles;
+    },
+    [],
+  );
   const folderBreadcrumb = folderBreadcrumbTitles.join(" > ");
   const selectedDay = activeFolder?.days.find(
     (day) => day.id === selectedDayId,
@@ -376,10 +386,10 @@ export default function DesktopApp() {
   const currentWord = words[wordIndex];
   const currentWordHasExtraContent = Boolean(
     currentWord &&
-      (currentWord.examples.length > 0 ||
-        currentWord.synonyms.length > 0 ||
-        currentWord.antonyms.length > 0 ||
-        (currentWord.studyPoints ?? []).length > 0),
+    (currentWord.examples.length > 0 ||
+      currentWord.synonyms.length > 0 ||
+      currentWord.antonyms.length > 0 ||
+      (currentWord.studyPoints ?? []).length > 0),
   );
 
   const sortedWords = selectedDay
@@ -647,7 +657,6 @@ export default function DesktopApp() {
         <HomeIcon />
       </button>,
     );
-
 
   const nextWord = () => {
     const currentPos = visibleSortedWords.findIndex(
@@ -1325,7 +1334,7 @@ export default function DesktopApp() {
 
   return (
     <main className="min-h-[100svh] bg-white text-[#111827]">
-        <style>{`
+      <style>{`
           @media (pointer: coarse) and (min-width: 768px) {
             .ipad-list-text { font-size: 18px; line-height: 1.45; }
             .ipad-list-subtext { font-size: 17px; line-height: 1.45; }
@@ -2112,40 +2121,67 @@ export default function DesktopApp() {
                   }`}
                 >
                   <div className="mx-auto h-full w-full max-w-[760px] overflow-y-auto px-8 py-8 sm:px-10 md:px-11 lg:px-[52px]">
-                    <div className={currentWordHasExtraContent ? "border-b border-[#d7ddea] pb-5" : ""}>
+                    <div
+                      className={
+                        currentWordHasExtraContent
+                          ? "border-b border-[#d7ddea] pb-5"
+                          : ""
+                      }
+                    >
                       <div className="ipad-detail-meaning flex flex-col items-center gap-2 text-[17px] font-semibold leading-relaxed text-[#111827]">
-                        {currentWord.meanings.map((group) => (
-                          <div
-                            key={`${group.pos}-${group.items.join("")}`}
-                            className="grid w-fit max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-2"
-                          >
-                            <span className="ipad-detail-pos inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#0f2a5f] px-[6px] text-[13px] font-bold text-white">
-                              {group.pos}
-                            </span>
+                        {currentWord.meanings.map((group) => {
+                          const shouldCenterStackedNumberedMeanings =
+                            group.numbered &&
+                            group.items.length > 1 &&
+                            group.items.join("").length >= 42;
 
-                            <div className="min-w-0 relative -top-[2px]">
-                              {group.numbered ? (
-                                <div className="flex flex-wrap items-start justify-start gap-x-[8px] gap-y-1">
-                                  {group.items.map((item, index) => (
-                                    <span
-                                      key={item}
-                                      className="inline-flex items-center gap-[4px]"
-                                    >
-                                      <span className="inline-flex h-[17px] w-[17px] items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
-                                        {index + 1}
+                          return (
+                            <div
+                              key={`${group.pos}-${group.items.join("")}`}
+                              className="grid w-fit max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-2"
+                            >
+                              <span className="ipad-detail-pos inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#0f2a5f] px-[6px] text-[13px] font-bold text-white">
+                                {group.pos}
+                              </span>
+
+                              <div
+                                className={`relative -top-[2px] min-w-0 ${
+                                  shouldCenterStackedNumberedMeanings
+                                    ? "flex justify-center"
+                                    : ""
+                                }`}
+                              >
+                                {group.numbered ? (
+                                  <div
+                                    className={
+                                      shouldCenterStackedNumberedMeanings
+                                        ? "inline-flex max-w-full flex-col items-start gap-y-1 text-left"
+                                        : "flex flex-wrap items-start justify-start gap-x-[8px] gap-y-1"
+                                    }
+                                  >
+                                    {group.items.map((item, index) => (
+                                      <span
+                                        key={`${item}-${index}`}
+                                        className="inline-flex max-w-full items-start gap-[4px]"
+                                      >
+                                        <span className="mt-[4px] inline-flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
+                                          {index + 1}
+                                        </span>
+                                        <span className="min-w-0 break-keep">
+                                          {item}
+                                        </span>
                                       </span>
-                                      <span>{item}</span>
-                                    </span>
-                                  ))}
-                                </div>
-                              ) : (
-                                <p className="break-keep text-left">
-                                  {group.items.join(", ")}
-                                </p>
-                              )}
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="break-keep text-left">
+                                    {group.items.join(", ")}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -2161,7 +2197,10 @@ export default function DesktopApp() {
                                     keyword={currentWord.word}
                                   />
                                 </p>
-                                <PronounceButtons text={ex.en} className="shrink-0" />
+                                <PronounceButtons
+                                  text={ex.en}
+                                  className="shrink-0"
+                                />
                               </div>
                               {ex.ko && (
                                 <p className="ipad-example-ko mt-0.5 text-[12px] leading-relaxed text-[#8a94a6]">
