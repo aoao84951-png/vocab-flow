@@ -400,7 +400,7 @@ function MobilePronounceButton({
 
   if (!isSpeakableEnglishOnly(cleanedText)) return null;
 
-  const playAccent = async (accent: MobileAccent, playback: MobileTtsPlayback) => {
+  const loadAccentAudio = async (accent: MobileAccent, playback: MobileTtsPlayback) => {
     if (playback.cancelled) throw createMobileTtsAbortError();
 
     const voice = MOBILE_TTS_VOICES[accent];
@@ -410,8 +410,7 @@ function MobilePronounceButton({
     if (playback.cancelled) throw createMobileTtsAbortError();
 
     if (cachedAudio) {
-      await playMobileTtsBlob(cachedAudio, playback);
-      return;
+      return cachedAudio;
     }
 
     const audioBlob = await fetchMobileTtsAudio(cleanedText, voice);
@@ -419,7 +418,7 @@ function MobilePronounceButton({
     if (playback.cancelled) throw createMobileTtsAbortError();
 
     await saveMobileTtsAudioToCache(cacheKey, audioBlob);
-    await playMobileTtsBlob(audioBlob, playback);
+    return audioBlob;
   };
 
   const playBothAccents = async () => {
@@ -465,9 +464,16 @@ function MobilePronounceButton({
 
     try {
       setIsPlaying(true);
-      await playAccent("US", playback);
+      const [usAudioBlob, ukAudioBlob] = await Promise.all([
+        loadAccentAudio("US", playback),
+        loadAccentAudio("UK", playback),
+      ]);
+
+      if (playback.cancelled) throw createMobileTtsAbortError();
+
+      await playMobileTtsBlob(usAudioBlob, playback);
       await waitMobileTtsDelay(260, playback);
-      await playAccent("UK", playback);
+      await playMobileTtsBlob(ukAudioBlob, playback);
     } catch (error) {
       if ((error as Error).name !== "AbortError") {
         console.error(error);
