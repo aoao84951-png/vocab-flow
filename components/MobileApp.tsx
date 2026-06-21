@@ -1957,7 +1957,7 @@ const getDayProgress = (day: Day) => {
                                   </span>
                             
                                   <div
-                                    className="mt-[1px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] leading-[1.45] text-[#596275]"
+                                    className="mt-[1px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]"
                                   >
                                     {(group.items ?? []).map((meaning, index) => (
                                       <span key={`${meaning}-${index}`} className="inline-flex items-center gap-0.5">
@@ -2256,37 +2256,70 @@ const getDayProgress = (day: Day) => {
                   <div
                     className="h-full overflow-y-auto px-3 pb-4"
                   >
-                    <Block>
-                      <div className="space-y-2">
-                        {currentWord.meanings.map((group) => (
-                          <div
-                            key={`${group.pos}-${group.items.join("")}`}
-                            className="flex items-start gap-2 text-[14px] leading-relaxed"
-                          >
-                            <span className="mt-[2px] inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[11px] font-bold text-white">
-                              {group.pos}
-                            </span>
+                    <div className="py-4">
+                      <div className="flex flex-col items-center gap-2">
+                        {currentWord.meanings.map((group) => {
+                          const shouldCenterStackedNumberedMeanings =
+                            group.numbered &&
+                            group.items.length > 1 &&
+                            group.items.join("").length >= 42;
 
-                            <div className="min-w-0 flex-1">
-                              {group.numbered ? (
-                                <div className="flex flex-wrap items-center gap-x-[7px] gap-y-1">
-                                  {group.items.map((item, index) => (
-                                    <span key={item} className="inline-flex items-center gap-[3px]">
-                                      <span className="inline-flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#9aa3b2] text-[9px] font-bold text-white">
-                                        {index + 1}
+                          return (
+                            <div
+                              key={`${group.pos}-${group.items.join("")}`}
+                              className="grid w-fit max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-2"
+                            >
+                              <span className="inline-flex h-[19px] min-w-[19px] items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[11px] font-bold text-white">
+                                {group.pos}
+                              </span>
+
+                              <div
+                                className={`relative -top-[2px] min-w-0 ${
+                                  shouldCenterStackedNumberedMeanings
+                                    ? "flex justify-center"
+                                    : ""
+                                }`}
+                              >
+                                {group.numbered ? (
+                                  <div
+                                    className={
+                                      shouldCenterStackedNumberedMeanings
+                                        ? "inline-flex max-w-full flex-col items-start gap-y-1 text-left"
+                                        : "flex flex-wrap items-start justify-start gap-x-[7px] gap-y-1"
+                                    }
+                                  >
+                                    {group.items.map((item, index) => (
+                                      <span
+                                        key={`${item}-${index}`}
+                                        className="inline-flex max-w-full items-start gap-[3px]"
+                                      >
+                                        <span className="mt-[4px] inline-flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[9px] font-bold text-white">
+                                          {index + 1}
+                                        </span>
+                                        <span className="min-w-0 break-keep">
+                                          {item}
+                                        </span>
                                       </span>
-                                      <span>{item}</span>
-                                    </span>
-                                  ))}
-                                </div>
-                              ) : (
-                                <p className="break-keep">{group.items.join(", ")}</p>
-                              )}
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="break-keep text-left">
+                                    {group.items.join(", ")}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
-                    </Block>
+                    </div>
+
+                    {(currentWord.examples.length > 0 ||
+                      currentWord.synonyms.length > 0 ||
+                      currentWord.antonyms.length > 0 ||
+                      (currentWord.studyPoints ?? []).length > 0) && (
+                      <div className="mx-1 border-t border-[#e6ebf3]" />
+                    )}
 
                     {currentWord.examples.length > 0 && (
                       <Block title="예문">
@@ -2295,14 +2328,14 @@ const getDayProgress = (day: Day) => {
                             <div key={`${ex.en}-${i}`} className="pl-[2px]">
                               {ex.en && (
                                 <div className="flex items-start gap-2">
-                                  <p className="min-w-0 flex-1 text-[13px] leading-relaxed">
+                                  <p className="min-w-0 flex-1 text-[14px] leading-relaxed">
                                     <HighlightedText text={ex.en} keyword={currentWord.word} />
                                   </p>
                                   <MobilePronounceButton text={ex.en} />
                                 </div>
                               )}
                               {ex.ko && (
-                                <p className="mt-0.5 text-[11px] leading-relaxed text-[#8a94a6]">
+                                <p className="mt-0.5 text-[12px] leading-relaxed text-[#8a94a6]">
                                   {ex.ko}
                                 </p>
                               )}
@@ -2329,12 +2362,12 @@ const getDayProgress = (day: Day) => {
                           {(currentWord.studyPoints ?? []).map((point, index) => (
                             <div key={index} className="rounded-2xl bg-[#f5f6fa] px-3 py-3">
                               <div className="flex items-center gap-2">
-                                <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[10px] font-bold text-[#0f2a5f]">
+                                <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#0f2a5f]">
                                   {point.category}
                                 </span>
 
                                 {point.expression && (
-                                  <p className="text-[13px] font-bold text-[#111827]">
+                                  <p className="text-[14px] font-bold text-[#111827]">
                                     <HighlightedText text={point.expression} keyword="" />
                                   </p>
                                 )}
@@ -2342,7 +2375,7 @@ const getDayProgress = (day: Day) => {
 
                               {point.description && (
                                 <div
-                                  className="mt-2 pl-[7px] whitespace-pre-wrap text-[12px] leading-relaxed text-[#596275]"
+                                  className="mt-2 pl-[7px] whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
                                   dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }}
                                 />
                               )}
@@ -2356,7 +2389,7 @@ const getDayProgress = (day: Day) => {
                                     >
                                       {variant.word && (
                                         <div className="mb-1.5 flex items-center gap-2">
-                                          <p className="min-w-0 flex-1 text-[13px] font-bold text-[#111827]">
+                                          <p className="min-w-0 flex-1 text-[14px] font-bold text-[#111827]">
                                             <HighlightedText text={variant.word} keyword="" />
                                           </p>
                                           <MobilePronounceButton text={variant.word} />
@@ -2373,7 +2406,7 @@ const getDayProgress = (day: Day) => {
                                               {meaning.pos}
                                             </span>
 
-                                            <div className="mt-[0.6px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[11px] leading-[1.45] text-[#596275]">
+                                            <div className="mt-[0.6px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
                                               {(meaning.items ?? []).map((item, itemIndex) => (
                                                 <span
                                                   key={`${item}-${itemIndex}`}
@@ -2398,7 +2431,7 @@ const getDayProgress = (day: Day) => {
                                             =
                                           </span>
 
-                                          <p className="min-w-0 text-[11px] font-bold leading-[1.45] tracking-[-0.01em] text-[#4b6cb7]">
+                                          <p className="min-w-0 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
                                             <HighlightedText text={variant.related} keyword="" />
                                           </p>
                                         </div>
@@ -2428,7 +2461,7 @@ const getDayProgress = (day: Day) => {
                                         {example.en && (
                                           <div className="flex items-start gap-2">
                                             <div
-                                              className="min-w-0 flex-1 whitespace-pre-wrap text-[12px] leading-relaxed text-[#596275]"
+                                              className="min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
                                               dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(example.en) }}
                                             />
                                             <MobilePronounceButton text={example.en} />
@@ -2437,7 +2470,7 @@ const getDayProgress = (day: Day) => {
 
                                         {example.ko && (
                                           <p
-                                            className={`${example.en ? "mt-1" : ""} text-[11px] leading-relaxed text-[#8a94a6]`}
+                                            className={`${example.en ? "mt-1" : ""} text-[12px] leading-relaxed text-[#8a94a6]`}
                                           >
                                             <HighlightedText text={example.ko} keyword="" />
                                           </p>
@@ -4644,7 +4677,7 @@ function Block({
     <div className="py-3">
       {title && (
         <p
-        className={`mb-2 text-[11px] font-bold tracking-[-0.01em] text-[#8a94a6] ${
+        className={`mb-2 text-[12px] font-bold tracking-[-0.01em] text-[#8a94a6] ${
           title === "반의어" ? "pl-[1px]" : ""
         }`}
       >
@@ -4704,13 +4737,13 @@ function ChipList({
 
   const wordChipClass =
     tone === "red"
-      ? "rounded-full bg-[#fdeeee] px-3 py-1 text-[11px] leading-none text-[#b42318]"
-      : "rounded-full bg-[#eef2f8] px-3 py-1 text-[11px] leading-none text-[#0f2a5f]";
+      ? "rounded-full bg-[#fdeeee] px-3 py-1 text-[12px] leading-none text-[#b42318]"
+      : "rounded-full bg-[#eef2f8] px-3 py-1 text-[12px] leading-none text-[#0f2a5f]";
 
   const labelClass =
     tone === "red"
-      ? "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#b42318] px-1.5 text-[9px] font-bold leading-none text-white"
-      : "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#4b6cb7] px-1.5 text-[9px] font-bold leading-none text-white";
+      ? "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#b42318] px-1.5 text-[10px] font-bold leading-none text-white"
+      : "inline-flex h-[18px] shrink-0 items-center justify-center rounded-[8px] bg-[#4b6cb7] px-1.5 text-[10px] font-bold leading-none text-white";
 
   return (
     <div className="space-y-2">
