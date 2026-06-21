@@ -2267,7 +2267,11 @@ const getDayProgress = (day: Day) => {
                           return (
                             <div
                               key={`${group.pos}-${group.items.join("")}`}
-                              className="grid w-fit max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-2"
+                              className={
+                                shouldCenterStackedNumberedMeanings
+                                  ? "grid w-fit max-w-full grid-cols-[auto_minmax(0,max-content)] items-start justify-center gap-2"
+                                  : "grid w-fit max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-2"
+                              }
                             >
                               <span className="inline-flex h-[19px] min-w-[19px] items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[11px] font-bold text-white">
                                 {group.pos}
