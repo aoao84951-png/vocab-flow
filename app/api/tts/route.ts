@@ -3,11 +3,20 @@ import textToSpeech from "@google-cloud/text-to-speech";
 
 export const runtime = "nodejs";
 
+const normalizePrivateKey = (key?: string) => {
+  if (!key) return undefined;
+
+  return key
+    .trim()
+    .replace(/^"|"$/g, "")
+    .replace(/\\n/g, "\n");
+};
+
 const client = new textToSpeech.TextToSpeechClient({
   projectId: process.env.GOOGLE_PROJECT_ID,
   credentials: {
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    private_key: normalizePrivateKey(process.env.GOOGLE_PRIVATE_KEY),
   },
 });
 
