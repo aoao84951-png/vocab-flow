@@ -227,27 +227,113 @@ const makeMobileTtsCacheKey = async (text: string, voice: string) => {
   return `/tts-cache/${voice}-${Math.abs(hash)}.mp3`;
 };
 
-const playMobileTtsBlob = (blob: Blob) =>
+type MobileTtsPlayback = {
+  audio: HTMLAudioElement | null;
+  delayTimer: number | null;
+  abortHandlers: Set<() => void>;
+  cancelled: boolean;
+  stop: () => void;
+};
+
+let activeMobileTtsPlayback: MobileTtsPlayback | null = null;
+
+const createMobileTtsAbortError = () => {
+  const error = new Error("발음 재생이 중지되었습니다.");
+  error.name = "AbortError";
+  return error;
+};
+
+const stopActiveMobileTtsPlayback = () => {
+  activeMobileTtsPlayback?.stop();
+};
+
+const waitMobileTtsDelay = (ms: number, playback: MobileTtsPlayback) =>
   new Promise<void>((resolve, reject) => {
+    if (playback.cancelled) {
+      reject(createMobileTtsAbortError());
+      return;
+    }
+
+    let settled = false;
+
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      playback.abortHandlers.delete(abortDelay);
+      callback();
+    };
+
+    const abortDelay = () => {
+      if (playback.delayTimer) {
+        window.clearTimeout(playback.delayTimer);
+        playback.delayTimer = null;
+      }
+
+      finish(() => reject(createMobileTtsAbortError()));
+    };
+
+    playback.abortHandlers.add(abortDelay);
+
+    playback.delayTimer = window.setTimeout(() => {
+      playback.delayTimer = null;
+
+      if (playback.cancelled) {
+        finish(() => reject(createMobileTtsAbortError()));
+        return;
+      }
+
+      finish(resolve);
+    }, ms);
+  });
+
+const playMobileTtsBlob = (blob: Blob, playback: MobileTtsPlayback) =>
+  new Promise<void>((resolve, reject) => {
+    if (playback.cancelled) {
+      reject(createMobileTtsAbortError());
+      return;
+    }
+
     const audioUrl = URL.createObjectURL(blob);
     const audio = new Audio(audioUrl);
+    playback.audio = audio;
 
-    const cleanup = () => URL.revokeObjectURL(audioUrl);
+    let settled = false;
+
+    const abortAudio = () => {
+      audio.pause();
+      finish(() => reject(createMobileTtsAbortError()));
+    };
+
+    const cleanup = () => {
+      URL.revokeObjectURL(audioUrl);
+      playback.abortHandlers.delete(abortAudio);
+      if (playback.audio === audio) playback.audio = null;
+    };
+
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      callback();
+    };
+
+    playback.abortHandlers.add(abortAudio);
 
     audio.onended = () => {
-      cleanup();
-      resolve();
+      finish(resolve);
     };
 
     audio.onerror = () => {
-      cleanup();
-      reject(new Error("오디오 재생에 실패했습니다."));
+      finish(() => reject(new Error("오디오 재생에 실패했습니다.")));
     };
 
     void audio.play().catch((error) => {
-      cleanup();
-      reject(error);
+      finish(() => reject(error));
     });
+
+    if (playback.cancelled) {
+      abortAudio();
+    }
   });
 
 const fetchMobileTtsAudio = async (text: string, voice: string) => {
@@ -303,52 +389,112 @@ function MobilePronounceButton({
   className?: string;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const playbackRef = useRef<MobileTtsPlayback | null>(null);
   const cleanedText = normalizeMobileTtsText(text);
+
+  useEffect(() => {
+    return () => {
+      playbackRef.current?.stop();
+    };
+  }, []);
 
   if (!isSpeakableEnglishOnly(cleanedText)) return null;
 
-  const playAccent = async (accent: MobileAccent) => {
+  const playAccent = async (accent: MobileAccent, playback: MobileTtsPlayback) => {
+    if (playback.cancelled) throw createMobileTtsAbortError();
+
     const voice = MOBILE_TTS_VOICES[accent];
     const cacheKey = await makeMobileTtsCacheKey(cleanedText, voice);
     const cachedAudio = await getMobileCachedTtsAudio(cacheKey);
 
+    if (playback.cancelled) throw createMobileTtsAbortError();
+
     if (cachedAudio) {
-      await playMobileTtsBlob(cachedAudio);
+      await playMobileTtsBlob(cachedAudio, playback);
       return;
     }
 
     const audioBlob = await fetchMobileTtsAudio(cleanedText, voice);
+
+    if (playback.cancelled) throw createMobileTtsAbortError();
+
     await saveMobileTtsAudioToCache(cacheKey, audioBlob);
-    await playMobileTtsBlob(audioBlob);
+    await playMobileTtsBlob(audioBlob, playback);
   };
 
   const playBothAccents = async () => {
-    if (isPlaying) return;
+    if (playbackRef.current && !playbackRef.current.cancelled) {
+      playbackRef.current.stop();
+      return;
+    }
+
+    stopActiveMobileTtsPlayback();
+
+    const playback: MobileTtsPlayback = {
+      audio: null,
+      delayTimer: null,
+      abortHandlers: new Set(),
+      cancelled: false,
+      stop: () => {
+        if (playback.cancelled) return;
+
+        playback.cancelled = true;
+        playback.abortHandlers.forEach((abort) => abort());
+        playback.abortHandlers.clear();
+        playback.audio?.pause();
+        playback.audio = null;
+
+        if (playback.delayTimer) {
+          window.clearTimeout(playback.delayTimer);
+          playback.delayTimer = null;
+        }
+
+        if (playbackRef.current === playback) {
+          playbackRef.current = null;
+          setIsPlaying(false);
+        }
+
+        if (activeMobileTtsPlayback === playback) {
+          activeMobileTtsPlayback = null;
+        }
+      },
+    };
+
+    playbackRef.current = playback;
+    activeMobileTtsPlayback = playback;
 
     try {
       setIsPlaying(true);
-      await playAccent("US");
-      await new Promise((resolve) => window.setTimeout(resolve, 260));
-      await playAccent("UK");
+      await playAccent("US", playback);
+      await waitMobileTtsDelay(260, playback);
+      await playAccent("UK", playback);
     } catch (error) {
-      console.error(error);
-      alert("발음 오디오를 불러오지 못했습니다.");
+      if ((error as Error).name !== "AbortError") {
+        console.error(error);
+        alert("발음 오디오를 불러오지 못했습니다.");
+      }
     } finally {
-      setIsPlaying(false);
+      if (playbackRef.current === playback) {
+        playbackRef.current = null;
+        setIsPlaying(false);
+      }
+
+      if (activeMobileTtsPlayback === playback) {
+        activeMobileTtsPlayback = null;
+      }
     }
   };
 
   return (
     <button
       type="button"
-      title="미국식 발음 후 영국식 발음"
-      aria-label="미국식 발음 후 영국식 발음"
-      disabled={isPlaying}
+      title={isPlaying ? "발음 멈추기" : "미국식 발음 후 영국식 발음"}
+      aria-label={isPlaying ? "발음 멈추기" : "미국식 발음 후 영국식 발음"}
       onClick={(e) => {
         e.stopPropagation();
         void playBothAccents();
       }}
-      className={`inline-flex h-[16px] w-[16px] shrink-0 items-center justify-center text-[#0f2a5f] transition active:scale-95 disabled:cursor-wait disabled:opacity-60 ${className}`}
+      className={`inline-flex h-[16px] w-[16px] shrink-0 items-center justify-center text-[#0f2a5f] transition active:scale-95 ${className}`}
     >
       <svg
         width="14"

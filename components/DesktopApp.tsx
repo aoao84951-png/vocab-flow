@@ -224,6 +224,91 @@ export default function DesktopApp() {
   const [actionFolderId, setActionFolderId] = useState<string | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const audioWindow = window as typeof window & {
+      __vocabFlowAudioPatchApplied?: boolean;
+      __vocabFlowActiveAudio?: HTMLMediaElement | null;
+      __vocabFlowActiveAudioTrigger?: Element | null;
+      __vocabFlowPendingAudioTrigger?: Element | null;
+    };
+
+    if (audioWindow.__vocabFlowAudioPatchApplied) return;
+    audioWindow.__vocabFlowAudioPatchApplied = true;
+
+    const originalPlay = HTMLMediaElement.prototype.play;
+    const originalPause = HTMLMediaElement.prototype.pause;
+
+    const stopAudio = (audio: HTMLMediaElement | null | undefined) => {
+      if (!audio) return;
+
+      try {
+        originalPause.call(audio);
+        audio.currentTime = 0;
+      } catch {
+        // 재생 객체가 이미 해제된 경우에는 무시합니다.
+      }
+    };
+
+    const handleClickCapture = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const clickedButton = target.closest("button");
+      if (!clickedButton) return;
+
+      const activeAudio = audioWindow.__vocabFlowActiveAudio;
+      const activeTrigger = audioWindow.__vocabFlowActiveAudioTrigger;
+
+      if (
+        activeAudio &&
+        activeTrigger === clickedButton &&
+        !activeAudio.paused &&
+        !activeAudio.ended
+      ) {
+        stopAudio(activeAudio);
+        audioWindow.__vocabFlowActiveAudio = null;
+        audioWindow.__vocabFlowActiveAudioTrigger = null;
+        audioWindow.__vocabFlowPendingAudioTrigger = null;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+
+      audioWindow.__vocabFlowPendingAudioTrigger = clickedButton;
+    };
+
+    document.addEventListener("click", handleClickCapture, true);
+
+    HTMLMediaElement.prototype.play = function patchedPlay() {
+      const activeAudio = audioWindow.__vocabFlowActiveAudio;
+
+      if (activeAudio && activeAudio !== this && !activeAudio.paused && !activeAudio.ended) {
+        stopAudio(activeAudio);
+      }
+
+      audioWindow.__vocabFlowActiveAudio = this;
+      audioWindow.__vocabFlowActiveAudioTrigger =
+        audioWindow.__vocabFlowPendingAudioTrigger ?? null;
+
+      const clearActiveAudio = () => {
+        if (audioWindow.__vocabFlowActiveAudio === this) {
+          audioWindow.__vocabFlowActiveAudio = null;
+          audioWindow.__vocabFlowActiveAudioTrigger = null;
+        }
+      };
+
+      this.addEventListener("ended", clearActiveAudio, { once: true });
+      this.addEventListener("pause", clearActiveAudio, { once: true });
+
+      const playResult = originalPlay.call(this);
+      playResult.catch(clearActiveAudio);
+      return playResult;
+    };
+  }, []);
+
+
   const [swipedIndex, setSwipedIndex] = useState<number | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [dragX, setDragX] = useState(0);
