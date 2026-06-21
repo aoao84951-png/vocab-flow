@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Dispatch, MutableRefObject, PointerEvent, ReactNode, SetStateAction } from "react";
 import { supabase } from "@/app/lib/supabase";
+import PronounceButtons from "./PronounceButtons";
 
 type Meaning = {
   pos: string;
@@ -1881,6 +1882,8 @@ const getDayProgress = (day: Day) => {
                 >
                   {currentWord.word}
                 </h2>
+
+                <PronounceButtons text={currentWord.word} className="mt-3 justify-center" />
                 </section>
 
                 <section
@@ -1932,9 +1935,12 @@ const getDayProgress = (day: Day) => {
                         <div className="max-h-[190px] space-y-3 overflow-y-auto pr-1">
                           {currentWord.examples.map((ex, i) => (
                             <div key={`${ex.en}-${i}`} className="pl-[2px]">
-                              <p className="text-[13px] leading-relaxed">
-                                <HighlightedText text={ex.en} keyword={currentWord.word} />
-                              </p>
+                              <div className="flex items-start gap-2">
+                                <p className="min-w-0 flex-1 text-[13px] leading-relaxed">
+                                  <HighlightedText text={ex.en} keyword={currentWord.word} />
+                                </p>
+                                <PronounceButtons text={ex.en} className="shrink-0" />
+                              </div>
                               {ex.ko && (
                                 <p className="mt-0.5 text-[11px] leading-relaxed text-[#8a94a6]">
                                   {ex.ko}
@@ -1968,9 +1974,12 @@ const getDayProgress = (day: Day) => {
                                 </span>
 
                                 {point.expression && (
-                                  <p className="text-[13px] font-bold text-[#111827]">
-                                    <HighlightedText text={point.expression} keyword="" />
-                                  </p>
+                                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                                    <p className="min-w-0 text-[13px] font-bold text-[#111827]">
+                                      <HighlightedText text={point.expression} keyword="" />
+                                    </p>
+                                    <PronounceButtons text={point.expression} className="shrink-0" />
+                                  </div>
                                 )}
                               </div>
 
@@ -1989,9 +1998,12 @@ const getDayProgress = (day: Day) => {
                                       className="rounded-xl border border-[#e4e8f0] bg-white px-3 py-2"
                                     >
                                       {variant.word && (
-                                        <p className="mb-1.5 text-[13px] font-bold text-[#111827]">
-                                          <HighlightedText text={variant.word} keyword="" />
-                                        </p>
+                                        <div className="mb-1.5 flex items-center gap-2">
+                                          <p className="min-w-0 text-[13px] font-bold text-[#111827]">
+                                            <HighlightedText text={variant.word} keyword="" />
+                                          </p>
+                                          <PronounceButtons text={variant.word} className="shrink-0" />
+                                        </div>
                                       )}
 
                                       <div className="space-y-1">
@@ -2057,10 +2069,13 @@ const getDayProgress = (day: Day) => {
                                         className="border-l-2 border-[#d7ddea] pl-3"
                                       >
                                         {example.en && (
-                                          <div
-                                            className="whitespace-pre-wrap text-[12px] leading-relaxed text-[#596275]"
-                                            dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(example.en) }}
-                                          />
+                                          <div className="flex items-start gap-2">
+                                            <div
+                                              className="min-w-0 flex-1 whitespace-pre-wrap text-[12px] leading-relaxed text-[#596275]"
+                                              dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(example.en) }}
+                                            />
+                                            <PronounceButtons text={example.en} className="shrink-0" />
+                                          </div>
                                         )}
 
                                         {example.ko && (

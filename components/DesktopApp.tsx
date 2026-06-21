@@ -9,6 +9,7 @@ import type {
   SetStateAction,
 } from "react";
 import { supabase } from "@/app/lib/supabase";
+import PronounceButtons from "./PronounceButtons";
 
 type Meaning = {
   pos: string;
@@ -2013,6 +2014,7 @@ export default function DesktopApp() {
                   >
                     {currentWord.word}
                   </h2>
+                  <PronounceButtons text={currentWord.word} className="mt-3" />
                 </section>
 
                 <section
@@ -2067,12 +2069,15 @@ export default function DesktopApp() {
                         <div className="max-h-[190px] space-y-3 overflow-y-auto pr-1">
                           {currentWord.examples.map((ex, i) => (
                             <div key={`${ex.en}-${i}`} className="pl-[2px]">
-                              <p className="ipad-example-en text-[14px] leading-relaxed">
-                                <HighlightedText
-                                  text={ex.en}
-                                  keyword={currentWord.word}
-                                />
-                              </p>
+                              <div className="flex items-start gap-2">
+                                <p className="ipad-example-en min-w-0 flex-1 text-[14px] leading-relaxed">
+                                  <HighlightedText
+                                    text={ex.en}
+                                    keyword={currentWord.word}
+                                  />
+                                </p>
+                                <PronounceButtons text={ex.en} className="shrink-0" />
+                              </div>
                               {ex.ko && (
                                 <p className="ipad-example-ko mt-0.5 text-[12px] leading-relaxed text-[#8a94a6]">
                                   {ex.ko}
@@ -2146,12 +2151,18 @@ export default function DesktopApp() {
                                           className="rounded-xl border border-[#e4e8f0] bg-white px-3 py-2"
                                         >
                                           {variant.word && (
-                                            <p className="ipad-study-main mb-1.5 text-[14px] font-bold text-[#111827]">
-                                              <HighlightedText
+                                            <div className="mb-1.5 flex items-start gap-2">
+                                              <p className="ipad-study-main min-w-0 flex-1 text-[14px] font-bold text-[#111827]">
+                                                <HighlightedText
+                                                  text={variant.word}
+                                                  keyword=""
+                                                />
+                                              </p>
+                                              <PronounceButtons
                                                 text={variant.word}
-                                                keyword=""
+                                                className="shrink-0"
                                               />
-                                            </p>
+                                            </div>
                                           )}
 
                                           <div className="space-y-1">
@@ -2196,12 +2207,18 @@ export default function DesktopApp() {
                                                 =
                                               </span>
 
-                                              <p className="ipad-study-sub min-w-0 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
-                                                <HighlightedText
+                                              <div className="flex min-w-0 flex-1 items-start gap-2">
+                                                <p className="ipad-study-sub min-w-0 flex-1 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
+                                                  <HighlightedText
+                                                    text={variant.related}
+                                                    keyword=""
+                                                  />
+                                                </p>
+                                                <PronounceButtons
                                                   text={variant.related}
-                                                  keyword=""
+                                                  className="shrink-0"
                                                 />
-                                              </p>
+                                              </div>
                                             </div>
                                           )}
                                         </div>
@@ -2233,15 +2250,21 @@ export default function DesktopApp() {
                                             className="border-l-2 border-[#d7ddea] pl-3"
                                           >
                                             {example.en && (
-                                              <div
-                                                className="ipad-study-main whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
-                                                dangerouslySetInnerHTML={{
-                                                  __html:
-                                                    applyBracketHighlightToHtml(
-                                                      example.en,
-                                                    ),
-                                                }}
-                                              />
+                                              <div className="flex items-start gap-2">
+                                                <div
+                                                  className="ipad-study-main min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
+                                                  dangerouslySetInnerHTML={{
+                                                    __html:
+                                                      applyBracketHighlightToHtml(
+                                                        example.en,
+                                                      ),
+                                                  }}
+                                                />
+                                                <PronounceButtons
+                                                  text={example.en}
+                                                  className="shrink-0"
+                                                />
+                                              </div>
                                             )}
 
                                             {example.ko && (
