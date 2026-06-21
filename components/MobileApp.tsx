@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Dispatch, MutableRefObject, PointerEvent, ReactNode, SetStateAction } from "react";
 import { supabase } from "@/app/lib/supabase";
-import PronounceButtons from "./PronounceButtons";
 
 type Meaning = {
   pos: string;
@@ -178,6 +177,210 @@ const resetEditorIfEmpty = (el: HTMLDivElement) => {
     el.innerHTML = "";
   }
 };
+
+type MobileAccent = "US" | "UK";
+
+const MOBILE_TTS_VOICES: Record<MobileAccent, string> = {
+  US: "en-US-Wavenet-D",
+  UK: "en-GB-Wavenet-B",
+};
+
+const MOBILE_TTS_CACHE_NAME = "vocab-flow-tts-cache-v1";
+
+const normalizeMobileTtsText = (value: string) =>
+  value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\[\[(.*?)\]\]/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const isSpeakableEnglishOnly = (value: string) => {
+  const text = normalizeMobileTtsText(value);
+
+  if (!text) return false;
+  if (!/[A-Za-z]/.test(text)) return false;
+  if (/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(text)) return false;
+
+  return true;
+};
+
+const mobileTtsToHex = (buffer: ArrayBuffer) =>
+  Array.from(new Uint8Array(buffer))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+
+const makeMobileTtsCacheKey = async (text: string, voice: string) => {
+  const source = `${voice}::${text}`;
+
+  if (typeof crypto !== "undefined" && crypto.subtle) {
+    const encoded = new TextEncoder().encode(source);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+    return `/tts-cache/${mobileTtsToHex(hashBuffer)}.mp3`;
+  }
+
+  let hash = 0;
+  for (let i = 0; i < source.length; i += 1) {
+    hash = (hash << 5) - hash + source.charCodeAt(i);
+    hash |= 0;
+  }
+
+  return `/tts-cache/${voice}-${Math.abs(hash)}.mp3`;
+};
+
+const playMobileTtsBlob = (blob: Blob) =>
+  new Promise<void>((resolve, reject) => {
+    const audioUrl = URL.createObjectURL(blob);
+    const audio = new Audio(audioUrl);
+
+    const cleanup = () => URL.revokeObjectURL(audioUrl);
+
+    audio.onended = () => {
+      cleanup();
+      resolve();
+    };
+
+    audio.onerror = () => {
+      cleanup();
+      reject(new Error("오디오 재생에 실패했습니다."));
+    };
+
+    void audio.play().catch((error) => {
+      cleanup();
+      reject(error);
+    });
+  });
+
+const fetchMobileTtsAudio = async (text: string, voice: string) => {
+  const response = await fetch("/api/tts", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text, voice }),
+  });
+
+  if (!response.ok) {
+    throw new Error("TTS 요청에 실패했습니다.");
+  }
+
+  return response.blob();
+};
+
+const getMobileCachedTtsAudio = async (cacheKey: string) => {
+  if (typeof window === "undefined" || !("caches" in window)) {
+    return null;
+  }
+
+  const cache = await caches.open(MOBILE_TTS_CACHE_NAME);
+  const cachedResponse = await cache.match(cacheKey);
+
+  if (!cachedResponse) return null;
+
+  return cachedResponse.blob();
+};
+
+const saveMobileTtsAudioToCache = async (cacheKey: string, blob: Blob) => {
+  if (typeof window === "undefined" || !("caches" in window)) {
+    return;
+  }
+
+  const cache = await caches.open(MOBILE_TTS_CACHE_NAME);
+  await cache.put(
+    cacheKey,
+    new Response(blob, {
+      headers: {
+        "Content-Type": "audio/mpeg",
+      },
+    })
+  );
+};
+
+function MobilePronounceButton({
+  text,
+  className = "",
+}: {
+  text: string;
+  className?: string;
+}) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const cleanedText = normalizeMobileTtsText(text);
+
+  if (!isSpeakableEnglishOnly(cleanedText)) return null;
+
+  const playAccent = async (accent: MobileAccent) => {
+    const voice = MOBILE_TTS_VOICES[accent];
+    const cacheKey = await makeMobileTtsCacheKey(cleanedText, voice);
+    const cachedAudio = await getMobileCachedTtsAudio(cacheKey);
+
+    if (cachedAudio) {
+      await playMobileTtsBlob(cachedAudio);
+      return;
+    }
+
+    const audioBlob = await fetchMobileTtsAudio(cleanedText, voice);
+    await saveMobileTtsAudioToCache(cacheKey, audioBlob);
+    await playMobileTtsBlob(audioBlob);
+  };
+
+  const playBothAccents = async () => {
+    if (isPlaying) return;
+
+    try {
+      setIsPlaying(true);
+      await playAccent("US");
+      await new Promise((resolve) => window.setTimeout(resolve, 260));
+      await playAccent("UK");
+    } catch (error) {
+      console.error(error);
+      alert("발음 오디오를 불러오지 못했습니다.");
+    } finally {
+      setIsPlaying(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      title="미국식 발음 후 영국식 발음"
+      aria-label="미국식 발음 후 영국식 발음"
+      disabled={isPlaying}
+      onClick={(e) => {
+        e.stopPropagation();
+        void playBothAccents();
+      }}
+      className={`inline-flex h-[16px] w-[16px] shrink-0 items-center justify-center text-[#0f2a5f] transition active:scale-95 disabled:cursor-wait disabled:opacity-60 ${className}`}
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M4.75 9.4H8.2L12.4 5.55V18.45L8.2 14.6H4.75V9.4Z"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M16.1 8.25C17.15 9.25 17.75 10.55 17.75 12C17.75 13.45 17.15 14.75 16.1 15.75"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+        />
+        <path
+          d="M18.7 5.8C20.35 7.45 21.25 9.6 21.25 12C21.25 14.4 20.35 16.55 18.7 18.2"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+        />
+      </svg>
+    </button>
+  );
+}
+
 
 export default function MobileApp() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -1821,6 +2024,11 @@ const getDayProgress = (day: Day) => {
                       : "border-[#dce2ee] bg-white"
                   }`}
                 >
+                <MobilePronounceButton
+                  text={currentWord.word}
+                  className="absolute left-5 top-6 scale-150"
+                />
+
                 <div className="absolute right-4 top-4 flex items-center gap-2">
                   <button
                     onClick={(e) => {
@@ -1882,8 +2090,6 @@ const getDayProgress = (day: Day) => {
                 >
                   {currentWord.word}
                 </h2>
-
-                <PronounceButtons text={currentWord.word} className="mt-3 justify-center" />
                 </section>
 
                 <section
@@ -1935,12 +2141,14 @@ const getDayProgress = (day: Day) => {
                         <div className="max-h-[190px] space-y-3 overflow-y-auto pr-1">
                           {currentWord.examples.map((ex, i) => (
                             <div key={`${ex.en}-${i}`} className="pl-[2px]">
-                              <div className="flex items-start gap-2">
-                                <p className="min-w-0 flex-1 text-[13px] leading-relaxed">
-                                  <HighlightedText text={ex.en} keyword={currentWord.word} />
-                                </p>
-                                <PronounceButtons text={ex.en} className="shrink-0" />
-                              </div>
+                              {ex.en && (
+                                <div className="flex items-start gap-2">
+                                  <p className="min-w-0 flex-1 text-[13px] leading-relaxed">
+                                    <HighlightedText text={ex.en} keyword={currentWord.word} />
+                                  </p>
+                                  <MobilePronounceButton text={ex.en} />
+                                </div>
+                              )}
                               {ex.ko && (
                                 <p className="mt-0.5 text-[11px] leading-relaxed text-[#8a94a6]">
                                   {ex.ko}
@@ -1974,12 +2182,9 @@ const getDayProgress = (day: Day) => {
                                 </span>
 
                                 {point.expression && (
-                                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                                    <p className="min-w-0 text-[13px] font-bold text-[#111827]">
-                                      <HighlightedText text={point.expression} keyword="" />
-                                    </p>
-                                    <PronounceButtons text={point.expression} className="shrink-0" />
-                                  </div>
+                                  <p className="text-[13px] font-bold text-[#111827]">
+                                    <HighlightedText text={point.expression} keyword="" />
+                                  </p>
                                 )}
                               </div>
 
@@ -1999,10 +2204,10 @@ const getDayProgress = (day: Day) => {
                                     >
                                       {variant.word && (
                                         <div className="mb-1.5 flex items-center gap-2">
-                                          <p className="min-w-0 text-[13px] font-bold text-[#111827]">
+                                          <p className="min-w-0 flex-1 text-[13px] font-bold text-[#111827]">
                                             <HighlightedText text={variant.word} keyword="" />
                                           </p>
-                                          <PronounceButtons text={variant.word} className="shrink-0" />
+                                          <MobilePronounceButton text={variant.word} />
                                         </div>
                                       )}
 
@@ -2074,7 +2279,7 @@ const getDayProgress = (day: Day) => {
                                               className="min-w-0 flex-1 whitespace-pre-wrap text-[12px] leading-relaxed text-[#596275]"
                                               dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(example.en) }}
                                             />
-                                            <PronounceButtons text={example.en} className="shrink-0" />
+                                            <MobilePronounceButton text={example.en} />
                                           </div>
                                         )}
 
