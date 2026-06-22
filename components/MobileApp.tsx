@@ -574,6 +574,8 @@ export default function MobileApp() {
   const studySwipeStart = useRef<{ x: number; y: number; width: number; pointerId: number } | null>(null);
   const studySwipeMoved = useRef(false);
   const studySwipeDirection = useRef<"horizontal" | "vertical" | null>(null);
+  const studySwipeLastPoint = useRef<{ x: number; time: number } | null>(null);
+  const studySwipeVelocityX = useRef(0);
   const [studySwipeDragX, setStudySwipeDragX] = useState(0);
   const studySwipeDragXRef = useRef(0);
   const [studySwipeAnimating, setStudySwipeAnimating] = useState(false);
@@ -883,6 +885,8 @@ export default function MobileApp() {
     studySwipeStart.current = null;
     studySwipeMoved.current = false;
     studySwipeDirection.current = null;
+    studySwipeLastPoint.current = null;
+    studySwipeVelocityX.current = 0;
   };
 
   const handleStudyPointerDown = (e: PointerEvent<HTMLDivElement>) => {
@@ -906,45 +910,60 @@ export default function MobileApp() {
     };
     studySwipeMoved.current = false;
     studySwipeDirection.current = null;
+    studySwipeLastPoint.current = { x: e.clientX, time: performance.now() };
+    studySwipeVelocityX.current = 0;
     setStudySwipeAnimating(false);
   };
 
   const handleStudyPointerMove = (e: PointerEvent<HTMLDivElement>) => {
-    if (!studySwipeStart.current) return;
+    if (!studySwipeStart.current || e.pointerId !== studySwipeStart.current.pointerId) return;
 
     const deltaX = e.clientX - studySwipeStart.current.x;
     const deltaY = e.clientY - studySwipeStart.current.y;
     const absX = Math.abs(deltaX);
     const absY = Math.abs(deltaY);
+    const now = performance.now();
+    const lastPoint = studySwipeLastPoint.current;
+
+    if (lastPoint) {
+      const elapsed = Math.max(1, now - lastPoint.time);
+      studySwipeVelocityX.current = (e.clientX - lastPoint.x) / elapsed;
+    }
+    studySwipeLastPoint.current = { x: e.clientX, time: now };
 
     if (!studySwipeDirection.current) {
-      if (absX < 12 && absY < 12) return;
+      if (absX < 8 && absY < 8) return;
 
-      if (absY > absX * 1.15) {
+      if (absX >= 8 && absX > absY * 0.75) {
+        studySwipeDirection.current = "horizontal";
+        if (!e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        }
+      } else if (absY >= 10 && absY > absX) {
         studySwipeDirection.current = "vertical";
         updateStudySwipeDragX(0);
         return;
-      }
-
-      if (absX <= absY * 1.15) return;
-
-      studySwipeDirection.current = "horizontal";
-      if (!e.currentTarget.hasPointerCapture(e.pointerId)) {
-        e.currentTarget.setPointerCapture(e.pointerId);
+      } else {
+        return;
       }
     }
 
     if (studySwipeDirection.current !== "horizontal") return;
 
     e.preventDefault();
+    e.stopPropagation();
 
     const hasPrev = Boolean(getAdjacentStudyWord("prev"));
     const hasNext = Boolean(getAdjacentStudyWord("next"));
+    const limitedDeltaX = Math.max(
+      -studySwipeStart.current.width,
+      Math.min(deltaX, studySwipeStart.current.width)
+    );
 
-    if ((deltaX > 0 && !hasPrev) || (deltaX < 0 && !hasNext)) {
-      updateStudySwipeDragX(deltaX * 0.18);
+    if ((limitedDeltaX > 0 && !hasPrev) || (limitedDeltaX < 0 && !hasNext)) {
+      updateStudySwipeDragX(limitedDeltaX * 0.14);
     } else {
-      updateStudySwipeDragX(deltaX);
+      updateStudySwipeDragX(limitedDeltaX);
     }
 
     studySwipeMoved.current = true;
@@ -962,9 +981,11 @@ export default function MobileApp() {
       studySwipeDirection.current === "horizontal"
     ) {
       const width = studySwipeStart.current.width;
-      const threshold = Math.max(64, width * 0.22);
+      const threshold = Math.max(46, width * 0.16);
       const dragX = studySwipeDragXRef.current;
+      const velocityX = studySwipeVelocityX.current;
       const direction = dragX > 0 ? "prev" : "next";
+      const isFastSwipe = Math.abs(velocityX) >= 0.45 && Math.sign(velocityX) === Math.sign(dragX);
       const adjacent = getAdjacentStudyWord(direction);
 
       if (e.currentTarget.hasPointerCapture(e.pointerId)) {
@@ -974,7 +995,7 @@ export default function MobileApp() {
       resetStudySwipeState();
       setStudySwipeAnimating(true);
 
-      if (adjacent && Math.abs(dragX) >= threshold) {
+      if (adjacent && (Math.abs(dragX) >= threshold || isFastSwipe)) {
         updateStudySwipeDragX(direction === "prev" ? width : -width);
         window.setTimeout(() => {
           setWordIndex(adjacent.originalIndex);
@@ -1117,7 +1138,7 @@ export default function MobileApp() {
                   }`}
                 >
                   <div
-                    className="h-full overflow-y-auto px-3 pb-4"
+                    className="h-full overflow-y-auto overscroll-contain px-3 pb-4 [touch-action:pan-y]"
                   >
                     <div className="py-4">
                       <div className="flex flex-col items-center gap-2">
@@ -2463,7 +2484,7 @@ const getDayProgress = (day: Day) => {
 
           {step === "study" && selectedBook && selectedDay && (
             <div
-              className="relative flex min-h-[100svh] flex-col px-4 pt-4 pb-6 [touch-action:pan-y]"
+              className="relative flex min-h-[100svh] flex-col overflow-hidden px-4 pt-4 pb-6 [overscroll-behavior:contain] [touch-action:pan-y]"
               onPointerDown={handleStudyPointerDown}
               onPointerMove={handleStudyPointerMove}
               onPointerUp={handleStudyPointerUp}
@@ -2645,7 +2666,7 @@ const getDayProgress = (day: Day) => {
                     <>
                       {preview && (
                         <div
-                          className={`pointer-events-none absolute inset-0 flex flex-col ${
+                          className={`pointer-events-none absolute inset-0 flex flex-col will-change-transform ${
                             studySwipeAnimating ? "transition-transform duration-[220ms] ease-out" : ""
                           }`}
                           style={{
@@ -2661,7 +2682,7 @@ const getDayProgress = (day: Day) => {
                       )}
 
                       <div
-                        className={`absolute inset-0 flex flex-col ${
+                        className={`absolute inset-0 flex flex-col will-change-transform ${
                           studySwipeAnimating ? "transition-transform duration-[220ms] ease-out" : ""
                         }`}
                         style={{ transform: `translateX(${studySwipeDragX}px)` }}
