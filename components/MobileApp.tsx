@@ -2258,63 +2258,38 @@ const getDayProgress = (day: Day) => {
                   >
                     <div className="py-4">
                       <div className="flex flex-col items-center gap-2">
-                        {currentWord.meanings.map((group) => {
-                          const shouldCenterStackedNumberedMeanings =
-                            group.numbered &&
-                            group.items.length > 1 &&
-                            group.items.join("").length >= 42;
-
-                          return (
-                            <div
-                              key={`${group.pos}-${group.items.join("")}`}
-                              className={
-                                shouldCenterStackedNumberedMeanings
-                                  ? "grid w-fit max-w-full grid-cols-[auto_minmax(0,max-content)] items-start justify-center gap-2"
-                                  : "grid w-fit max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-2"
-                              }
-                            >
-                              <span className="inline-flex h-[19px] min-w-[19px] items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[11px] font-bold text-white">
+                        {currentWord.meanings.map((group) => (
+                          <div
+                            key={`${group.pos}-${group.items.join("")}`}
+                            className="flex w-full justify-center"
+                          >
+                            <div className="relative -top-[2px] flex max-w-full flex-wrap items-start justify-center gap-x-[7px] gap-y-1">
+                              <span className="mt-[2px] inline-flex h-[19px] min-w-[19px] shrink-0 items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[11px] font-bold text-white">
                                 {group.pos}
                               </span>
 
-                              <div
-                                className={`relative -top-[2px] min-w-0 ${
-                                  shouldCenterStackedNumberedMeanings
-                                    ? "flex justify-center"
-                                    : ""
-                                }`}
-                              >
-                                {group.numbered ? (
-                                  <div
-                                    className={
-                                      shouldCenterStackedNumberedMeanings
-                                        ? "inline-flex max-w-full flex-col items-start gap-y-1 text-left"
-                                        : "flex flex-wrap items-start justify-start gap-x-[7px] gap-y-1"
-                                    }
+                              {group.numbered ? (
+                                group.items.map((item, index) => (
+                                  <span
+                                    key={`${item}-${index}`}
+                                    className="inline-flex max-w-full items-start gap-[3px]"
                                   >
-                                    {group.items.map((item, index) => (
-                                      <span
-                                        key={`${item}-${index}`}
-                                        className="inline-flex max-w-full items-start gap-[3px]"
-                                      >
-                                        <span className="mt-[4px] inline-flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[9px] font-bold text-white">
-                                          {index + 1}
-                                        </span>
-                                        <span className="min-w-0 break-keep">
-                                          {item}
-                                        </span>
-                                      </span>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="break-keep text-left">
-                                    {group.items.join(", ")}
-                                  </p>
-                                )}
-                              </div>
+                                    <span className="mt-[4px] inline-flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[9px] font-bold text-white">
+                                      {index + 1}
+                                    </span>
+                                    <span className="min-w-0 break-keep">
+                                      {item}
+                                    </span>
+                                  </span>
+                                ))
+                              ) : (
+                                <p className="min-w-0 break-keep text-left">
+                                  {group.items.join(", ")}
+                                </p>
+                              )}
                             </div>
-                          );
-                        })}
+                          </div>
+                        ))}
                       </div>
                     </div>
 
