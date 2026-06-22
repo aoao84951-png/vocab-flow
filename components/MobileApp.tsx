@@ -728,24 +728,78 @@ export default function MobileApp() {
   }, []);
 
   useEffect(() => {
-    if (step !== "study") return;
-
     const html = document.documentElement;
     const body = document.body;
-    const prevHtmlOverscroll = html.style.overscrollBehaviorY;
-    const prevBodyOverscroll = body.style.overscrollBehaviorY;
-    const prevBodyOverflow = body.style.overflow;
+    const prevHtmlOverscroll = html.style.overscrollBehavior;
+    const prevHtmlOverscrollY = html.style.overscrollBehaviorY;
+    const prevBodyOverscroll = body.style.overscrollBehavior;
+    const prevBodyOverscrollY = body.style.overscrollBehaviorY;
 
+    let startY = 0;
+
+    const getScrollableParent = (target: EventTarget | null) => {
+      let element = target instanceof Element ? target : null;
+
+      while (element && element !== body && element !== html) {
+        const style = window.getComputedStyle(element);
+        const overflowY = style.overflowY;
+        const canScrollY =
+          (overflowY === "auto" || overflowY === "scroll") &&
+          element.scrollHeight > element.clientHeight;
+
+        if (canScrollY) return element;
+
+        element = element.parentElement;
+      }
+
+      return null;
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1) return;
+      startY = event.touches[0].clientY;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (event.touches.length !== 1) return;
+
+      const currentY = event.touches[0].clientY;
+      const deltaY = currentY - startY;
+      const scrollable = getScrollableParent(event.target);
+
+      if (!scrollable) {
+        if (Math.abs(deltaY) > 2) {
+          event.preventDefault();
+        }
+        return;
+      }
+
+      const atTop = scrollable.scrollTop <= 0;
+      const atBottom =
+        scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
+
+      if ((atTop && deltaY > 0) || (atBottom && deltaY < 0)) {
+        event.preventDefault();
+      }
+    };
+
+    html.style.overscrollBehavior = "none";
     html.style.overscrollBehaviorY = "none";
+    body.style.overscrollBehavior = "none";
     body.style.overscrollBehaviorY = "none";
-    body.style.overflow = "hidden";
+
+    document.addEventListener("touchstart", handleTouchStart, { passive: true });
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
 
     return () => {
-      html.style.overscrollBehaviorY = prevHtmlOverscroll;
-      body.style.overscrollBehaviorY = prevBodyOverscroll;
-      body.style.overflow = prevBodyOverflow;
+      html.style.overscrollBehavior = prevHtmlOverscroll;
+      html.style.overscrollBehaviorY = prevHtmlOverscrollY;
+      body.style.overscrollBehavior = prevBodyOverscroll;
+      body.style.overscrollBehaviorY = prevBodyOverscrollY;
+      document.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchmove", handleTouchMove);
     };
-  }, [step]);
+  }, []);
   
   function normalizeFolders(folders: any[]): Folder[] {
     return (folders || []).map((folder) => ({
