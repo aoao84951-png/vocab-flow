@@ -572,6 +572,7 @@ export default function MobileApp() {
   const touchStartX = useRef<number | null>(null);
   const studyTapStart = useRef<{ x: number; y: number } | null>(null);
   const studySwipeStart = useRef<{ x: number; y: number; width: number; pointerId: number } | null>(null);
+  const studySwipeWidth = useRef(0);
   const studySwipeMoved = useRef(false);
   const studySwipeDirection = useRef<"horizontal" | "vertical" | null>(null);
   const studySwipeLastPoint = useRef<{ x: number; time: number } | null>(null);
@@ -725,6 +726,26 @@ export default function MobileApp() {
   
     setIsStandalone(standalone);
   }, []);
+
+  useEffect(() => {
+    if (step !== "study") return;
+
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlOverscroll = html.style.overscrollBehaviorY;
+    const prevBodyOverscroll = body.style.overscrollBehaviorY;
+    const prevBodyOverflow = body.style.overflow;
+
+    html.style.overscrollBehaviorY = "none";
+    body.style.overscrollBehaviorY = "none";
+    body.style.overflow = "hidden";
+
+    return () => {
+      html.style.overscrollBehaviorY = prevHtmlOverscroll;
+      body.style.overscrollBehaviorY = prevBodyOverscroll;
+      body.style.overflow = prevBodyOverflow;
+    };
+  }, [step]);
   
   function normalizeFolders(folders: any[]): Folder[] {
     return (folders || []).map((folder) => ({
@@ -901,11 +922,14 @@ export default function MobileApp() {
       return;
     }
 
+    const width = e.currentTarget.getBoundingClientRect().width;
+
     studyTapStart.current = { x: e.clientX, y: e.clientY };
+    studySwipeWidth.current = width;
     studySwipeStart.current = {
       x: e.clientX,
       y: e.clientY,
-      width: e.currentTarget.getBoundingClientRect().width,
+      width,
       pointerId: e.pointerId,
     };
     studySwipeMoved.current = false;
@@ -934,12 +958,12 @@ export default function MobileApp() {
     if (!studySwipeDirection.current) {
       if (absX < 8 && absY < 8) return;
 
-      if (absX >= 8 && absX > absY * 0.75) {
+      if (absX >= 10 && absX > absY * 1.15) {
         studySwipeDirection.current = "horizontal";
         if (!e.currentTarget.hasPointerCapture(e.pointerId)) {
           e.currentTarget.setPointerCapture(e.pointerId);
         }
-      } else if (absY >= 10 && absY > absX) {
+      } else if (absY >= 8 && absY > absX * 0.85) {
         studySwipeDirection.current = "vertical";
         updateStudySwipeDragX(0);
         return;
@@ -998,15 +1022,15 @@ export default function MobileApp() {
       if (adjacent && (Math.abs(dragX) >= threshold || isFastSwipe)) {
         updateStudySwipeDragX(direction === "prev" ? width : -width);
         window.setTimeout(() => {
-          setWordIndex(adjacent.originalIndex);
           setStudySwipeAnimating(false);
           updateStudySwipeDragX(0);
-        }, 220);
+          setWordIndex(adjacent.originalIndex);
+        }, 260);
       } else {
         updateStudySwipeDragX(0);
         window.setTimeout(() => {
           setStudySwipeAnimating(false);
-        }, 220);
+        }, 260);
       }
 
       return;
@@ -1048,7 +1072,7 @@ export default function MobileApp() {
     resetStudySwipeState();
     setStudySwipeAnimating(true);
     updateStudySwipeDragX(0);
-    window.setTimeout(() => setStudySwipeAnimating(false), 220);
+    window.setTimeout(() => setStudySwipeAnimating(false), 260);
   };
 
   const renderStudyPane = (displayWord: Word, displayWordIndex: number) => (
@@ -2484,7 +2508,7 @@ const getDayProgress = (day: Day) => {
 
           {step === "study" && selectedBook && selectedDay && (
             <div
-              className="relative flex min-h-[100svh] flex-col overflow-hidden px-4 pt-4 pb-6 [overscroll-behavior:contain] [touch-action:pan-y]"
+              className="fixed inset-0 flex h-[100svh] flex-col overflow-hidden bg-white px-4 pt-4 pb-6 [overscroll-behavior:none] [touch-action:pan-y]"
               onPointerDown={handleStudyPointerDown}
               onPointerMove={handleStudyPointerMove}
               onPointerUp={handleStudyPointerUp}
@@ -2655,6 +2679,7 @@ const getDayProgress = (day: Day) => {
             ) : (
               <div className="relative min-h-0 flex-1 overflow-hidden">
                 {(() => {
+                  const swipeWidth = studySwipeStart.current?.width || studySwipeWidth.current || 0;
                   const preview =
                     studySwipeDragX > 0
                       ? getAdjacentStudyWord("prev")
@@ -2667,13 +2692,13 @@ const getDayProgress = (day: Day) => {
                       {preview && (
                         <div
                           className={`pointer-events-none absolute inset-0 flex flex-col will-change-transform ${
-                            studySwipeAnimating ? "transition-transform duration-[220ms] ease-out" : ""
+                            studySwipeAnimating ? "transition-transform duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)]" : ""
                           }`}
                           style={{
                             transform: `translateX(${
                               studySwipeDragX > 0
-                                ? studySwipeDragX - (studySwipeStart.current?.width ?? 0)
-                                : studySwipeDragX + (studySwipeStart.current?.width ?? 0)
+                                ? studySwipeDragX - (swipeWidth)
+                                : studySwipeDragX + (swipeWidth)
                             }px)`,
                           }}
                         >
@@ -2683,7 +2708,7 @@ const getDayProgress = (day: Day) => {
 
                       <div
                         className={`absolute inset-0 flex flex-col will-change-transform ${
-                          studySwipeAnimating ? "transition-transform duration-[220ms] ease-out" : ""
+                          studySwipeAnimating ? "transition-transform duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)]" : ""
                         }`}
                         style={{ transform: `translateX(${studySwipeDragX}px)` }}
                       >
