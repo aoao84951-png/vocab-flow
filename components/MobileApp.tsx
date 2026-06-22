@@ -2262,7 +2262,7 @@ const getDayProgress = (day: Day) => {
                           const shouldCenterStackedNumberedMeanings =
                             group.numbered &&
                             group.items.length > 1 &&
-                            group.items.join("").length >= 42;
+                            group.items.join("").length >= 38;
 
                           return shouldCenterStackedNumberedMeanings ? (
                             <div
