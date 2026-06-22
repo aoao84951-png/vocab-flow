@@ -571,9 +571,11 @@ export default function MobileApp() {
   const [dragX, setDragX] = useState(0);
   const touchStartX = useRef<number | null>(null);
   const studyTapStart = useRef<{ x: number; y: number } | null>(null);
-  const studySwipeStart = useRef<{ x: number; y: number; width: number } | null>(null);
+  const studySwipeStart = useRef<{ x: number; y: number; width: number; pointerId: number } | null>(null);
   const studySwipeMoved = useRef(false);
+  const studySwipeDirection = useRef<"horizontal" | "vertical" | null>(null);
   const [studySwipeDragX, setStudySwipeDragX] = useState(0);
+  const studySwipeDragXRef = useRef(0);
   const [studySwipeAnimating, setStudySwipeAnimating] = useState(false);
   const folderLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPressFolder = useRef(false);
@@ -871,20 +873,19 @@ export default function MobileApp() {
     return visibleSortedWords[adjacentPos];
   };
 
-  const handleStudyPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    studyTapStart.current = { x: e.clientX, y: e.clientY };
-    studySwipeStart.current = {
-      x: e.clientX,
-      y: e.clientY,
-      width: e.currentTarget.getBoundingClientRect().width,
-    };
-    studySwipeMoved.current = false;
-    setStudySwipeAnimating(false);
+  const updateStudySwipeDragX = (value: number) => {
+    studySwipeDragXRef.current = value;
+    setStudySwipeDragX(value);
   };
 
-  const handleStudyPointerMove = (e: PointerEvent<HTMLDivElement>) => {
-    if (!studySwipeStart.current) return;
+  const resetStudySwipeState = () => {
+    studyTapStart.current = null;
+    studySwipeStart.current = null;
+    studySwipeMoved.current = false;
+    studySwipeDirection.current = null;
+  };
 
+  const handleStudyPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
     if (
       target.closest("button") ||
@@ -892,22 +893,58 @@ export default function MobileApp() {
       target.closest("textarea") ||
       target.closest("select")
     ) {
+      resetStudySwipeState();
       return;
     }
 
+    studyTapStart.current = { x: e.clientX, y: e.clientY };
+    studySwipeStart.current = {
+      x: e.clientX,
+      y: e.clientY,
+      width: e.currentTarget.getBoundingClientRect().width,
+      pointerId: e.pointerId,
+    };
+    studySwipeMoved.current = false;
+    studySwipeDirection.current = null;
+    setStudySwipeAnimating(false);
+  };
+
+  const handleStudyPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (!studySwipeStart.current) return;
+
     const deltaX = e.clientX - studySwipeStart.current.x;
     const deltaY = e.clientY - studySwipeStart.current.y;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
 
-    if (!studySwipeMoved.current && Math.abs(deltaX) < 8) return;
-    if (!studySwipeMoved.current && Math.abs(deltaX) <= Math.abs(deltaY)) return;
+    if (!studySwipeDirection.current) {
+      if (absX < 12 && absY < 12) return;
+
+      if (absY > absX * 1.15) {
+        studySwipeDirection.current = "vertical";
+        updateStudySwipeDragX(0);
+        return;
+      }
+
+      if (absX <= absY * 1.15) return;
+
+      studySwipeDirection.current = "horizontal";
+      if (!e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }
+    }
+
+    if (studySwipeDirection.current !== "horizontal") return;
+
+    e.preventDefault();
 
     const hasPrev = Boolean(getAdjacentStudyWord("prev"));
     const hasNext = Boolean(getAdjacentStudyWord("next"));
 
     if ((deltaX > 0 && !hasPrev) || (deltaX < 0 && !hasNext)) {
-      setStudySwipeDragX(deltaX * 0.18);
+      updateStudySwipeDragX(deltaX * 0.18);
     } else {
-      setStudySwipeDragX(deltaX);
+      updateStudySwipeDragX(deltaX);
     }
 
     studySwipeMoved.current = true;
@@ -916,41 +953,36 @@ export default function MobileApp() {
   const handleStudyPointerUp = (e: PointerEvent<HTMLDivElement>) => {
     if (!studyTapStart.current) return;
   
-    const target = e.target as HTMLElement;
-  
-    if (
-      target.closest("button") ||
-      target.closest("input") ||
-      target.closest("textarea") ||
-      target.closest("select")
-    ) {
-      studyTapStart.current = null;
-      return;
-    }
-  
     const movedX = Math.abs(e.clientX - studyTapStart.current.x);
     const movedY = Math.abs(e.clientY - studyTapStart.current.y);
 
-    if (studySwipeMoved.current && studySwipeStart.current) {
+    if (
+      studySwipeMoved.current &&
+      studySwipeStart.current &&
+      studySwipeDirection.current === "horizontal"
+    ) {
       const width = studySwipeStart.current.width;
       const threshold = Math.max(64, width * 0.22);
-      const direction = studySwipeDragX > 0 ? "prev" : "next";
+      const dragX = studySwipeDragXRef.current;
+      const direction = dragX > 0 ? "prev" : "next";
       const adjacent = getAdjacentStudyWord(direction);
 
-      studyTapStart.current = null;
-      studySwipeStart.current = null;
-      studySwipeMoved.current = false;
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+
+      resetStudySwipeState();
       setStudySwipeAnimating(true);
 
-      if (adjacent && Math.abs(studySwipeDragX) >= threshold) {
-        setStudySwipeDragX(direction === "prev" ? width : -width);
+      if (adjacent && Math.abs(dragX) >= threshold) {
+        updateStudySwipeDragX(direction === "prev" ? width : -width);
         window.setTimeout(() => {
           setWordIndex(adjacent.originalIndex);
           setStudySwipeAnimating(false);
-          setStudySwipeDragX(0);
+          updateStudySwipeDragX(0);
         }, 220);
       } else {
-        setStudySwipeDragX(0);
+        updateStudySwipeDragX(0);
         window.setTimeout(() => {
           setStudySwipeAnimating(false);
         }, 220);
@@ -960,10 +992,8 @@ export default function MobileApp() {
     }
   
     if (movedX > 10 || movedY > 10) {
-      studyTapStart.current = null;
-      studySwipeStart.current = null;
-      studySwipeMoved.current = false;
-      setStudySwipeDragX(0);
+      resetStudySwipeState();
+      updateStudySwipeDragX(0);
       return;
     }
   
@@ -972,7 +1002,7 @@ export default function MobileApp() {
     const y = e.clientY - rect.top;
   
     if (y < 58) {
-      studyTapStart.current = null;
+      resetStudySwipeState();
       return;
     }
   
@@ -986,17 +1016,17 @@ export default function MobileApp() {
       setShowMeaning((prev) => !prev);
     }
   
-    studyTapStart.current = null;
-    studySwipeStart.current = null;
-    studySwipeMoved.current = false;
+    resetStudySwipeState();
   };
 
-  const handleStudyPointerCancel = () => {
-    studyTapStart.current = null;
-    studySwipeStart.current = null;
-    studySwipeMoved.current = false;
+  const handleStudyPointerCancel = (e?: PointerEvent<HTMLDivElement>) => {
+    if (e && e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+
+    resetStudySwipeState();
     setStudySwipeAnimating(true);
-    setStudySwipeDragX(0);
+    updateStudySwipeDragX(0);
     window.setTimeout(() => setStudySwipeAnimating(false), 220);
   };
 
