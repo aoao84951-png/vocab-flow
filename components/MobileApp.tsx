@@ -752,6 +752,11 @@ export default function MobileApp() {
         element = element.parentElement;
       }
 
+      const pageScroller = document.scrollingElement as HTMLElement | null;
+      if (pageScroller && pageScroller.scrollHeight > pageScroller.clientHeight) {
+        return pageScroller;
+      }
+
       return null;
     };
 
@@ -768,9 +773,6 @@ export default function MobileApp() {
       const scrollable = getScrollableParent(event.target);
 
       if (!scrollable) {
-        if (Math.abs(deltaY) > 2) {
-          event.preventDefault();
-        }
         return;
       }
 
