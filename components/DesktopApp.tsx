@@ -2135,30 +2135,18 @@ export default function DesktopApp() {
                             group.items.length > 1 &&
                             group.items.join("").length >= 42;
 
-                          return (
+                          return shouldCenterStackedNumberedMeanings ? (
                             <div
                               key={`${group.pos}-${group.items.join("")}`}
-                              className="grid w-fit max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-2"
+                              className="flex w-full justify-center"
                             >
-                              <span className="ipad-detail-pos inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#0f2a5f] px-[6px] text-[13px] font-bold text-white">
-                                {group.pos}
-                              </span>
+                              <div className="grid w-fit max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-2">
+                                <span className="ipad-detail-pos inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#0f2a5f] px-[6px] text-[13px] font-bold text-white">
+                                  {group.pos}
+                                </span>
 
-                              <div
-                                className={`relative -top-[2px] min-w-0 ${
-                                  shouldCenterStackedNumberedMeanings
-                                    ? "flex justify-center"
-                                    : ""
-                                }`}
-                              >
-                                {group.numbered ? (
-                                  <div
-                                    className={
-                                      shouldCenterStackedNumberedMeanings
-                                        ? "inline-flex max-w-full flex-col items-start gap-y-1 text-left"
-                                        : "flex flex-wrap items-start justify-start gap-x-[8px] gap-y-1"
-                                    }
-                                  >
+                                <div className="relative -top-[2px] flex min-w-0 justify-center">
+                                  <div className="inline-flex max-w-full flex-col items-start gap-y-1 text-left">
                                     {group.items.map((item, index) => (
                                       <span
                                         key={`${item}-${index}`}
@@ -2173,12 +2161,39 @@ export default function DesktopApp() {
                                       </span>
                                     ))}
                                   </div>
-                                ) : (
-                                  <p className="break-keep text-left">
-                                    {group.items.join(", ")}
-                                  </p>
-                                )}
+                                </div>
                               </div>
+                            </div>
+                          ) : (
+                            <div
+                              key={`${group.pos}-${group.items.join("")}`}
+                              className="w-full max-w-full text-center"
+                            >
+                              <span className="ipad-detail-pos mr-2 inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#0f2a5f] px-[6px] text-[13px] font-bold text-white align-top">
+                                {group.pos}
+                              </span>
+
+                              {group.numbered ? (
+                                <span className="relative -top-[2px] inline max-w-full">
+                                  {group.items.map((item, index) => (
+                                    <span
+                                      key={`${item}-${index}`}
+                                      className="mr-2 inline-flex max-w-full items-start gap-[4px] text-left align-top last:mr-0"
+                                    >
+                                      <span className="mt-[6px] inline-flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
+                                        {index + 1}
+                                      </span>
+                                      <span className="min-w-0 break-keep">
+                                        {item}
+                                      </span>
+                                    </span>
+                                  ))}
+                                </span>
+                              ) : (
+                                <span className="relative -top-[2px] inline break-keep text-center">
+                                  {group.items.join(", ")}
+                                </span>
+                              )}
                             </div>
                           );
                         })}

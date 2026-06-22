@@ -2258,38 +2258,74 @@ const getDayProgress = (day: Day) => {
                   >
                     <div className="py-4">
                       <div className="flex flex-col items-center gap-2">
-                        {currentWord.meanings.map((group) => (
-                          <div
-                            key={`${group.pos}-${group.items.join("")}`}
-                            className="flex w-full justify-center"
-                          >
-                            <div className="relative -top-[2px] flex max-w-full flex-wrap items-start justify-center gap-x-[7px] gap-y-1">
-                              <span className="mt-[2px] inline-flex h-[19px] min-w-[19px] shrink-0 items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[11px] font-bold text-white">
+                        {currentWord.meanings.map((group) => {
+                          const shouldCenterStackedNumberedMeanings =
+                            group.numbered &&
+                            group.items.length > 1 &&
+                            group.items.join("").length >= 42;
+
+                          return shouldCenterStackedNumberedMeanings ? (
+                            <div
+                              key={`${group.pos}-${group.items.join("")}`}
+                              className="flex w-full justify-center"
+                            >
+                              <div className="grid w-fit max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-[7px]">
+                                <span className="mt-[2px] inline-flex h-[19px] min-w-[19px] shrink-0 items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[11px] font-bold text-white">
+                                  {group.pos}
+                                </span>
+
+                                <div className="relative -top-[2px] flex min-w-0 justify-center">
+                                  <div className="inline-flex max-w-full flex-col items-start gap-y-1 text-left">
+                                    {group.items.map((item, index) => (
+                                      <span
+                                        key={`${item}-${index}`}
+                                        className="inline-flex max-w-full items-start gap-[3px]"
+                                      >
+                                        <span className="mt-[4px] inline-flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[9px] font-bold text-white">
+                                          {index + 1}
+                                        </span>
+                                        <span className="min-w-0 break-keep">
+                                          {item}
+                                        </span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              key={`${group.pos}-${group.items.join("")}`}
+                              className="w-full max-w-full text-center"
+                            >
+                              <span className="mr-[7px] inline-flex h-[19px] min-w-[19px] shrink-0 items-center justify-center rounded-[5px] bg-[#0f2a5f] text-[11px] font-bold text-white align-top">
                                 {group.pos}
                               </span>
 
                               {group.numbered ? (
-                                group.items.map((item, index) => (
-                                  <span
-                                    key={`${item}-${index}`}
-                                    className="inline-flex max-w-full items-start gap-[3px]"
-                                  >
-                                    <span className="mt-[4px] inline-flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[9px] font-bold text-white">
-                                      {index + 1}
+                                <span className="relative -top-[2px] inline max-w-full">
+                                  {group.items.map((item, index) => (
+                                    <span
+                                      key={`${item}-${index}`}
+                                      className="mr-[7px] inline-flex max-w-full items-start gap-[3px] text-left align-top last:mr-0"
+                                    >
+                                      <span className="mt-[4px] inline-flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[9px] font-bold text-white">
+                                        {index + 1}
+                                      </span>
+                                      <span className="min-w-0 break-keep">
+                                        {item}
+                                      </span>
                                     </span>
-                                    <span className="min-w-0 break-keep">
-                                      {item}
-                                    </span>
-                                  </span>
-                                ))
+                                  ))}
+                                </span>
                               ) : (
-                                <p className="min-w-0 break-keep text-left">
+                                <span className="relative -top-[2px] inline break-keep text-center">
                                   {group.items.join(", ")}
-                                </p>
+                                </span>
                               )}
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
 
