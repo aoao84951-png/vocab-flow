@@ -185,7 +185,7 @@ const MOBILE_TTS_VOICES: Record<MobileAccent, string> = {
   UK: "en-GB-Wavenet-B",
 };
 
-const MOBILE_TTS_CACHE_NAME = "vocab-flow-tts-cache-v1";
+const MOBILE_TTS_CACHE_NAME = "vocab-flow-tts-cache-v2";
 
 const normalizeMobileTtsText = (value: string) =>
   value

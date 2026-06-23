@@ -15,7 +15,7 @@ const VOICES: Record<Accent, string> = {
   UK: "en-GB-Wavenet-B",
 };
 
-const CACHE_NAME = "vocab-flow-tts-cache-v1";
+const CACHE_NAME = "vocab-flow-tts-cache-v2";
 
 const normalizeText = (value: string) =>
   value
