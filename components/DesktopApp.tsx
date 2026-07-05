@@ -3565,7 +3565,7 @@ function AddWord({
     examples.map(() => createFieldKey()),
   );
 
-  const preventInputCarryover = () => {
+  const appendAfterInputCommit = (append: () => void) => {
     const active = document.activeElement;
 
     if (
@@ -3576,16 +3576,19 @@ function AddWord({
     ) {
       active.blur();
     }
+
+    window.setTimeout(append, 0);
   };
 
   const addMeaningGroup = () => {
-    preventInputCarryover();
-    setMeaningGroupKeys((prev) => [...prev, createFieldKey()]);
-    setMeaningItemKeys((prev) => [...prev, [createFieldKey()]]);
-    setMeanings((prev) => [
-      ...prev,
-      { pos: "명", items: [""], numbered: false },
-    ]);
+    appendAfterInputCommit(() => {
+      setMeaningGroupKeys((prev) => [...prev, createFieldKey()]);
+      setMeaningItemKeys((prev) => [...prev, [createFieldKey()]]);
+      setMeanings((prev) => [
+        ...prev,
+        { pos: "명", items: [""], numbered: false },
+      ]);
+    });
   };
 
   const updateMeaningGroup = (groupIndex: number, next: Partial<Meaning>) => {
@@ -3641,17 +3644,18 @@ function AddWord({
   };
 
   const addMeaningItem = (groupIndex: number) => {
-    preventInputCarryover();
-    setMeaningItemKeys((prev) =>
-      prev.map((keys, i) =>
-        i === groupIndex ? [...keys, createFieldKey()] : keys,
-      ),
-    );
-    setMeanings((prev) =>
-      prev.map((group, i) =>
-        i === groupIndex ? { ...group, items: [...group.items, ""] } : group,
-      ),
-    );
+    appendAfterInputCommit(() => {
+      setMeaningItemKeys((prev) =>
+        prev.map((keys, i) =>
+          i === groupIndex ? [...keys, createFieldKey()] : keys,
+        ),
+      );
+      setMeanings((prev) =>
+        prev.map((group, i) =>
+          i === groupIndex ? { ...group, items: [...group.items, ""] } : group,
+        ),
+      );
+    });
   };
 
   const removeMeaningGroup = (groupIndex: number) => {
@@ -3661,9 +3665,10 @@ function AddWord({
   };
 
   const addExample = () => {
-    preventInputCarryover();
-    setExampleKeys((prev) => [...prev, createFieldKey()]);
-    setExamples((prev) => [...prev, { en: "", ko: "" }]);
+    appendAfterInputCommit(() => {
+      setExampleKeys((prev) => [...prev, createFieldKey()]);
+      setExamples((prev) => [...prev, { en: "", ko: "" }]);
+    });
   };
 
   const updateExample = (index: number, key: "en" | "ko", value: string) => {
@@ -4101,7 +4106,6 @@ function AddWord({
             <p className="pl-1.5 text-[12px] font-bold text-[#596275]">뜻</p>
             <button
               type="button"
-              onMouseDown={(e) => e.preventDefault()}
               onClick={addMeaningGroup}
               className="rounded-full bg-[#eef2f8] px-3 py-1.5 text-[11px] font-bold text-[#0f2a5f]"
             >
@@ -4176,6 +4180,7 @@ function AddWord({
                     >
                       <input
                         autoComplete="off"
+                        name={`meaning-${groupIndex}-${itemIndex}-${meaningItemKeys[groupIndex]?.[itemIndex] ?? itemIndex}`}
                         value={item}
                         onChange={(e) =>
                           updateMeaningItem(
@@ -4203,7 +4208,6 @@ function AddWord({
 
                 <button
                   type="button"
-                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => addMeaningItem(groupIndex)}
                   className="mt-3 h-9 w-full rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275]"
                 >
@@ -4221,7 +4225,6 @@ function AddWord({
             </p>
             <button
               type="button"
-              onMouseDown={(e) => e.preventDefault()}
               onClick={addExample}
               className="rounded-full bg-[#eef2f8] px-3 py-1.5 text-[11px] font-bold text-[#0f2a5f]"
             >
@@ -4249,6 +4252,7 @@ function AddWord({
 
                 <input
                   autoComplete="off"
+                  name={`example-en-${index}-${exampleKeys[index] ?? index}`}
                   value={example.en}
                   onChange={(e) => updateExample(index, "en", e.target.value)}
                   placeholder="영어 예문"
@@ -4257,6 +4261,7 @@ function AddWord({
 
                 <input
                   autoComplete="off"
+                  name={`example-ko-${index}-${exampleKeys[index] ?? index}`}
                   value={example.ko}
                   onChange={(e) => updateExample(index, "ko", e.target.value)}
                   placeholder="한국어 해석"
