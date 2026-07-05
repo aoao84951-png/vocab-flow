@@ -318,20 +318,6 @@ export default function DesktopApp() {
   const [dragX, setDragX] = useState(0);
   const touchStartX = useRef<number | null>(null);
   const studyTapStart = useRef<{ x: number; y: number } | null>(null);
-  const [studySwipeDragX, setStudySwipeDragX] = useState(0);
-  const [studySwipeAnimating, setStudySwipeAnimating] = useState(false);
-  const studySwipeDragXRef = useRef(0);
-  const studySwipeWidth = useRef(0);
-  const studySwipeStart = useRef<{
-    x: number;
-    y: number;
-    width: number;
-    pointerId: number;
-  } | null>(null);
-  const studySwipeDirection = useRef<"horizontal" | "vertical" | null>(null);
-  const studySwipeMoved = useRef(false);
-  const studySwipeLastPoint = useRef<{ x: number; time: number } | null>(null);
-  const studySwipeVelocityX = useRef(0);
   const folderLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -510,78 +496,6 @@ export default function DesktopApp() {
         true;
 
     setIsStandalone(standalone);
-  }, []);
-
-  useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-    const prevHtmlOverscroll = html.style.overscrollBehaviorY;
-    const prevBodyOverscroll = body.style.overscrollBehaviorY;
-    const prevHtmlOverflowX = html.style.overflowX;
-    const prevBodyOverflowX = body.style.overflowX;
-
-    html.style.overscrollBehaviorY = "none";
-    body.style.overscrollBehaviorY = "none";
-    html.style.overflowX = "hidden";
-    body.style.overflowX = "hidden";
-
-    let startY = 0;
-
-    const getScrollableParent = (target: EventTarget | null) => {
-      let element = target instanceof HTMLElement ? target : null;
-
-      while (element && element !== body && element !== html) {
-        const style = window.getComputedStyle(element);
-        const canScrollY =
-          /(auto|scroll)/.test(style.overflowY) &&
-          element.scrollHeight > element.clientHeight;
-
-        if (canScrollY) return element;
-        element = element.parentElement;
-      }
-
-      return document.scrollingElement as HTMLElement | null;
-    };
-
-    const handleTouchStart = (event: TouchEvent) => {
-      startY = event.touches[0]?.clientY ?? 0;
-    };
-
-    const handleTouchMove = (event: TouchEvent) => {
-      if (event.touches.length !== 1) return;
-
-      const target = event.target;
-      if (target instanceof Element && target.closest("input, textarea, select, [contenteditable='true']")) {
-        return;
-      }
-
-      const currentY = event.touches[0].clientY;
-      const deltaY = currentY - startY;
-      const scroller = getScrollableParent(target);
-
-      if (!scroller) return;
-
-      const atTop = scroller.scrollTop <= 0;
-      const atBottom =
-        Math.ceil(scroller.scrollTop + scroller.clientHeight) >=
-        scroller.scrollHeight;
-
-      if ((atTop && deltaY > 0) || (atBottom && deltaY < 0)) {
-        event.preventDefault();
-      }
-    };
-
-    document.addEventListener("touchstart", handleTouchStart, { passive: true });
-    document.addEventListener("touchmove", handleTouchMove, { passive: false });
-
-    return () => {
-      html.style.overscrollBehaviorY = prevHtmlOverscroll;
-      body.style.overscrollBehaviorY = prevBodyOverscroll;
-      html.style.overflowX = prevHtmlOverflowX;
-      body.style.overflowX = prevBodyOverflowX;
-      document.removeEventListener("touchstart", handleTouchStart);
-      document.removeEventListener("touchmove", handleTouchMove);
-    };
   }, []);
 
   function normalizeFolders(folders: any[]): Folder[] {
@@ -771,181 +685,36 @@ export default function DesktopApp() {
     }
   };
 
-  const getAdjacentStudyWord = (direction: "prev" | "next") => {
-    const currentPos = visibleSortedWords.findIndex(
-      (item) => item.originalIndex === wordIndex,
-    );
-    if (currentPos === -1) return null;
-
-    const adjacentPos = direction === "prev" ? currentPos - 1 : currentPos + 1;
-    if (adjacentPos < 0 || adjacentPos >= visibleSortedWords.length) return null;
-
-    return visibleSortedWords[adjacentPos];
-  };
-
-  const updateStudySwipeDragX = (value: number) => {
-    studySwipeDragXRef.current = value;
-    setStudySwipeDragX(value);
-  };
-
-  const resetStudySwipeState = () => {
-    studyTapStart.current = null;
-    studySwipeStart.current = null;
-    studySwipeMoved.current = false;
-    studySwipeDirection.current = null;
-    studySwipeLastPoint.current = null;
-    studySwipeVelocityX.current = 0;
-  };
-
   const handleStudyPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    studyTapStart.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handleStudyPointerUp = (e: PointerEvent<HTMLDivElement>) => {
+    if (!studyTapStart.current) return;
+
     const target = e.target as HTMLElement;
+
     if (
       target.closest("button") ||
       target.closest("input") ||
       target.closest("textarea") ||
       target.closest("select")
     ) {
-      resetStudySwipeState();
+      studyTapStart.current = null;
       return;
     }
-
-    const width = e.currentTarget.getBoundingClientRect().width;
-
-    studyTapStart.current = { x: e.clientX, y: e.clientY };
-    studySwipeWidth.current = width;
-    studySwipeStart.current = {
-      x: e.clientX,
-      y: e.clientY,
-      width,
-      pointerId: e.pointerId,
-    };
-    studySwipeMoved.current = false;
-    studySwipeDirection.current = null;
-    studySwipeLastPoint.current = { x: e.clientX, time: performance.now() };
-    studySwipeVelocityX.current = 0;
-    setStudySwipeAnimating(false);
-  };
-
-  const handleStudyPointerMove = (e: PointerEvent<HTMLDivElement>) => {
-    if (!studySwipeStart.current || e.pointerId !== studySwipeStart.current.pointerId) return;
-
-    const deltaX = e.clientX - studySwipeStart.current.x;
-    const deltaY = e.clientY - studySwipeStart.current.y;
-    const absX = Math.abs(deltaX);
-    const absY = Math.abs(deltaY);
-    const now = performance.now();
-    const lastPoint = studySwipeLastPoint.current;
-
-    if (lastPoint) {
-      const elapsed = Math.max(1, now - lastPoint.time);
-      studySwipeVelocityX.current = (e.clientX - lastPoint.x) / elapsed;
-    }
-    studySwipeLastPoint.current = { x: e.clientX, time: now };
-
-    if (!studySwipeDirection.current) {
-      if (absX < 8 && absY < 8) return;
-
-      if (absX >= 10 && absX > absY * 1.15) {
-        studySwipeDirection.current = "horizontal";
-        if (!e.currentTarget.hasPointerCapture(e.pointerId)) {
-          e.currentTarget.setPointerCapture(e.pointerId);
-        }
-      } else if (absY >= 8 && absY > absX * 0.85) {
-        studySwipeDirection.current = "vertical";
-        updateStudySwipeDragX(0);
-        return;
-      } else {
-        return;
-      }
-    }
-
-    if (studySwipeDirection.current !== "horizontal") return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    const hasPrev = Boolean(getAdjacentStudyWord("prev"));
-    const hasNext = Boolean(getAdjacentStudyWord("next"));
-    const limitedDeltaX = Math.max(
-      -studySwipeStart.current.width,
-      Math.min(deltaX, studySwipeStart.current.width),
-    );
-
-    if ((limitedDeltaX > 0 && !hasPrev) || (limitedDeltaX < 0 && !hasNext)) {
-      updateStudySwipeDragX(limitedDeltaX * 0.14);
-    } else {
-      updateStudySwipeDragX(limitedDeltaX);
-    }
-
-    studySwipeMoved.current = true;
-  };
-
-  const handleStudyPointerUp = (e: PointerEvent<HTMLDivElement>) => {
-    if (!studyTapStart.current) return;
 
     const movedX = Math.abs(e.clientX - studyTapStart.current.x);
     const movedY = Math.abs(e.clientY - studyTapStart.current.y);
 
-    if (
-      studySwipeMoved.current &&
-      studySwipeStart.current &&
-      studySwipeDirection.current === "horizontal"
-    ) {
-      const width = studySwipeStart.current.width;
-      const threshold = Math.max(46, width * 0.16);
-      const dragX = studySwipeDragXRef.current;
-      const velocityX = studySwipeVelocityX.current;
-      const direction = dragX > 0 ? "prev" : "next";
-      const isFastSwipe =
-        Math.abs(velocityX) >= 0.45 && Math.sign(velocityX) === Math.sign(dragX);
-      const adjacent = getAdjacentStudyWord(direction);
-
-      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-      }
-
-      resetStudySwipeState();
-      setStudySwipeAnimating(true);
-
-      if (adjacent && (Math.abs(dragX) >= threshold || isFastSwipe)) {
-        updateStudySwipeDragX(direction === "prev" ? width : -width);
-        window.setTimeout(() => {
-          setStudySwipeAnimating(false);
-          updateStudySwipeDragX(0);
-          setWordIndex(adjacent.originalIndex);
-          setActionWordIndex(null);
-        }, 260);
-      } else {
-        updateStudySwipeDragX(0);
-        window.setTimeout(() => {
-          setStudySwipeAnimating(false);
-        }, 260);
-      }
-
-      return;
-    }
-
     if (movedX > 10 || movedY > 10) {
-      resetStudySwipeState();
-      updateStudySwipeDragX(0);
+      studyTapStart.current = null;
       return;
     }
 
     setShowMeaning((prev) => !prev);
-    resetStudySwipeState();
-  };
 
-  const handleStudyPointerCancel = (e?: PointerEvent<HTMLDivElement>) => {
-    if (e && e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    }
-
-    resetStudySwipeState();
-    setStudySwipeAnimating(true);
-    updateStudySwipeDragX(0);
-    window.setTimeout(() => {
-      setStudySwipeAnimating(false);
-    }, 260);
+    studyTapStart.current = null;
   };
 
   useEffect(() => {
@@ -1563,409 +1332,6 @@ export default function DesktopApp() {
     );
   };
 
-  const renderStudyPane = (displayWord: Word, displayWordIndex: number) => {
-    const displayWordHasExtraContent = Boolean(
-      displayWord.examples.length > 0 ||
-        displayWord.synonyms.length > 0 ||
-        displayWord.antonyms.length > 0 ||
-        (displayWord.studyPoints ?? []).length > 0,
-    );
-
-    return (
-      <>
-                <section
-                  className={`relative flex min-h-[220px] shrink-0 flex-col items-center justify-center border-b border-[#d7ddea] px-5 py-9 ${
-                    displayWord.importanceStars ? "bg-[#f8fbff]" : "bg-white"
-                  }`}
-                >
-                  <div className="absolute right-5 top-5 flex items-center gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleImportant(displayWordIndex);
-                      }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full transition-transform active:scale-90"
-                      aria-label={`중요도 ${displayWord.importanceStars ?? 0}단계`}
-                      title="누를 때마다 중요도 1 → 2 → 3 → 해제로 변경"
-                    >
-                      <span className="relative flex h-5 w-5 items-center justify-center">
-                        <StarIcon
-                          active={Boolean(displayWord.importanceStars)}
-                          size={22}
-                        />
-                        {displayWord.importanceStars ? (
-                          <span className="absolute -right-1 -top-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#0f2a5f] px-[3px] text-[8px] font-black leading-none text-white">
-                            {displayWord.importanceStars}
-                          </span>
-                        ) : null}
-                      </span>
-                    </button>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleMemorized(displayWordIndex);
-                      }}
-                      className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
-                        displayWord.memorized
-                          ? "border-[#0f2a5f] bg-[#0f2a5f] shadow-[0_6px_14px_rgba(15,42,95,0.22)]"
-                          : "border-[#dce2ee] bg-[#f8fafc]"
-                      }`}
-                      aria-label="암기완료"
-                    >
-                      <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <path
-                          d="M5.5 12.5L10 17L18.8 7.5"
-                          stroke={displayWord.memorized ? "white" : "#9aa3b2"}
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-
-                  <h2
-                    className={`ipad-study-word w-full min-w-0 break-words px-10 text-center text-[52px] font-black leading-tight tracking-[-0.045em] ${
-                      displayWord.memorized
-                        ? "text-[#b0b7c3]"
-                        : "text-[#0f2a5f]"
-                    }`}
-                  >
-                    {displayWord.word}
-                  </h2>
-                  <PronounceButtons text={displayWord.word} className="mt-3" />
-                </section>
-
-                <section
-                  className={`relative z-[2] min-h-0 flex-1 overflow-hidden transition-opacity duration-200 ${
-                    showMeaning
-                      ? displayWord.memorized
-                        ? "pointer-events-auto opacity-45"
-                        : "pointer-events-auto opacity-100"
-                      : "pointer-events-none opacity-0"
-                  }`}
-                >
-                  <div className="mx-auto h-full w-full max-w-[760px] overflow-y-auto px-8 py-8 sm:px-10 md:px-11 lg:px-[52px]">
-                    <div
-                      className={
-                        displayWordHasExtraContent
-                          ? "border-b border-[#d7ddea] pb-5"
-                          : ""
-                      }
-                    >
-                      <div className="ipad-detail-meaning flex flex-col items-center gap-2 text-[17px] font-semibold leading-relaxed text-[#111827]">
-                        {displayWord.meanings.map((group) => {
-                          const shouldCenterStackedNumberedMeanings =
-                            group.numbered &&
-                            group.items.length > 1 &&
-                            group.items.join("").length >= 42;
-
-                          return shouldCenterStackedNumberedMeanings ? (
-                            <div
-                              key={`${group.pos}-${group.items.join("")}`}
-                              className="flex w-full justify-center"
-                            >
-                              <div className="grid w-fit max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-2">
-                                <span className="ipad-detail-pos inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#0f2a5f] px-[6px] text-[13px] font-bold text-white">
-                                  {group.pos}
-                                </span>
-
-                                <div className="relative -top-[2px] flex min-w-0 justify-center">
-                                  <div className="inline-flex max-w-full flex-col items-start gap-y-1 text-left">
-                                    {group.items.map((item, index) => (
-                                      <span
-                                        key={`${item}-${index}`}
-                                        className="inline-flex max-w-full items-start gap-[4px]"
-                                      >
-                                        <span className="mt-[6px] inline-flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
-                                          {index + 1}
-                                        </span>
-                                        <span className="min-w-0 break-keep">
-                                          {item}
-                                        </span>
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div
-                              key={`${group.pos}-${group.items.join("")}`}
-                              className="w-full max-w-full text-center"
-                            >
-                              <span className="ipad-detail-pos mr-2 inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#0f2a5f] px-[6px] text-[13px] font-bold text-white align-top">
-                                {group.pos}
-                              </span>
-
-                              {group.numbered ? (
-                                <span className="relative -top-[2px] inline max-w-full">
-                                  {group.items.map((item, index) => (
-                                    <span
-                                      key={`${item}-${index}`}
-                                      className="mr-2 inline-flex max-w-full items-start gap-[4px] text-left align-top last:mr-0"
-                                    >
-                                      <span className="mt-[6px] inline-flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
-                                        {index + 1}
-                                      </span>
-                                      <span className="min-w-0 break-keep">
-                                        {item}
-                                      </span>
-                                    </span>
-                                  ))}
-                                </span>
-                              ) : (
-                                <span className="relative -top-[2px] inline break-keep text-center">
-                                  {group.items.join(", ")}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {displayWord.examples.length > 0 && (
-                      <Block title="예문">
-                        <div className="max-h-[190px] space-y-3 overflow-y-auto pr-1">
-                          {displayWord.examples.map((ex, i) => (
-                            <div key={`${ex.en}-${i}`} className="pl-[2px]">
-                              <div className="flex items-start gap-2">
-                                <p className="ipad-example-en min-w-0 flex-1 text-[14px] leading-relaxed">
-                                  <HighlightedText
-                                    text={ex.en}
-                                    keyword={displayWord.word}
-                                  />
-                                </p>
-                                <PronounceButtons
-                                  text={ex.en}
-                                  className="shrink-0"
-                                />
-                              </div>
-                              {ex.ko && (
-                                <p className="ipad-example-ko mt-0.5 text-[12px] leading-relaxed text-[#8a94a6]">
-                                  {ex.ko}
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </Block>
-                    )}
-
-                    {displayWord.synonyms.length > 0 && (
-                      <Block title="동의어">
-                        <ChipList
-                          items={displayWord.synonyms}
-                          meanings={displayWord.meanings}
-                        />
-                      </Block>
-                    )}
-
-                    {displayWord.antonyms.length > 0 && (
-                      <Block title="반의어">
-                        <ChipList
-                          items={displayWord.antonyms}
-                          meanings={displayWord.meanings}
-                          tone="red"
-                        />
-                      </Block>
-                    )}
-                    {(displayWord.studyPoints ?? []).length > 0 && (
-                      <Block title="학습포인트">
-                        <div className="divide-y divide-[#d7ddea]">
-                          {(displayWord.studyPoints ?? []).map(
-                            (point, index) => (
-                              <div
-                                key={index}
-                                className="px-0 py-4 first:pt-0 last:pb-0"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#0f2a5f]">
-                                    {point.category}
-                                  </span>
-
-                                  {point.expression && (
-                                    <p className="ipad-study-main text-[14px] font-bold text-[#111827]">
-                                      <HighlightedText
-                                        text={point.expression}
-                                        keyword=""
-                                      />
-                                    </p>
-                                  )}
-                                </div>
-
-                                {point.description && (
-                                  <div
-                                    className="ipad-study-main mt-2 pl-[7px] whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
-                                    dangerouslySetInnerHTML={{
-                                      __html: applyBracketHighlightToHtml(
-                                        point.description,
-                                      ),
-                                    }}
-                                  />
-                                )}
-
-                                {(point.variants ?? []).length > 0 && (
-                                  <div className="mt-3 ml-[0px] space-y-2">
-                                    {(point.variants ?? []).map(
-                                      (variant, variantIndex) => (
-                                        <div
-                                          key={`${variant.word}-${variantIndex}`}
-                                          className="rounded-xl border border-[#e4e8f0] bg-white px-3 py-2"
-                                        >
-                                          {variant.word && (
-                                            <div className="mb-1.5 flex items-start gap-2">
-                                              <p className="ipad-study-main min-w-0 flex-1 text-[14px] font-bold text-[#111827]">
-                                                <HighlightedText
-                                                  text={variant.word}
-                                                  keyword=""
-                                                />
-                                              </p>
-                                              <PronounceButtons
-                                                text={variant.word}
-                                                className="shrink-0"
-                                              />
-                                            </div>
-                                          )}
-
-                                          <div className="space-y-1">
-                                            {(variant.meanings ?? []).map(
-                                              (meaning, meaningIndex) => (
-                                                <div
-                                                  key={`${meaning.pos}-${meaningIndex}`}
-                                                  className="flex items-start gap-1.5"
-                                                >
-                                                  <span className="ipad-pos-badge inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#0f2a5f] text-[10px] font-bold text-white">
-                                                    {meaning.pos}
-                                                  </span>
-
-                                                  <div className="ipad-study-sub min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
-                                                    {(meaning.items ?? []).map(
-                                                      (item, itemIndex) => (
-                                                        <span
-                                                          key={`${item}-${itemIndex}`}
-                                                          className="inline-flex items-center gap-0.5"
-                                                        >
-                                                          {meaning.numbered && (
-                                                            <span className="inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-[#9aa3b2] px-[3px] text-[9px] font-bold text-white">
-                                                              {itemIndex + 1}
-                                                            </span>
-                                                          )}
-                                                          <HighlightedText
-                                                            text={item}
-                                                            keyword=""
-                                                          />
-                                                        </span>
-                                                      ),
-                                                    )}
-                                                  </div>
-                                                </div>
-                                              ),
-                                            )}
-                                          </div>
-
-                                          {variant.related && (
-                                            <div className="mt-2 flex items-start gap-1.5 pl-[1px]">
-                                              <span className="mt-[1px] text-[13px] font-bold leading-none text-[#4b6cb7]">
-                                                =
-                                              </span>
-
-                                              <div className="flex min-w-0 flex-1 items-start gap-2">
-                                                <p className="ipad-study-sub min-w-0 flex-1 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
-                                                  <HighlightedText
-                                                    text={variant.related}
-                                                    keyword=""
-                                                  />
-                                                </p>
-                                                <PronounceButtons
-                                                  text={variant.related}
-                                                  className="shrink-0"
-                                                />
-                                              </div>
-                                            </div>
-                                          )}
-                                        </div>
-                                      ),
-                                    )}
-                                  </div>
-                                )}
-
-                                {(() => {
-                                  const pointExamples = point.examples?.length
-                                    ? point.examples
-                                    : point.exampleEn || point.exampleKo
-                                      ? [
-                                          {
-                                            en: point.exampleEn,
-                                            ko: point.exampleKo,
-                                          },
-                                        ]
-                                      : [];
-
-                                  if (pointExamples.length === 0) return null;
-
-                                  return (
-                                    <div className="mt-3 ml-[6px] space-y-3">
-                                      {pointExamples.map(
-                                        (example, exampleIndex) => (
-                                          <div
-                                            key={`${example.en}-${exampleIndex}`}
-                                            className="border-l-2 border-[#d7ddea] pl-3"
-                                          >
-                                            {example.en && (
-                                              <div className="flex items-start gap-2">
-                                                <div
-                                                  className="ipad-study-main min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
-                                                  dangerouslySetInnerHTML={{
-                                                    __html:
-                                                      applyBracketHighlightToHtml(
-                                                        example.en,
-                                                      ),
-                                                  }}
-                                                />
-                                                <PronounceButtons
-                                                  text={example.en}
-                                                  className="shrink-0"
-                                                />
-                                              </div>
-                                            )}
-
-                                            {example.ko && (
-                                              <p
-                                                className={`${example.en ? "mt-1" : ""} text-[12px] leading-relaxed text-[#8a94a6] ipad-study-sub`}
-                                              >
-                                                <HighlightedText
-                                                  text={example.ko}
-                                                  keyword=""
-                                                />
-                                              </p>
-                                            )}
-                                          </div>
-                                        ),
-                                      )}
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                            ),
-                          )}
-                        </div>
-                      </Block>
-                    )}
-                  </div>
-                </section>
-
-      </>
-    );
-  };
-
   return (
     <main className="min-h-[100svh] bg-white text-[#111827]">
       <style>{`
@@ -1985,7 +1351,6 @@ export default function DesktopApp() {
             .ipad-study-main { font-size: 16px; line-height: 1.68; }
             .ipad-study-sub { font-size: 15px; line-height: 1.68; }
           }
-          html, body { overscroll-behavior-y: none; }
         `}</style>
       <section className="min-h-[100svh] w-full bg-white px-3 sm:px-5 md:px-6 lg:px-8">
         {isStandalone && (
@@ -2580,11 +1945,9 @@ export default function DesktopApp() {
 
         {step === "study" && selectedBook && selectedDay && (
           <div
-            className="relative -mx-3 flex min-h-[100svh] flex-col overflow-hidden bg-white px-0 pt-0 pb-[calc(86px+env(safe-area-inset-bottom))] [overscroll-behavior:none] [touch-action:pan-y] sm:-mx-5 md:-mx-6 lg:-mx-8"
+            className="relative -mx-3 flex min-h-[100svh] flex-col bg-white px-0 pt-0 pb-[calc(86px+env(safe-area-inset-bottom))] sm:-mx-5 md:-mx-6 lg:-mx-8"
             onPointerDown={handleStudyPointerDown}
-            onPointerMove={handleStudyPointerMove}
             onPointerUp={handleStudyPointerUp}
-            onPointerCancel={handleStudyPointerCancel}
           >
             <header
               onClick={(e) => e.stopPropagation()}
@@ -2679,52 +2042,394 @@ export default function DesktopApp() {
               <Empty text="이 Day에는 아직 단어가 없어." />
             ) : (
               <>
-                <div className="relative min-h-0 flex-1 overflow-hidden">
-                  {(() => {
-                    const swipeWidth =
-                      studySwipeStart.current?.width || studySwipeWidth.current || 0;
-                    const preview =
-                      studySwipeDragX > 0
-                        ? getAdjacentStudyWord("prev")
-                        : studySwipeDragX < 0
-                          ? getAdjacentStudyWord("next")
-                          : null;
+                <section
+                  className={`relative flex min-h-[220px] shrink-0 flex-col items-center justify-center border-b border-[#d7ddea] px-5 py-9 ${
+                    currentWord.importanceStars ? "bg-[#f8fbff]" : "bg-white"
+                  }`}
+                >
+                  <div className="absolute right-5 top-5 flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleImportant(wordIndex);
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-full transition-transform active:scale-90"
+                      aria-label={`중요도 ${currentWord.importanceStars ?? 0}단계`}
+                      title="누를 때마다 중요도 1 → 2 → 3 → 해제로 변경"
+                    >
+                      <span className="relative flex h-5 w-5 items-center justify-center">
+                        <StarIcon
+                          active={Boolean(currentWord.importanceStars)}
+                          size={22}
+                        />
+                        {currentWord.importanceStars ? (
+                          <span className="absolute -right-1 -top-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#0f2a5f] px-[3px] text-[8px] font-black leading-none text-white">
+                            {currentWord.importanceStars}
+                          </span>
+                        ) : null}
+                      </span>
+                    </button>
 
-                    return (
-                      <>
-                        {preview && (
-                          <div
-                            className={`pointer-events-none absolute inset-0 flex flex-col will-change-transform ${
-                              studySwipeAnimating
-                                ? "transition-transform duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
-                                : ""
-                            }`}
-                            style={{
-                              transform: `translateX(${
-                                studySwipeDragX > 0
-                                  ? studySwipeDragX - swipeWidth
-                                  : studySwipeDragX + swipeWidth
-                              }px)`,
-                            }}
-                          >
-                            {renderStudyPane(preview.word, preview.originalIndex)}
-                          </div>
-                        )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleMemorized(wordIndex);
+                      }}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
+                        currentWord.memorized
+                          ? "border-[#0f2a5f] bg-[#0f2a5f] shadow-[0_6px_14px_rgba(15,42,95,0.22)]"
+                          : "border-[#dce2ee] bg-[#f8fafc]"
+                      }`}
+                      aria-label="암기완료"
+                    >
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <path
+                          d="M5.5 12.5L10 17L18.8 7.5"
+                          stroke={currentWord.memorized ? "white" : "#9aa3b2"}
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
 
-                        <div
-                          className={`absolute inset-0 flex flex-col will-change-transform ${
-                            studySwipeAnimating
-                              ? "transition-transform duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
-                              : ""
-                          }`}
-                          style={{ transform: `translateX(${studySwipeDragX}px)` }}
-                        >
-                          {renderStudyPane(currentWord, wordIndex)}
+                  <h2
+                    className={`ipad-study-word w-full min-w-0 break-words px-10 text-center text-[52px] font-black leading-tight tracking-[-0.045em] ${
+                      currentWord.memorized
+                        ? "text-[#b0b7c3]"
+                        : "text-[#0f2a5f]"
+                    }`}
+                  >
+                    {currentWord.word}
+                  </h2>
+                  <PronounceButtons text={currentWord.word} className="mt-3" />
+                </section>
+
+                <section
+                  className={`relative z-[2] min-h-0 flex-1 overflow-hidden transition-opacity duration-200 ${
+                    showMeaning
+                      ? currentWord.memorized
+                        ? "pointer-events-auto opacity-45"
+                        : "pointer-events-auto opacity-100"
+                      : "pointer-events-none opacity-0"
+                  }`}
+                >
+                  <div className="mx-auto h-full w-full max-w-[760px] overflow-y-auto px-8 py-8 sm:px-10 md:px-11 lg:px-[52px]">
+                    <div
+                      className={
+                        currentWordHasExtraContent
+                          ? "border-b border-[#d7ddea] pb-5"
+                          : ""
+                      }
+                    >
+                      <div className="ipad-detail-meaning flex flex-col items-center gap-2 text-[17px] font-semibold leading-relaxed text-[#111827]">
+                        {currentWord.meanings.map((group) => {
+                          const shouldCenterStackedNumberedMeanings =
+                            group.numbered &&
+                            group.items.length > 1 &&
+                            group.items.join("").length >= 42;
+
+                          return shouldCenterStackedNumberedMeanings ? (
+                            <div
+                              key={`${group.pos}-${group.items.join("")}`}
+                              className="flex w-full justify-center"
+                            >
+                              <div className="grid w-fit max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-2">
+                                <span className="ipad-detail-pos inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#0f2a5f] px-[6px] text-[13px] font-bold text-white">
+                                  {group.pos}
+                                </span>
+
+                                <div className="relative -top-[2px] flex min-w-0 justify-center">
+                                  <div className="inline-flex max-w-full flex-col items-start gap-y-1 text-left">
+                                    {group.items.map((item, index) => (
+                                      <span
+                                        key={`${item}-${index}`}
+                                        className="inline-flex max-w-full items-start gap-[4px]"
+                                      >
+                                        <span className="mt-[6px] inline-flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
+                                          {index + 1}
+                                        </span>
+                                        <span className="min-w-0 break-keep">
+                                          {item}
+                                        </span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              key={`${group.pos}-${group.items.join("")}`}
+                              className="w-full max-w-full text-center"
+                            >
+                              <span className="ipad-detail-pos mr-2 inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#0f2a5f] px-[6px] text-[13px] font-bold text-white align-top">
+                                {group.pos}
+                              </span>
+
+                              {group.numbered ? (
+                                <span className="relative -top-[2px] inline max-w-full">
+                                  {group.items.map((item, index) => (
+                                    <span
+                                      key={`${item}-${index}`}
+                                      className="mr-2 inline-flex max-w-full items-start gap-[4px] text-left align-top last:mr-0"
+                                    >
+                                      <span className="mt-[6px] inline-flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
+                                        {index + 1}
+                                      </span>
+                                      <span className="min-w-0 break-keep">
+                                        {item}
+                                      </span>
+                                    </span>
+                                  ))}
+                                </span>
+                              ) : (
+                                <span className="relative -top-[2px] inline break-keep text-center">
+                                  {group.items.join(", ")}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {currentWord.examples.length > 0 && (
+                      <Block title="예문">
+                        <div className="max-h-[190px] space-y-3 overflow-y-auto pr-1">
+                          {currentWord.examples.map((ex, i) => (
+                            <div key={`${ex.en}-${i}`} className="pl-[2px]">
+                              <div className="flex items-start gap-2">
+                                <p className="ipad-example-en min-w-0 flex-1 text-[14px] leading-relaxed">
+                                  <HighlightedText
+                                    text={ex.en}
+                                    keyword={currentWord.word}
+                                  />
+                                </p>
+                                <PronounceButtons
+                                  text={ex.en}
+                                  className="shrink-0"
+                                />
+                              </div>
+                              {ex.ko && (
+                                <p className="ipad-example-ko mt-0.5 text-[12px] leading-relaxed text-[#8a94a6]">
+                                  {ex.ko}
+                                </p>
+                              )}
+                            </div>
+                          ))}
                         </div>
-                      </>
-                    );
-                  })()}
-                </div>
+                      </Block>
+                    )}
+
+                    {currentWord.synonyms.length > 0 && (
+                      <Block title="동의어">
+                        <ChipList
+                          items={currentWord.synonyms}
+                          meanings={currentWord.meanings}
+                        />
+                      </Block>
+                    )}
+
+                    {currentWord.antonyms.length > 0 && (
+                      <Block title="반의어">
+                        <ChipList
+                          items={currentWord.antonyms}
+                          meanings={currentWord.meanings}
+                          tone="red"
+                        />
+                      </Block>
+                    )}
+                    {(currentWord.studyPoints ?? []).length > 0 && (
+                      <Block title="학습포인트">
+                        <div className="divide-y divide-[#d7ddea]">
+                          {(currentWord.studyPoints ?? []).map(
+                            (point, index) => (
+                              <div
+                                key={index}
+                                className="px-0 py-4 first:pt-0 last:pb-0"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#0f2a5f]">
+                                    {point.category}
+                                  </span>
+
+                                  {point.expression && (
+                                    <p className="ipad-study-main text-[14px] font-bold text-[#111827]">
+                                      <HighlightedText
+                                        text={point.expression}
+                                        keyword=""
+                                      />
+                                    </p>
+                                  )}
+                                </div>
+
+                                {point.description && (
+                                  <div
+                                    className="ipad-study-main mt-2 pl-[7px] whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
+                                    dangerouslySetInnerHTML={{
+                                      __html: applyBracketHighlightToHtml(
+                                        point.description,
+                                      ),
+                                    }}
+                                  />
+                                )}
+
+                                {(point.variants ?? []).length > 0 && (
+                                  <div className="mt-3 ml-[0px] space-y-2">
+                                    {(point.variants ?? []).map(
+                                      (variant, variantIndex) => (
+                                        <div
+                                          key={`${variant.word}-${variantIndex}`}
+                                          className="rounded-xl border border-[#e4e8f0] bg-white px-3 py-2"
+                                        >
+                                          {variant.word && (
+                                            <div className="mb-1.5 flex items-start gap-2">
+                                              <p className="ipad-study-main min-w-0 flex-1 text-[14px] font-bold text-[#111827]">
+                                                <HighlightedText
+                                                  text={variant.word}
+                                                  keyword=""
+                                                />
+                                              </p>
+                                              <PronounceButtons
+                                                text={variant.word}
+                                                className="shrink-0"
+                                              />
+                                            </div>
+                                          )}
+
+                                          <div className="space-y-1">
+                                            {(variant.meanings ?? []).map(
+                                              (meaning, meaningIndex) => (
+                                                <div
+                                                  key={`${meaning.pos}-${meaningIndex}`}
+                                                  className="flex items-start gap-1.5"
+                                                >
+                                                  <span className="ipad-pos-badge inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#0f2a5f] text-[10px] font-bold text-white">
+                                                    {meaning.pos}
+                                                  </span>
+
+                                                  <div className="ipad-study-sub min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
+                                                    {(meaning.items ?? []).map(
+                                                      (item, itemIndex) => (
+                                                        <span
+                                                          key={`${item}-${itemIndex}`}
+                                                          className="inline-flex items-center gap-0.5"
+                                                        >
+                                                          {meaning.numbered && (
+                                                            <span className="inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-[#9aa3b2] px-[3px] text-[9px] font-bold text-white">
+                                                              {itemIndex + 1}
+                                                            </span>
+                                                          )}
+                                                          <HighlightedText
+                                                            text={item}
+                                                            keyword=""
+                                                          />
+                                                        </span>
+                                                      ),
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              ),
+                                            )}
+                                          </div>
+
+                                          {variant.related && (
+                                            <div className="mt-2 flex items-start gap-1.5 pl-[1px]">
+                                              <span className="mt-[1px] text-[13px] font-bold leading-none text-[#4b6cb7]">
+                                                =
+                                              </span>
+
+                                              <div className="flex min-w-0 flex-1 items-start gap-2">
+                                                <p className="ipad-study-sub min-w-0 flex-1 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
+                                                  <HighlightedText
+                                                    text={variant.related}
+                                                    keyword=""
+                                                  />
+                                                </p>
+                                                <PronounceButtons
+                                                  text={variant.related}
+                                                  className="shrink-0"
+                                                />
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      ),
+                                    )}
+                                  </div>
+                                )}
+
+                                {(() => {
+                                  const pointExamples = point.examples?.length
+                                    ? point.examples
+                                    : point.exampleEn || point.exampleKo
+                                      ? [
+                                          {
+                                            en: point.exampleEn,
+                                            ko: point.exampleKo,
+                                          },
+                                        ]
+                                      : [];
+
+                                  if (pointExamples.length === 0) return null;
+
+                                  return (
+                                    <div className="mt-3 ml-[6px] space-y-3">
+                                      {pointExamples.map(
+                                        (example, exampleIndex) => (
+                                          <div
+                                            key={`${example.en}-${exampleIndex}`}
+                                            className="border-l-2 border-[#d7ddea] pl-3"
+                                          >
+                                            {example.en && (
+                                              <div className="flex items-start gap-2">
+                                                <div
+                                                  className="ipad-study-main min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
+                                                  dangerouslySetInnerHTML={{
+                                                    __html:
+                                                      applyBracketHighlightToHtml(
+                                                        example.en,
+                                                      ),
+                                                  }}
+                                                />
+                                                <PronounceButtons
+                                                  text={example.en}
+                                                  className="shrink-0"
+                                                />
+                                              </div>
+                                            )}
+
+                                            {example.ko && (
+                                              <p
+                                                className={`${example.en ? "mt-1" : ""} text-[12px] leading-relaxed text-[#8a94a6] ipad-study-sub`}
+                                              >
+                                                <HighlightedText
+                                                  text={example.ko}
+                                                  keyword=""
+                                                />
+                                              </p>
+                                            )}
+                                          </div>
+                                        ),
+                                      )}
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            ),
+                          )}
+                        </div>
+                      </Block>
+                    )}
+                  </div>
+                </section>
 
                 <footer
                   onClick={(e) => e.stopPropagation()}
@@ -3847,7 +3552,36 @@ function AddWord({
     "기타",
   ];
 
+  const fieldKeySeq = useRef(0);
+  const createFieldKey = () => `field-${fieldKeySeq.current++}`;
+
+  const [meaningGroupKeys, setMeaningGroupKeys] = useState<string[]>(() =>
+    meanings.map(() => createFieldKey()),
+  );
+  const [meaningItemKeys, setMeaningItemKeys] = useState<string[][]>(() =>
+    meanings.map((group) => group.items.map(() => createFieldKey())),
+  );
+  const [exampleKeys, setExampleKeys] = useState<string[]>(() =>
+    examples.map(() => createFieldKey()),
+  );
+
+  const preventInputCarryover = () => {
+    const active = document.activeElement;
+
+    if (
+      active instanceof HTMLInputElement ||
+      active instanceof HTMLTextAreaElement ||
+      active instanceof HTMLSelectElement ||
+      active instanceof HTMLDivElement
+    ) {
+      active.blur();
+    }
+  };
+
   const addMeaningGroup = () => {
+    preventInputCarryover();
+    setMeaningGroupKeys((prev) => [...prev, createFieldKey()]);
+    setMeaningItemKeys((prev) => [...prev, [createFieldKey()]]);
     setMeanings((prev) => [
       ...prev,
       { pos: "명", items: [""], numbered: false },
@@ -3882,6 +3616,15 @@ function AddWord({
   };
 
   const removeMeaningItem = (groupIndex: number, itemIndex: number) => {
+    setMeaningItemKeys((prev) =>
+      prev.map((keys, i) =>
+        i === groupIndex
+          ? keys.length > 1
+            ? keys.filter((_, j) => j !== itemIndex)
+            : [createFieldKey()]
+          : keys,
+      ),
+    );
     setMeanings((prev) =>
       prev.map((group, i) =>
         i === groupIndex
@@ -3898,6 +3641,12 @@ function AddWord({
   };
 
   const addMeaningItem = (groupIndex: number) => {
+    preventInputCarryover();
+    setMeaningItemKeys((prev) =>
+      prev.map((keys, i) =>
+        i === groupIndex ? [...keys, createFieldKey()] : keys,
+      ),
+    );
     setMeanings((prev) =>
       prev.map((group, i) =>
         i === groupIndex ? { ...group, items: [...group.items, ""] } : group,
@@ -3906,10 +3655,14 @@ function AddWord({
   };
 
   const removeMeaningGroup = (groupIndex: number) => {
+    setMeaningGroupKeys((prev) => prev.filter((_, i) => i !== groupIndex));
+    setMeaningItemKeys((prev) => prev.filter((_, i) => i !== groupIndex));
     setMeanings((prev) => prev.filter((_, i) => i !== groupIndex));
   };
 
   const addExample = () => {
+    preventInputCarryover();
+    setExampleKeys((prev) => [...prev, createFieldKey()]);
     setExamples((prev) => [...prev, { en: "", ko: "" }]);
   };
 
@@ -3922,6 +3675,7 @@ function AddWord({
   };
 
   const removeExample = (index: number) => {
+    setExampleKeys((prev) => prev.filter((_, i) => i !== index));
     setExamples((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -4346,6 +4100,8 @@ function AddWord({
           <div className="mb-2 flex items-center justify-between">
             <p className="pl-1.5 text-[12px] font-bold text-[#596275]">뜻</p>
             <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={addMeaningGroup}
               className="rounded-full bg-[#eef2f8] px-3 py-1.5 text-[11px] font-bold text-[#0f2a5f]"
             >
@@ -4356,7 +4112,7 @@ function AddWord({
           <div className="space-y-3">
             {meanings.map((group, groupIndex) => (
               <div
-                key={groupIndex}
+                key={meaningGroupKeys[groupIndex] ?? groupIndex}
                 className="rounded-2xl border border-[#dce2ee] p-4"
               >
                 <div className="flex gap-2">
@@ -4414,8 +4170,12 @@ function AddWord({
 
                 <div className="mt-3 space-y-2">
                   {group.items.map((item, itemIndex) => (
-                    <div key={itemIndex} className="relative">
+                    <div
+                      key={meaningItemKeys[groupIndex]?.[itemIndex] ?? itemIndex}
+                      className="relative"
+                    >
                       <input
+                        autoComplete="off"
                         value={item}
                         onChange={(e) =>
                           updateMeaningItem(
@@ -4442,6 +4202,8 @@ function AddWord({
                 </div>
 
                 <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => addMeaningItem(groupIndex)}
                   className="mt-3 h-9 w-full rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275]"
                 >
@@ -4458,6 +4220,8 @@ function AddWord({
               예시문장
             </p>
             <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={addExample}
               className="rounded-full bg-[#eef2f8] px-3 py-1.5 text-[11px] font-bold text-[#0f2a5f]"
             >
@@ -4468,7 +4232,7 @@ function AddWord({
           <div className="space-y-3">
             {examples.map((example, index) => (
               <div
-                key={index}
+                key={exampleKeys[index] ?? index}
                 className="rounded-2xl border border-[#dce2ee] p-4"
               >
                 <div className="mb-2 flex items-center justify-between">
@@ -4484,6 +4248,7 @@ function AddWord({
                 </div>
 
                 <input
+                  autoComplete="off"
                   value={example.en}
                   onChange={(e) => updateExample(index, "en", e.target.value)}
                   placeholder="영어 예문"
@@ -4491,6 +4256,7 @@ function AddWord({
                 />
 
                 <input
+                  autoComplete="off"
                   value={example.ko}
                   onChange={(e) => updateExample(index, "ko", e.target.value)}
                   placeholder="한국어 해석"
