@@ -3553,19 +3553,115 @@ function AddWord({
     "기타",
   ];
 
+  const recentKoreanInputRef = useRef<{
+    fieldId: string;
+    value: string;
+    at: number;
+  } | null>(null);
+
+  const isIPadLikeBrowser = () => {
+    if (typeof navigator === "undefined") return false;
+
+    return (
+      /iPad/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+    );
+  };
+
+  const hasKoreanText = (value: string) => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(value);
+
+  const rememberIPadKoreanInput = (fieldId: string, value: string) => {
+    const nextValue = value.trim();
+
+    if (!isIPadLikeBrowser() || !hasKoreanText(nextValue)) return;
+
+    recentKoreanInputRef.current = {
+      fieldId,
+      value: nextValue,
+      at: Date.now(),
+    };
+  };
+
+  const removeRepeatedIPadKoreanPrefix = (
+    fieldId: string,
+    controlledValue: string,
+    nextValue: string,
+  ) => {
+    const recent = recentKoreanInputRef.current;
+
+    if (
+      !isIPadLikeBrowser() ||
+      controlledValue ||
+      !nextValue ||
+      !recent ||
+      recent.fieldId === fieldId ||
+      Date.now() - recent.at > 4000
+    ) {
+      return nextValue;
+    }
+
+    const candidates = Array.from(
+      new Set([
+        recent.value,
+        recent.value.slice(-1),
+        recent.value.slice(-2),
+      ].filter(Boolean)),
+    ).sort((a, b) => b.length - a.length);
+
+    for (const prefix of candidates) {
+      if (nextValue === prefix) return "";
+      if (nextValue.startsWith(prefix)) return nextValue.slice(prefix.length);
+    }
+
+    return nextValue;
+  };
+
   const preventIPadKoreanAutofill = (
+    fieldId: string,
     el: HTMLInputElement,
     controlledValue: string,
   ) => {
     if (controlledValue || !el.value) return;
 
-    el.value = "";
+    const nextValue = removeRepeatedIPadKoreanPrefix(
+      fieldId,
+      controlledValue,
+      el.value,
+    );
+
+    if (nextValue === el.value) return;
+
+    el.value = nextValue;
 
     requestAnimationFrame(() => {
-      if (!controlledValue && el.value) {
-        el.value = "";
+      const cleanedValue = removeRepeatedIPadKoreanPrefix(
+        fieldId,
+        controlledValue,
+        el.value,
+      );
+
+      if (cleanedValue !== el.value) {
+        el.value = cleanedValue;
       }
     });
+  };
+
+  const getIPadSafeInputValue = (
+    fieldId: string,
+    el: HTMLInputElement,
+    controlledValue: string,
+  ) => {
+    const nextValue = removeRepeatedIPadKoreanPrefix(
+      fieldId,
+      controlledValue,
+      el.value,
+    );
+
+    if (nextValue !== el.value) {
+      el.value = nextValue;
+    }
+
+    return nextValue;
   };
 
   const iPadSafeInputProps = (fieldId: string, controlledValue: string) => ({
@@ -3575,7 +3671,9 @@ function AddWord({
     autoCapitalize: "off",
     spellCheck: false,
     onFocus: (e: FocusEvent<HTMLInputElement>) =>
-      preventIPadKoreanAutofill(e.currentTarget, controlledValue),
+      preventIPadKoreanAutofill(fieldId, e.currentTarget, controlledValue),
+    onBlur: (e: FocusEvent<HTMLInputElement>) =>
+      rememberIPadKoreanInput(fieldId, e.currentTarget.value),
   });
 
   const addMeaningGroup = () => {
@@ -4153,7 +4251,11 @@ function AddWord({
                           updateMeaningItem(
                             groupIndex,
                             itemIndex,
-                            e.target.value,
+                            getIPadSafeInputValue(
+                              `meaning-${groupIndex}-${itemIndex}`,
+                              e.currentTarget,
+                              item,
+                            ),
                           )
                         }
                         placeholder={
@@ -4218,7 +4320,17 @@ function AddWord({
                 <input
                   {...iPadSafeInputProps(`example-${index}-en`, example.en)}
                   value={example.en}
-                  onChange={(e) => updateExample(index, "en", e.target.value)}
+                  onChange={(e) =>
+                    updateExample(
+                      index,
+                      "en",
+                      getIPadSafeInputValue(
+                        `example-${index}-en`,
+                        e.currentTarget,
+                        example.en,
+                      ),
+                    )
+                  }
                   placeholder="영어 예문"
                   className="h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
                 />
@@ -4226,7 +4338,17 @@ function AddWord({
                 <input
                   {...iPadSafeInputProps(`example-${index}-ko`, example.ko)}
                   value={example.ko}
-                  onChange={(e) => updateExample(index, "ko", e.target.value)}
+                  onChange={(e) =>
+                    updateExample(
+                      index,
+                      "ko",
+                      getIPadSafeInputValue(
+                        `example-${index}-ko`,
+                        e.currentTarget,
+                        example.ko,
+                      ),
+                    )
+                  }
                   placeholder="한국어 해석"
                   className="mt-2 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
                 />
@@ -4315,7 +4437,15 @@ function AddWord({
                     {...iPadSafeInputProps(`study-${index}-category`, point.category)}
                     value={point.category}
                     onChange={(e) =>
-                      updateStudyPoint(index, "category", e.target.value)
+                      updateStudyPoint(
+                        index,
+                        "category",
+                        getIPadSafeInputValue(
+                          `study-${index}-category`,
+                          e.currentTarget,
+                          point.category,
+                        ),
+                      )
                     }
                     placeholder="유형 직접입력"
                     className="mt-3 h-10 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
@@ -4326,7 +4456,15 @@ function AddWord({
                   {...iPadSafeInputProps(`study-${index}-expression`, point.expression)}
                   value={point.expression}
                   onChange={(e) =>
-                    updateStudyPoint(index, "expression", e.target.value)
+                    updateStudyPoint(
+                      index,
+                      "expression",
+                      getIPadSafeInputValue(
+                        `study-${index}-expression`,
+                        e.currentTarget,
+                        point.expression,
+                      ),
+                    )
                   }
                   placeholder="제목"
                   className="mt-3 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
@@ -4380,7 +4518,11 @@ function AddWord({
                               updateStudyPointVariantWord(
                                 index,
                                 variantIndex,
-                                e.target.value,
+                                getIPadSafeInputValue(
+                                  `study-${index}-variant-${variantIndex}-word`,
+                                  e.currentTarget,
+                                  variant.word,
+                                ),
                               )
                             }
                             placeholder="변형 단어 예: advanced, advance"
@@ -4489,7 +4631,11 @@ function AddWord({
                                           variantIndex,
                                           meaningIndex,
                                           itemIndex,
-                                          e.target.value,
+                                          getIPadSafeInputValue(
+                                            `study-${index}-variant-${variantIndex}-meaning-${meaningIndex}-${itemIndex}`,
+                                            e.currentTarget,
+                                            item,
+                                          ),
                                         )
                                       }
                                       placeholder="뜻"
@@ -4540,7 +4686,11 @@ function AddWord({
                             updateStudyPointVariantRelated(
                               index,
                               variantIndex,
-                              e.target.value,
+                              getIPadSafeInputValue(
+                                `study-${index}-variant-${variantIndex}-related`,
+                                e.currentTarget,
+                                variant.related ?? "",
+                              ),
                             )
                           }
                           placeholder="유의어/동의어 예: on request, reply to, react to"
@@ -4630,7 +4780,11 @@ function AddWord({
                               index,
                               exampleIndex,
                               "ko",
-                              e.target.value,
+                              getIPadSafeInputValue(
+                                `study-${index}-example-${exampleIndex}-ko`,
+                                e.currentTarget,
+                                example.ko,
+                              ),
                             )
                           }
                           placeholder="한국어 해석"
