@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type {
   Dispatch,
+  FocusEvent,
   MutableRefObject,
   PointerEvent,
   ReactNode,
@@ -3552,43 +3553,36 @@ function AddWord({
     "기타",
   ];
 
-  const fieldKeySeq = useRef(0);
-  const createFieldKey = () => `field-${fieldKeySeq.current++}`;
+  const preventIPadKoreanAutofill = (
+    el: HTMLInputElement,
+    controlledValue: string,
+  ) => {
+    if (controlledValue || !el.value) return;
 
-  const [meaningGroupKeys, setMeaningGroupKeys] = useState<string[]>(() =>
-    meanings.map(() => createFieldKey()),
-  );
-  const [meaningItemKeys, setMeaningItemKeys] = useState<string[][]>(() =>
-    meanings.map((group) => group.items.map(() => createFieldKey())),
-  );
-  const [exampleKeys, setExampleKeys] = useState<string[]>(() =>
-    examples.map(() => createFieldKey()),
-  );
+    el.value = "";
 
-  const appendAfterInputCommit = (append: () => void) => {
-    const active = document.activeElement;
-
-    if (
-      active instanceof HTMLInputElement ||
-      active instanceof HTMLTextAreaElement ||
-      active instanceof HTMLSelectElement ||
-      active instanceof HTMLDivElement
-    ) {
-      active.blur();
-    }
-
-    window.setTimeout(append, 0);
+    requestAnimationFrame(() => {
+      if (!controlledValue && el.value) {
+        el.value = "";
+      }
+    });
   };
 
+  const iPadSafeInputProps = (fieldId: string, controlledValue: string) => ({
+    name: `vocab-flow-${fieldId}`,
+    autoComplete: "new-password",
+    autoCorrect: "off",
+    autoCapitalize: "off",
+    spellCheck: false,
+    onFocus: (e: FocusEvent<HTMLInputElement>) =>
+      preventIPadKoreanAutofill(e.currentTarget, controlledValue),
+  });
+
   const addMeaningGroup = () => {
-    appendAfterInputCommit(() => {
-      setMeaningGroupKeys((prev) => [...prev, createFieldKey()]);
-      setMeaningItemKeys((prev) => [...prev, [createFieldKey()]]);
-      setMeanings((prev) => [
-        ...prev,
-        { pos: "명", items: [""], numbered: false },
-      ]);
-    });
+    setMeanings((prev) => [
+      ...prev,
+      { pos: "명", items: [""], numbered: false },
+    ]);
   };
 
   const updateMeaningGroup = (groupIndex: number, next: Partial<Meaning>) => {
@@ -3619,15 +3613,6 @@ function AddWord({
   };
 
   const removeMeaningItem = (groupIndex: number, itemIndex: number) => {
-    setMeaningItemKeys((prev) =>
-      prev.map((keys, i) =>
-        i === groupIndex
-          ? keys.length > 1
-            ? keys.filter((_, j) => j !== itemIndex)
-            : [createFieldKey()]
-          : keys,
-      ),
-    );
     setMeanings((prev) =>
       prev.map((group, i) =>
         i === groupIndex
@@ -3644,31 +3629,19 @@ function AddWord({
   };
 
   const addMeaningItem = (groupIndex: number) => {
-    appendAfterInputCommit(() => {
-      setMeaningItemKeys((prev) =>
-        prev.map((keys, i) =>
-          i === groupIndex ? [...keys, createFieldKey()] : keys,
-        ),
-      );
-      setMeanings((prev) =>
-        prev.map((group, i) =>
-          i === groupIndex ? { ...group, items: [...group.items, ""] } : group,
-        ),
-      );
-    });
+    setMeanings((prev) =>
+      prev.map((group, i) =>
+        i === groupIndex ? { ...group, items: [...group.items, ""] } : group,
+      ),
+    );
   };
 
   const removeMeaningGroup = (groupIndex: number) => {
-    setMeaningGroupKeys((prev) => prev.filter((_, i) => i !== groupIndex));
-    setMeaningItemKeys((prev) => prev.filter((_, i) => i !== groupIndex));
     setMeanings((prev) => prev.filter((_, i) => i !== groupIndex));
   };
 
   const addExample = () => {
-    appendAfterInputCommit(() => {
-      setExampleKeys((prev) => [...prev, createFieldKey()]);
-      setExamples((prev) => [...prev, { en: "", ko: "" }]);
-    });
+    setExamples((prev) => [...prev, { en: "", ko: "" }]);
   };
 
   const updateExample = (index: number, key: "en" | "ko", value: string) => {
@@ -3680,7 +3653,6 @@ function AddWord({
   };
 
   const removeExample = (index: number) => {
-    setExampleKeys((prev) => prev.filter((_, i) => i !== index));
     setExamples((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -4105,7 +4077,6 @@ function AddWord({
           <div className="mb-2 flex items-center justify-between">
             <p className="pl-1.5 text-[12px] font-bold text-[#596275]">뜻</p>
             <button
-              type="button"
               onClick={addMeaningGroup}
               className="rounded-full bg-[#eef2f8] px-3 py-1.5 text-[11px] font-bold text-[#0f2a5f]"
             >
@@ -4116,7 +4087,7 @@ function AddWord({
           <div className="space-y-3">
             {meanings.map((group, groupIndex) => (
               <div
-                key={meaningGroupKeys[groupIndex] ?? groupIndex}
+                key={groupIndex}
                 className="rounded-2xl border border-[#dce2ee] p-4"
               >
                 <div className="flex gap-2">
@@ -4174,13 +4145,9 @@ function AddWord({
 
                 <div className="mt-3 space-y-2">
                   {group.items.map((item, itemIndex) => (
-                    <div
-                      key={meaningItemKeys[groupIndex]?.[itemIndex] ?? itemIndex}
-                      className="relative"
-                    >
+                    <div key={itemIndex} className="relative">
                       <input
-                        autoComplete="off"
-                        name={`meaning-${groupIndex}-${itemIndex}-${meaningItemKeys[groupIndex]?.[itemIndex] ?? itemIndex}`}
+                        {...iPadSafeInputProps(`meaning-${groupIndex}-${itemIndex}`, item)}
                         value={item}
                         onChange={(e) =>
                           updateMeaningItem(
@@ -4207,7 +4174,6 @@ function AddWord({
                 </div>
 
                 <button
-                  type="button"
                   onClick={() => addMeaningItem(groupIndex)}
                   className="mt-3 h-9 w-full rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275]"
                 >
@@ -4224,7 +4190,6 @@ function AddWord({
               예시문장
             </p>
             <button
-              type="button"
               onClick={addExample}
               className="rounded-full bg-[#eef2f8] px-3 py-1.5 text-[11px] font-bold text-[#0f2a5f]"
             >
@@ -4235,7 +4200,7 @@ function AddWord({
           <div className="space-y-3">
             {examples.map((example, index) => (
               <div
-                key={exampleKeys[index] ?? index}
+                key={index}
                 className="rounded-2xl border border-[#dce2ee] p-4"
               >
                 <div className="mb-2 flex items-center justify-between">
@@ -4251,8 +4216,7 @@ function AddWord({
                 </div>
 
                 <input
-                  autoComplete="off"
-                  name={`example-en-${index}-${exampleKeys[index] ?? index}`}
+                  {...iPadSafeInputProps(`example-${index}-en`, example.en)}
                   value={example.en}
                   onChange={(e) => updateExample(index, "en", e.target.value)}
                   placeholder="영어 예문"
@@ -4260,8 +4224,7 @@ function AddWord({
                 />
 
                 <input
-                  autoComplete="off"
-                  name={`example-ko-${index}-${exampleKeys[index] ?? index}`}
+                  {...iPadSafeInputProps(`example-${index}-ko`, example.ko)}
                   value={example.ko}
                   onChange={(e) => updateExample(index, "ko", e.target.value)}
                   placeholder="한국어 해석"
@@ -4349,6 +4312,7 @@ function AddWord({
 
                 {!STUDY_CATEGORIES.includes(point.category) && (
                   <input
+                    {...iPadSafeInputProps(`study-${index}-category`, point.category)}
                     value={point.category}
                     onChange={(e) =>
                       updateStudyPoint(index, "category", e.target.value)
@@ -4359,6 +4323,7 @@ function AddWord({
                 )}
 
                 <input
+                  {...iPadSafeInputProps(`study-${index}-expression`, point.expression)}
                   value={point.expression}
                   onChange={(e) =>
                     updateStudyPoint(index, "expression", e.target.value)
@@ -4409,6 +4374,7 @@ function AddWord({
                       >
                         <div className="flex gap-2">
                           <input
+                            {...iPadSafeInputProps(`study-${index}-variant-${variantIndex}-word`, variant.word)}
                             value={variant.word}
                             onChange={(e) =>
                               updateStudyPointVariantWord(
@@ -4515,6 +4481,7 @@ function AddWord({
                                 {meaning.items.map((item, itemIndex) => (
                                   <div key={itemIndex} className="flex gap-2">
                                     <input
+                                      {...iPadSafeInputProps(`study-${index}-variant-${variantIndex}-meaning-${meaningIndex}-${itemIndex}`, item)}
                                       value={item}
                                       onChange={(e) =>
                                         updateStudyPointVariantMeaningItem(
@@ -4567,6 +4534,7 @@ function AddWord({
                         </div>
 
                         <input
+                          {...iPadSafeInputProps(`study-${index}-variant-${variantIndex}-related`, variant.related ?? "")}
                           value={variant.related ?? ""}
                           onChange={(e) =>
                             updateStudyPointVariantRelated(
@@ -4655,6 +4623,7 @@ function AddWord({
                         </div>
 
                         <input
+                          {...iPadSafeInputProps(`study-${index}-example-${exampleIndex}-ko`, example.ko)}
                           value={example.ko}
                           onChange={(e) =>
                             updateStudyPointExample(
