@@ -1356,6 +1356,11 @@ export default function DesktopApp() {
               top: 2px;
             }
 
+            .ipad-variant-pos-text {
+              position: relative;
+              top: 0px;   /* 2px → 0px = 아이패드에서 글자가 2px 위로 올라감 */
+            }
+
             .ipad-study-sub {
               transform: translateY(-2px);
             }
@@ -2322,9 +2327,9 @@ export default function DesktopApp() {
                                                   className="flex items-start gap-1.5"
                                                 >
                                                   <span className="ipad-pos-badge inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#0f2a5f] text-[10px] font-bold text-white">
-                                                    <span className="relative -top-[1px]">
-                                                      {meaning.pos}
-                                                    </span>
+                                                  <span className="ipad-pos-text ipad-variant-pos-text">
+                                                    {meaning.pos}
+                                                  </span>
                                                   </span>
 
                                                   <div className="ipad-study-sub relative -top-[1px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
