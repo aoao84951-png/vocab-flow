@@ -2316,7 +2316,7 @@ export default function DesktopApp() {
                                                     {meaning.pos}
                                                   </span>
 
-                                                  <div className="ipad-study-sub relative -top-[2px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
+                                                  <div className="ipad-study-sub relative -top-[3px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
                                                     {(meaning.items ?? []).map(
                                                       (item, itemIndex) => (
                                                         <span
