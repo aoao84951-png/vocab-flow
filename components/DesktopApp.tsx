@@ -2322,7 +2322,7 @@ export default function DesktopApp() {
                                                   className="flex items-start gap-1.5"
                                                 >
                                                   <span className="ipad-pos-badge inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#0f2a5f] text-[10px] font-bold text-white">
-                                                    <span className="ipad-pos-text">
+                                                    <span className="relative -top-[1px]">
                                                       {meaning.pos}
                                                     </span>
                                                   </span>
