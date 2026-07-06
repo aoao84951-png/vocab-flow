@@ -1351,6 +1351,14 @@ export default function DesktopApp() {
             .ipad-chip { font-size: 15px; padding-top: 6px; padding-bottom: 6px; }
             .ipad-study-main { font-size: 16px; line-height: 1.68; }
             .ipad-study-sub { font-size: 15px; line-height: 1.68; }
+            .ipad-pos-text {
+              position: relative;
+              top: 2px;
+            }
+
+            .ipad-study-sub {
+              transform: translateY(-2px);
+            }
           }
         `}</style>
       <section className="min-h-[100svh] w-full bg-white px-3 sm:px-5 md:px-6 lg:px-8">
@@ -1894,9 +1902,10 @@ export default function DesktopApp() {
                                       className="relative flex items-start gap-1.5"
                                     >
                                       <span className="ipad-pos-badge inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#0f2a5f] text-[10px] font-bold text-white">
-                                        {group.pos}
+                                        <span className="ipad-pos-text">
+                                          {group.pos}
+                                        </span>
                                       </span>
-
                                       <div className="ipad-word-meaning relative -top-[1.5px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
                                         {(group.items ?? []).map(
                                           (meaning, index) => (
@@ -2313,10 +2322,12 @@ export default function DesktopApp() {
                                                   className="flex items-start gap-1.5"
                                                 >
                                                   <span className="ipad-pos-badge inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#0f2a5f] text-[10px] font-bold text-white">
-                                                    {meaning.pos}
+                                                    <span className="ipad-pos-text">
+                                                      {meaning.pos}
+                                                    </span>
                                                   </span>
 
-                                                  <div className="ipad-study-sub relative -top-[3px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
+                                                  <div className="ipad-study-sub relative -top-[1px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
                                                     {(meaning.items ?? []).map(
                                                       (item, itemIndex) => (
                                                         <span
