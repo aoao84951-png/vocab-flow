@@ -1358,7 +1358,7 @@ export default function DesktopApp() {
 
             .ipad-variant-pos-text {
               position: relative;
-              top: 0px;   /* 2px → 0px = 아이패드에서 글자가 2px 위로 올라감 */
+              top: 0.5px;   /* 2px → 0px = 아이패드에서 글자가 2px 위로 올라감 */
             }
 
             .ipad-study-sub {
