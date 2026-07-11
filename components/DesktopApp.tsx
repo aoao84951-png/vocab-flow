@@ -3642,7 +3642,15 @@ function AddWord({
     el: HTMLInputElement,
     controlledValue: string,
   ) => {
-    if (controlledValue) return;
+    if (controlledValue || !isIPadLikeBrowser()) return;
+
+    // 아이패드 사파리는 포커스가 들어온 뒤 "비동기로" (정확한 타이밍을 예측할 수
+    // 없게) 이전 칸에 입력했던 한글 마지막 글자를 이 칸에 채워 넣는 경우가 있다.
+    // 지워지는 시점을 아무리 앞당겨도 브라우저가 그 값을 화면에 그려버리는
+    // 순간 자체를 코드로 막을 수는 없으므로, 정리가 끝날 때까지 글자 자체를
+    // 투명하게 가려서 잘못된 값이 "보이는" 순간이 애초에 생기지 않도록 한다.
+    const previousOpacity = el.style.opacity;
+    el.style.opacity = "0";
 
     const clean = () => {
       if (controlledValue || !el.value) return;
@@ -3658,15 +3666,17 @@ function AddWord({
       }
     };
 
-    // 포커스 시점에는 아직 브라우저가 이전 칸의 값을 채워 넣지 않은 경우가 많아,
-    // 그 순간 한 번만 검사하면 뒤늦게(비동기로) 채워지는 값을 놓치게 되어
-    // 화면에 이전 단어가 잠깐 나타났다가 사라지는 현상이 발생한다.
-    // 여러 타이밍에 걸쳐 반복 검사해서 언제 채워지든 즉시 지워지도록 한다.
+    const revealWhenSafe = () => {
+      clean();
+      el.style.opacity = previousOpacity;
+    };
+
     clean();
     requestAnimationFrame(clean);
-    requestAnimationFrame(() => requestAnimationFrame(clean));
     window.setTimeout(clean, 0);
-    window.setTimeout(clean, 100);
+    window.setTimeout(clean, 80);
+    // 브라우저의 지연 채움이 끝났을 시점에 마지막으로 한 번 더 정리한 뒤 공개한다.
+    window.setTimeout(revealWhenSafe, 120);
   };
 
   const getIPadSafeInputValue = (
