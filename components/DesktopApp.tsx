@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import type {
-  ChangeEvent,
   Dispatch,
   FocusEvent,
   MutableRefObject,
@@ -3575,6 +3574,44 @@ function AddWord({
     "기타",
   ];
 
+  const recentKoreanInputRef = useRef<{
+    fieldId: string;
+    value: string;
+    at: number;
+  } | null>(null);
+
+  // 포커스 직후 지연 검사(tryFix)가 실제로는 사용자가 이미 입력을
+  // 시작한(진짜 타이핑 중인) 필드의 값을 "새어 들어온 값"으로 오인해
+  // 지워버리는 것이 한글 입력 중 글자가 나타났다 사라지는 현상의 핵심
+  // 원인이다. 아래 두 ref로 "이 필드에 실제 입력이 시작됐는지"와
+  // "이 필드가 지금 한글 조합 중인지"를 추적해서, 조합 중이거나 이미
+  // 입력이 시작된 필드는 절대 값을 건드리지 않도록 막는다.
+  const iPadComposingFieldRef = useRef<string | null>(null);
+  const iPadInteractedFieldsRef = useRef<Set<string>>(new Set());
+
+  // 아이패드 사파리가 "이름이 비슷하게 반복되는 입력칸들"을 같은 종류의
+  // 필드로 착각해서 값을 서로 채워 넣는 것이 이 현상의 근본 원인이다.
+  // 실제 구조(예: study-0-variant-0-meaning-0-0)를 그대로 name 속성에
+  // 노출하면 형제 필드들끼리 이름이 거의 똑같아 보이므로, 화면에는 영향을
+  // 주지 않으면서 브라우저에게만 보이는 name 속성을 필드마다 서로 전혀
+  // 다른 무작위 문자열로 바꿔서 애초에 헷갈릴 조건 자체를 없앤다.
+  const fieldNameRegistryRef = useRef<Map<string, string>>(new Map());
+
+  const getObfuscatedFieldName = (fieldId: string) => {
+    const registry = fieldNameRegistryRef.current;
+    const existing = registry.get(fieldId);
+    if (existing) return existing;
+
+    const randomPart =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+
+    const obfuscated = `vf-${randomPart}`;
+    registry.set(fieldId, obfuscated);
+    return obfuscated;
+  };
+
   const isIPadLikeBrowser = () => {
     if (typeof navigator === "undefined") return false;
 
@@ -3584,39 +3621,163 @@ function AddWord({
     );
   };
 
-  // iPadOS Safari can leave a stray leftover value in a text field the
-  // instant it gains focus (e.g. a Korean composition that never got a
-  // chance to commit before Tab moved focus to the next field). We only
-  // ever reset that value synchronously at focus time, before the user has
-  // had any chance to type into the newly focused field, so this can never
-  // clobber input the user is actively composing.
-  const iPadSafeInputProps = (controlledValue: string) => ({
-    autoComplete: "off",
+  const hasKoreanText = (value: string) => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(value);
+
+  const rememberIPadKoreanInput = (fieldId: string, value: string) => {
+    const nextValue = value.trim();
+
+    if (!isIPadLikeBrowser() || !hasKoreanText(nextValue)) return;
+
+    recentKoreanInputRef.current = {
+      fieldId,
+      value: nextValue,
+      at: Date.now(),
+    };
+  };
+
+  const removeRepeatedIPadKoreanPrefix = (
+    fieldId: string,
+    controlledValue: string,
+    nextValue: string,
+  ) => {
+    const recent = recentKoreanInputRef.current;
+
+    if (
+      !isIPadLikeBrowser() ||
+      controlledValue ||
+      !nextValue ||
+      !recent ||
+      recent.fieldId === fieldId ||
+      Date.now() - recent.at > 4000 ||
+      // 지금 이 필드에서 한글 조합(IME composition)이 진행 중이면 절대
+      // 값을 건드리지 않는다. 조합 중에 value를 강제로 바꾸면 조합 중이던
+      // 음절이 깨져서 글자가 나타났다 사라지거나 엉뚱한 글자가 남는 문제가
+      // 발생한다.
+      iPadComposingFieldRef.current === fieldId
+    ) {
+      return nextValue;
+    }
+
+    const candidates = Array.from(
+      new Set([
+        recent.value,
+        recent.value.slice(-1),
+        recent.value.slice(-2),
+      ].filter(Boolean)),
+    ).sort((a, b) => b.length - a.length);
+
+    for (const prefix of candidates) {
+      if (nextValue === prefix) return "";
+      if (nextValue.startsWith(prefix)) return nextValue.slice(prefix.length);
+    }
+
+    return nextValue;
+  };
+
+  const preventIPadKoreanAutofill = (
+    fieldId: string,
+    el: HTMLInputElement,
+    controlledValue: string,
+  ) => {
+    if (controlledValue || !isIPadLikeBrowser()) return;
+
+    // 새로 포커스가 들어온 시점이므로, 이 필드에 대해 이전에 남아있을 수
+    // 있는 "입력 시작됨" 표시를 지워서 이번 포커스 세션은 깨끗한 상태에서
+    // 시작하게 한다.
+    iPadInteractedFieldsRef.current.delete(fieldId);
+
+    // 이 함수는 실제로 el.value에 값이 채워져 있는(=문제가 실제로 발생한)
+    // 경우에만 개입한다. 정상적으로 빈 칸을 선택하는 대부분의 경우엔
+    // el.value도 비어 있으므로 아래 로직이 사실상 아무 것도 하지 않고
+    // 즉시 리턴하며, 화면 깜빡임도 전혀 발생하지 않는다.
+    const tryFix = () => {
+      // controlledValue는 포커스 시점의 값을 클로저로 캡처한 것이라
+      // 이후 타이머(80ms, 150ms)가 실행될 때는 이미 사용자가 실제로
+      // 입력을 시작했을 수 있다. 그 경우 controlledValue만 보고 판단하면
+      // 방금 사용자가 입력한 진짜 글자를 "새어 들어온 값"으로 착각해서
+      // 지워버리게 된다(글자가 나타났다 사라지는 현상의 원인). 따라서
+      // 실제 입력이 시작됐는지(interacted) 또는 지금 한글 조합 중인지
+      // (composing)를 함께 확인해서, 둘 중 하나라도 해당하면 절대 값을
+      // 건드리지 않는다.
+      if (
+        controlledValue ||
+        !el.value ||
+        iPadInteractedFieldsRef.current.has(fieldId) ||
+        iPadComposingFieldRef.current === fieldId
+      )
+        return;
+
+      // 문제가 실제로 감지된 순간에만: 지우는 아주 짧은 순간 동안 글자를
+      // 가려서, 잘못된 값이 화면에 보이는 프레임 자체가 생기지 않게 한다.
+      const previousOpacity = el.style.opacity;
+      el.style.opacity = "0";
+
+      el.value = removeRepeatedIPadKoreanPrefix(
+        fieldId,
+        controlledValue,
+        el.value,
+      );
+
+      requestAnimationFrame(() => {
+        el.style.opacity = previousOpacity;
+      });
+    };
+
+    // 포커스 시점엔 아직 안 채워져 있어도, 아이패드가 뒤늦게(비동기로) 값을
+    // 채워 넣는 경우를 대비해 몇 차례 더 확인한다. 실제로 값이 없으면
+    // tryFix 안에서 바로 리턴되므로 이 반복 검사 자체는 화면에 영향을 주지
+    // 않는다.
+    tryFix();
+    requestAnimationFrame(tryFix);
+    window.setTimeout(tryFix, 0);
+    window.setTimeout(tryFix, 80);
+    window.setTimeout(tryFix, 150);
+  };
+
+  const getIPadSafeInputValue = (
+    fieldId: string,
+    el: HTMLInputElement,
+    controlledValue: string,
+  ) => {
+    const nextValue = removeRepeatedIPadKoreanPrefix(
+      fieldId,
+      controlledValue,
+      el.value,
+    );
+
+    if (nextValue !== el.value) {
+      el.value = nextValue;
+    }
+
+    return nextValue;
+  };
+
+  const iPadSafeInputProps = (fieldId: string, controlledValue: string) => ({
+    name: getObfuscatedFieldName(fieldId),
+    autoComplete: "new-password",
     autoCorrect: "off",
     autoCapitalize: "off",
     spellCheck: false,
-    onFocus: (e: FocusEvent<HTMLInputElement>) => {
-      if (!isIPadLikeBrowser()) return;
-
-      const el = e.currentTarget;
-      if (el.value !== controlledValue) el.value = controlledValue;
+    onFocus: (e: FocusEvent<HTMLInputElement>) =>
+      preventIPadKoreanAutofill(fieldId, e.currentTarget, controlledValue),
+    onBlur: (e: FocusEvent<HTMLInputElement>) =>
+      rememberIPadKoreanInput(fieldId, e.currentTarget.value),
+    // 실제 키 입력 또는 한글 조합 시작을 감지하면 "이 필드는 이미 진짜
+    // 입력이 시작됐다"고 표시해서, 뒤늦게 실행되는 자동보정 타이머가
+    // 사용자가 막 입력한 글자를 지워버리지 않게 막는다.
+    onKeyDown: () => {
+      iPadInteractedFieldsRef.current.add(fieldId);
+    },
+    onCompositionStart: () => {
+      iPadInteractedFieldsRef.current.add(fieldId);
+      iPadComposingFieldRef.current = fieldId;
+    },
+    onCompositionEnd: () => {
+      if (iPadComposingFieldRef.current === fieldId) {
+        iPadComposingFieldRef.current = null;
+      }
     },
   });
-
-  // Forcing the DOM value back to the React-controlled value on every
-  // keystroke while Safari is mid-composition (assembling a Hangul
-  // syllable) fights the IME and corrupts the composition buffer — that's
-  // what produces characters that flash in and vanish, or leftover jamo
-  // fragments. Skip committing to state while `isComposing` is true;
-  // `onCompositionEnd` commits the final, fully-composed text once the IME
-  // session ends.
-  const commitIfNotComposing = (
-    e: ChangeEvent<HTMLInputElement>,
-    commit: (value: string) => void,
-  ) => {
-    if ((e.nativeEvent as InputEvent).isComposing) return;
-    commit(e.currentTarget.value);
-  };
 
   const addMeaningGroup = () => {
     setMeanings((prev) => [
@@ -4187,18 +4348,17 @@ function AddWord({
                   {group.items.map((item, itemIndex) => (
                     <div key={itemIndex} className="relative">
                       <input
-                        {...iPadSafeInputProps(item)}
+                        {...iPadSafeInputProps(`meaning-${groupIndex}-${itemIndex}`, item)}
                         value={item}
                         onChange={(e) =>
-                          commitIfNotComposing(e, (value) =>
-                            updateMeaningItem(groupIndex, itemIndex, value),
-                          )
-                        }
-                        onCompositionEnd={(e) =>
                           updateMeaningItem(
                             groupIndex,
                             itemIndex,
-                            e.currentTarget.value,
+                            getIPadSafeInputValue(
+                              `meaning-${groupIndex}-${itemIndex}`,
+                              e.currentTarget,
+                              item,
+                            ),
                           )
                         }
                         placeholder={
@@ -4261,30 +4421,36 @@ function AddWord({
                 </div>
 
                 <input
-                  {...iPadSafeInputProps(example.en)}
+                  {...iPadSafeInputProps(`example-${index}-en`, example.en)}
                   value={example.en}
                   onChange={(e) =>
-                    commitIfNotComposing(e, (value) =>
-                      updateExample(index, "en", value),
+                    updateExample(
+                      index,
+                      "en",
+                      getIPadSafeInputValue(
+                        `example-${index}-en`,
+                        e.currentTarget,
+                        example.en,
+                      ),
                     )
-                  }
-                  onCompositionEnd={(e) =>
-                    updateExample(index, "en", e.currentTarget.value)
                   }
                   placeholder="영어 예문"
                   className="h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
                 />
 
                 <input
-                  {...iPadSafeInputProps(example.ko)}
+                  {...iPadSafeInputProps(`example-${index}-ko`, example.ko)}
                   value={example.ko}
                   onChange={(e) =>
-                    commitIfNotComposing(e, (value) =>
-                      updateExample(index, "ko", value),
+                    updateExample(
+                      index,
+                      "ko",
+                      getIPadSafeInputValue(
+                        `example-${index}-ko`,
+                        e.currentTarget,
+                        example.ko,
+                      ),
                     )
-                  }
-                  onCompositionEnd={(e) =>
-                    updateExample(index, "ko", e.currentTarget.value)
                   }
                   placeholder="한국어 해석"
                   className="mt-2 h-11 w-full rounded-xl border border-[#dce2ee] px-3 text-[13px] outline-none"
@@ -4371,18 +4537,17 @@ function AddWord({
 
                 {!STUDY_CATEGORIES.includes(point.category) && (
                   <input
-                    {...iPadSafeInputProps(point.category)}
+                    {...iPadSafeInputProps(`study-${index}-category`, point.category)}
                     value={point.category}
                     onChange={(e) =>
-                      commitIfNotComposing(e, (value) =>
-                        updateStudyPoint(index, "category", value),
-                      )
-                    }
-                    onCompositionEnd={(e) =>
                       updateStudyPoint(
                         index,
                         "category",
-                        e.currentTarget.value,
+                        getIPadSafeInputValue(
+                          `study-${index}-category`,
+                          e.currentTarget,
+                          point.category,
+                        ),
                       )
                     }
                     placeholder="유형 직접입력"
@@ -4391,18 +4556,17 @@ function AddWord({
                 )}
 
                 <input
-                  {...iPadSafeInputProps(point.expression)}
+                  {...iPadSafeInputProps(`study-${index}-expression`, point.expression)}
                   value={point.expression}
                   onChange={(e) =>
-                    commitIfNotComposing(e, (value) =>
-                      updateStudyPoint(index, "expression", value),
-                    )
-                  }
-                  onCompositionEnd={(e) =>
                     updateStudyPoint(
                       index,
                       "expression",
-                      e.currentTarget.value,
+                      getIPadSafeInputValue(
+                        `study-${index}-expression`,
+                        e.currentTarget,
+                        point.expression,
+                      ),
                     )
                   }
                   placeholder="제목"
@@ -4451,22 +4615,17 @@ function AddWord({
                       >
                         <div className="flex gap-2">
                           <input
-                            {...iPadSafeInputProps(variant.word)}
+                            {...iPadSafeInputProps(`study-${index}-variant-${variantIndex}-word`, variant.word)}
                             value={variant.word}
                             onChange={(e) =>
-                              commitIfNotComposing(e, (value) =>
-                                updateStudyPointVariantWord(
-                                  index,
-                                  variantIndex,
-                                  value,
-                                ),
-                              )
-                            }
-                            onCompositionEnd={(e) =>
                               updateStudyPointVariantWord(
                                 index,
                                 variantIndex,
-                                e.currentTarget.value,
+                                getIPadSafeInputValue(
+                                  `study-${index}-variant-${variantIndex}-word`,
+                                  e.currentTarget,
+                                  variant.word,
+                                ),
                               )
                             }
                             placeholder="변형 단어 예: advanced, advance"
@@ -4567,26 +4726,19 @@ function AddWord({
                                 {meaning.items.map((item, itemIndex) => (
                                   <div key={itemIndex} className="flex gap-2">
                                     <input
-                                      {...iPadSafeInputProps(item)}
+                                      {...iPadSafeInputProps(`study-${index}-variant-${variantIndex}-meaning-${meaningIndex}-${itemIndex}`, item)}
                                       value={item}
                                       onChange={(e) =>
-                                        commitIfNotComposing(e, (value) =>
-                                          updateStudyPointVariantMeaningItem(
-                                            index,
-                                            variantIndex,
-                                            meaningIndex,
-                                            itemIndex,
-                                            value,
-                                          ),
-                                        )
-                                      }
-                                      onCompositionEnd={(e) =>
                                         updateStudyPointVariantMeaningItem(
                                           index,
                                           variantIndex,
                                           meaningIndex,
                                           itemIndex,
-                                          e.currentTarget.value,
+                                          getIPadSafeInputValue(
+                                            `study-${index}-variant-${variantIndex}-meaning-${meaningIndex}-${itemIndex}`,
+                                            e.currentTarget,
+                                            item,
+                                          ),
                                         )
                                       }
                                       placeholder="뜻"
@@ -4631,22 +4783,17 @@ function AddWord({
                         </div>
 
                         <input
-                          {...iPadSafeInputProps(variant.related ?? "")}
+                          {...iPadSafeInputProps(`study-${index}-variant-${variantIndex}-related`, variant.related ?? "")}
                           value={variant.related ?? ""}
                           onChange={(e) =>
-                            commitIfNotComposing(e, (value) =>
-                              updateStudyPointVariantRelated(
-                                index,
-                                variantIndex,
-                                value,
-                              ),
-                            )
-                          }
-                          onCompositionEnd={(e) =>
                             updateStudyPointVariantRelated(
                               index,
                               variantIndex,
-                              e.currentTarget.value,
+                              getIPadSafeInputValue(
+                                `study-${index}-variant-${variantIndex}-related`,
+                                e.currentTarget,
+                                variant.related ?? "",
+                              ),
                             )
                           }
                           placeholder="유의어/동의어 예: on request, reply to, react to"
@@ -4729,24 +4876,18 @@ function AddWord({
                         </div>
 
                         <input
-                          {...iPadSafeInputProps(example.ko)}
+                          {...iPadSafeInputProps(`study-${index}-example-${exampleIndex}-ko`, example.ko)}
                           value={example.ko}
                           onChange={(e) =>
-                            commitIfNotComposing(e, (value) =>
-                              updateStudyPointExample(
-                                index,
-                                exampleIndex,
-                                "ko",
-                                value,
-                              ),
-                            )
-                          }
-                          onCompositionEnd={(e) =>
                             updateStudyPointExample(
                               index,
                               exampleIndex,
                               "ko",
-                              e.currentTarget.value,
+                              getIPadSafeInputValue(
+                                `study-${index}-example-${exampleIndex}-ko`,
+                                e.currentTarget,
+                                example.ko,
+                              ),
                             )
                           }
                           placeholder="한국어 해석"
