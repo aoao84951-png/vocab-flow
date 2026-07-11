@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type {
   Dispatch,
   FocusEvent,
+  KeyboardEvent as ReactKeyboardEvent,
   MutableRefObject,
   PointerEvent,
   ReactNode,
@@ -3621,6 +3622,57 @@ function AddWord({
     );
   };
 
+  // 아이패드(사파리)는 물리 키보드의 Tab 키를 눌러 포커스가 다음 칸으로
+  // "동기적으로 즉시" 넘어갈 때, 방금 입력 중이던 한글 입력기(키보드)가
+  // 내부적으로 들고 있던 상태(마지막으로 조합/입력했던 단어 버퍼)를 미처
+  // 정리하지 못한 채 그대로 다음 칸으로 들고 넘어가는 버그가 있다. 그
+  // 결과로 다음 칸이 비어 보여도 실제로는 이전 칸의 마지막 글자(음절이
+  // 깨진 형태)가 내부에 남아있다가, 새 칸에서 아무 키(백스페이스 포함)나
+  // 누르는 순간 그 값이 화면에 반영되면서 나타났다 지워지는 것처럼 보인다.
+  // 이 문제는 값이 새어 들어온 "뒤에" 문자열을 분석해서 지우는 방식으로는
+  // 근본적으로 해결할 수 없다(음절이 이미 깨져서 원래 글자를 알 수 없기
+  // 때문). 그래서 애초에 네이티브 Tab 이동을 막고, 현재 칸을 blur한 뒤
+  // 한 박자 쉬었다가 다음 칸으로 focus를 옮겨서, 아이패드가 이전 칸의
+  // 입력기 상태를 정리할 시간을 벌어주는 방식으로 근본 원인을 막는다.
+  const getFocusableFormElements = (): HTMLElement[] => {
+    if (typeof document === "undefined") return [];
+
+    // 사파리는 기본 설정에서 Tab 키로 버튼/링크는 건너뛰고 입력 필드
+    // (input/textarea/select)만 순서대로 이동시킨다(× 삭제 버튼이
+    // 건너뛰어지는 현재 동작과 동일). 여기서도 똑같은 범위만 대상으로
+    // 삼아서, 기존 Tab 이동 순서를 바꾸지 않도록 한다.
+    const selector =
+      'input:not([disabled]):not([tabindex="-1"]), textarea:not([disabled]):not([tabindex="-1"]), select:not([disabled]):not([tabindex="-1"])';
+
+    return Array.from(
+      document.querySelectorAll<HTMLElement>(selector),
+    ).filter((el) => el.offsetParent !== null);
+  };
+
+  const handleIPadSafeTabKeyDown = (
+    e: ReactKeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (e.key !== "Tab" || !isIPadLikeBrowser()) return;
+
+    e.preventDefault();
+
+    const currentEl = e.currentTarget;
+    const focusable = getFocusableFormElements();
+    const currentPos = focusable.indexOf(currentEl);
+
+    if (currentPos === -1) return;
+
+    const nextEl = e.shiftKey
+      ? focusable[currentPos - 1]
+      : focusable[currentPos + 1];
+
+    currentEl.blur();
+
+    window.setTimeout(() => {
+      nextEl?.focus();
+    }, 80);
+  };
+
   const hasKoreanText = (value: string) => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(value);
 
   const rememberIPadKoreanInput = (fieldId: string, value: string) => {
@@ -3764,9 +3816,12 @@ function AddWord({
       rememberIPadKoreanInput(fieldId, e.currentTarget.value),
     // 실제 키 입력 또는 한글 조합 시작을 감지하면 "이 필드는 이미 진짜
     // 입력이 시작됐다"고 표시해서, 뒤늦게 실행되는 자동보정 타이머가
-    // 사용자가 막 입력한 글자를 지워버리지 않게 막는다.
-    onKeyDown: () => {
+    // 사용자가 막 입력한 글자를 지워버리지 않게 막는다. 또한 Tab 키는
+    // 별도로 가로채서, 아이패드에서 다음 칸으로 넘어갈 때 한글 입력기
+    // 상태가 새어 들어오지 않도록 한 박자 쉬었다가 포커스를 옮긴다.
+    onKeyDown: (e: ReactKeyboardEvent<HTMLInputElement>) => {
       iPadInteractedFieldsRef.current.add(fieldId);
+      handleIPadSafeTabKeyDown(e);
     },
     onCompositionStart: () => {
       iPadInteractedFieldsRef.current.add(fieldId);
