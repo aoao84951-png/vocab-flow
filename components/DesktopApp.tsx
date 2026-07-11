@@ -1334,8 +1334,13 @@ export default function DesktopApp() {
   };
 
   return (
-    <main className="min-h-[100svh] bg-white text-[#111827]">
+    <main className="min-h-[100svh] overscroll-none bg-white text-[#111827]">
       <style>{`
+          html,
+          body {
+            overscroll-behavior: none;
+          }
+
           @media (pointer: coarse) and (min-width: 768px) {
             .ipad-list-text { font-size: 18px; line-height: 1.45; }
             .ipad-list-subtext { font-size: 17px; line-height: 1.45; }
