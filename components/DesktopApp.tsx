@@ -387,10 +387,10 @@ export default function DesktopApp() {
   const currentWord = words[wordIndex];
   const currentWordHasExtraContent = Boolean(
     currentWord &&
-      (currentWord.examples.length > 0 ||
-        currentWord.synonyms.length > 0 ||
-        currentWord.antonyms.length > 0 ||
-        (currentWord.studyPoints ?? []).length > 0),
+    (currentWord.examples.length > 0 ||
+      currentWord.synonyms.length > 0 ||
+      currentWord.antonyms.length > 0 ||
+      (currentWord.studyPoints ?? []).length > 0),
   );
 
   const sortedWords = selectedDay
@@ -2332,9 +2332,9 @@ export default function DesktopApp() {
                                                   className="flex items-start gap-1.5"
                                                 >
                                                   <span className="ipad-pos-badge inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#0f2a5f] text-[10px] font-bold text-white">
-                                                    <span className="ipad-pos-text ipad-variant-pos-text">
-                                                      {meaning.pos}
-                                                    </span>
+                                                  <span className="ipad-pos-text ipad-variant-pos-text">
+                                                    {meaning.pos}
+                                                  </span>
                                                   </span>
 
                                                   <div className="ipad-study-sub relative -top-[1px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]">
@@ -3577,12 +3577,6 @@ function AddWord({
   const recentKoreanInputRef = useRef<{
     fieldId: string;
     value: string;
-    tail: string;
-    at: number;
-  } | null>(null);
-  const imeComposingFieldRef = useRef<string | null>(null);
-  const imeFocusedFieldRef = useRef<{
-    fieldId: string;
     at: number;
   } | null>(null);
 
@@ -3595,38 +3589,18 @@ function AddWord({
     );
   };
 
-  const hasCJKText = (value: string) =>
-    /[ㄱ-ㅎㅏ-ㅣ가-힣㐀-鿿぀-ヿ]/.test(value);
-
-  const getLastCharacter = (value: string) =>
-    Array.from(value.trim()).at(-1) ?? "";
+  const hasKoreanText = (value: string) => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(value);
 
   const rememberIPadKoreanInput = (fieldId: string, value: string) => {
     const nextValue = value.trim();
 
-    if (!isIPadLikeBrowser() || !hasCJKText(nextValue)) return;
+    if (!isIPadLikeBrowser() || !hasKoreanText(nextValue)) return;
 
     recentKoreanInputRef.current = {
       fieldId,
       value: nextValue,
-      tail: getLastCharacter(nextValue),
       at: Date.now(),
     };
-  };
-
-  const isRecentIMEGhost = (fieldId: string, value: string) => {
-    const recent = recentKoreanInputRef.current;
-    const focused = imeFocusedFieldRef.current;
-
-    return Boolean(
-      isIPadLikeBrowser() &&
-        recent &&
-        focused?.fieldId === fieldId &&
-        recent.fieldId !== fieldId &&
-        Date.now() - recent.at < 1800 &&
-        Date.now() - focused.at < 1200 &&
-        value === recent.tail,
-    );
   };
 
   const removeRepeatedIPadKoreanPrefix = (
@@ -3642,18 +3616,22 @@ function AddWord({
       !nextValue ||
       !recent ||
       recent.fieldId === fieldId ||
-      Date.now() - recent.at > 1800
+      Date.now() - recent.at > 4000
     ) {
       return nextValue;
     }
 
-    if (isRecentIMEGhost(fieldId, nextValue)) return "";
+    const candidates = Array.from(
+      new Set([
+        recent.value,
+        recent.value.slice(-1),
+        recent.value.slice(-2),
+      ].filter(Boolean)),
+    ).sort((a, b) => b.length - a.length);
 
-    if (
-      nextValue.length > recent.tail.length &&
-      nextValue.startsWith(recent.tail)
-    ) {
-      return nextValue.slice(recent.tail.length);
+    for (const prefix of candidates) {
+      if (nextValue === prefix) return "";
+      if (nextValue.startsWith(prefix)) return nextValue.slice(prefix.length);
     }
 
     return nextValue;
@@ -3664,8 +3642,6 @@ function AddWord({
     el: HTMLInputElement,
     controlledValue: string,
   ) => {
-    imeFocusedFieldRef.current = { fieldId, at: Date.now() };
-
     if (controlledValue || !el.value) return;
 
     const nextValue = removeRepeatedIPadKoreanPrefix(
@@ -3674,7 +3650,9 @@ function AddWord({
       el.value,
     );
 
-    if (nextValue !== el.value) el.value = nextValue;
+    if (nextValue === el.value) return;
+
+    el.value = nextValue;
 
     requestAnimationFrame(() => {
       const cleanedValue = removeRepeatedIPadKoreanPrefix(
@@ -3683,7 +3661,9 @@ function AddWord({
         el.value,
       );
 
-      if (cleanedValue !== el.value) el.value = cleanedValue;
+      if (cleanedValue !== el.value) {
+        el.value = cleanedValue;
+      }
     });
   };
 
@@ -3692,15 +3672,15 @@ function AddWord({
     el: HTMLInputElement,
     controlledValue: string,
   ) => {
-    if (imeComposingFieldRef.current === fieldId) return el.value;
-
     const nextValue = removeRepeatedIPadKoreanPrefix(
       fieldId,
       controlledValue,
       el.value,
     );
 
-    if (nextValue !== el.value) el.value = nextValue;
+    if (nextValue !== el.value) {
+      el.value = nextValue;
+    }
 
     return nextValue;
   };
@@ -3708,58 +3688,13 @@ function AddWord({
   const iPadSafeInputProps = (fieldId: string, controlledValue: string) => ({
     name: `vocab-flow-${fieldId}`,
     autoComplete: "new-password",
-    autoCorrect: "off" as const,
-    autoCapitalize: "off" as const,
+    autoCorrect: "off",
+    autoCapitalize: "off",
     spellCheck: false,
-    onCompositionStart: () => {
-      imeComposingFieldRef.current = fieldId;
-    },
-    onCompositionEnd: (e: React.CompositionEvent<HTMLInputElement>) => {
-      imeComposingFieldRef.current = null;
-
-      const cleanedValue = removeRepeatedIPadKoreanPrefix(
-        fieldId,
-        controlledValue,
-        e.currentTarget.value,
-      );
-
-      if (cleanedValue !== e.currentTarget.value) {
-        e.currentTarget.value = cleanedValue;
-        e.currentTarget.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-    },
-    onBeforeInput: (e: React.FormEvent<HTMLInputElement>) => {
-      if (!isIPadLikeBrowser() || controlledValue) return;
-
-      const nativeEvent = e.nativeEvent as InputEvent;
-      const incoming = nativeEvent.data ?? "";
-      const recent = recentKoreanInputRef.current;
-
-      if (
-        nativeEvent.inputType === "insertText" &&
-        recent &&
-        incoming === recent.tail &&
-        isRecentIMEGhost(fieldId, incoming)
-      ) {
-        e.preventDefault();
-      }
-    },
-    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (
-        e.key === "Backspace" &&
-        !controlledValue &&
-        !e.currentTarget.value &&
-        imeComposingFieldRef.current !== fieldId
-      ) {
-        recentKoreanInputRef.current = null;
-      }
-    },
     onFocus: (e: FocusEvent<HTMLInputElement>) =>
       preventIPadKoreanAutofill(fieldId, e.currentTarget, controlledValue),
-    onBlur: (e: FocusEvent<HTMLInputElement>) => {
-      imeComposingFieldRef.current = null;
-      rememberIPadKoreanInput(fieldId, e.currentTarget.value);
-    },
+    onBlur: (e: FocusEvent<HTMLInputElement>) =>
+      rememberIPadKoreanInput(fieldId, e.currentTarget.value),
   });
 
   const addMeaningGroup = () => {
@@ -4331,10 +4266,7 @@ function AddWord({
                   {group.items.map((item, itemIndex) => (
                     <div key={itemIndex} className="relative">
                       <input
-                        {...iPadSafeInputProps(
-                          `meaning-${groupIndex}-${itemIndex}`,
-                          item,
-                        )}
+                        {...iPadSafeInputProps(`meaning-${groupIndex}-${itemIndex}`, item)}
                         value={item}
                         onChange={(e) =>
                           updateMeaningItem(
@@ -4523,10 +4455,7 @@ function AddWord({
 
                 {!STUDY_CATEGORIES.includes(point.category) && (
                   <input
-                    {...iPadSafeInputProps(
-                      `study-${index}-category`,
-                      point.category,
-                    )}
+                    {...iPadSafeInputProps(`study-${index}-category`, point.category)}
                     value={point.category}
                     onChange={(e) =>
                       updateStudyPoint(
@@ -4545,10 +4474,7 @@ function AddWord({
                 )}
 
                 <input
-                  {...iPadSafeInputProps(
-                    `study-${index}-expression`,
-                    point.expression,
-                  )}
+                  {...iPadSafeInputProps(`study-${index}-expression`, point.expression)}
                   value={point.expression}
                   onChange={(e) =>
                     updateStudyPoint(
@@ -4607,10 +4533,7 @@ function AddWord({
                       >
                         <div className="flex gap-2">
                           <input
-                            {...iPadSafeInputProps(
-                              `study-${index}-variant-${variantIndex}-word`,
-                              variant.word,
-                            )}
+                            {...iPadSafeInputProps(`study-${index}-variant-${variantIndex}-word`, variant.word)}
                             value={variant.word}
                             onChange={(e) =>
                               updateStudyPointVariantWord(
@@ -4721,10 +4644,7 @@ function AddWord({
                                 {meaning.items.map((item, itemIndex) => (
                                   <div key={itemIndex} className="flex gap-2">
                                     <input
-                                      {...iPadSafeInputProps(
-                                        `study-${index}-variant-${variantIndex}-meaning-${meaningIndex}-${itemIndex}`,
-                                        item,
-                                      )}
+                                      {...iPadSafeInputProps(`study-${index}-variant-${variantIndex}-meaning-${meaningIndex}-${itemIndex}`, item)}
                                       value={item}
                                       onChange={(e) =>
                                         updateStudyPointVariantMeaningItem(
@@ -4781,10 +4701,7 @@ function AddWord({
                         </div>
 
                         <input
-                          {...iPadSafeInputProps(
-                            `study-${index}-variant-${variantIndex}-related`,
-                            variant.related ?? "",
-                          )}
+                          {...iPadSafeInputProps(`study-${index}-variant-${variantIndex}-related`, variant.related ?? "")}
                           value={variant.related ?? ""}
                           onChange={(e) =>
                             updateStudyPointVariantRelated(
@@ -4877,10 +4794,7 @@ function AddWord({
                         </div>
 
                         <input
-                          {...iPadSafeInputProps(
-                            `study-${index}-example-${exampleIndex}-ko`,
-                            example.ko,
-                          )}
+                          {...iPadSafeInputProps(`study-${index}-example-${exampleIndex}-ko`, example.ko)}
                           value={example.ko}
                           onChange={(e) =>
                             updateStudyPointExample(
