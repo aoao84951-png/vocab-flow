@@ -3580,6 +3580,29 @@ function AddWord({
     at: number;
   } | null>(null);
 
+  // 아이패드 사파리가 "이름이 비슷하게 반복되는 입력칸들"을 같은 종류의
+  // 필드로 착각해서 값을 서로 채워 넣는 것이 이 현상의 근본 원인이다.
+  // 실제 구조(예: study-0-variant-0-meaning-0-0)를 그대로 name 속성에
+  // 노출하면 형제 필드들끼리 이름이 거의 똑같아 보이므로, 화면에는 영향을
+  // 주지 않으면서 브라우저에게만 보이는 name 속성을 필드마다 서로 전혀
+  // 다른 무작위 문자열로 바꿔서 애초에 헷갈릴 조건 자체를 없앤다.
+  const fieldNameRegistryRef = useRef<Map<string, string>>(new Map());
+
+  const getObfuscatedFieldName = (fieldId: string) => {
+    const registry = fieldNameRegistryRef.current;
+    const existing = registry.get(fieldId);
+    if (existing) return existing;
+
+    const randomPart =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+
+    const obfuscated = `vf-${randomPart}`;
+    registry.set(fieldId, obfuscated);
+    return obfuscated;
+  };
+
   const isIPadLikeBrowser = () => {
     if (typeof navigator === "undefined") return false;
 
@@ -3642,29 +3665,40 @@ function AddWord({
     el: HTMLInputElement,
     controlledValue: string,
   ) => {
-    if (controlledValue || !el.value) return;
+    if (controlledValue || !isIPadLikeBrowser()) return;
 
-    const nextValue = removeRepeatedIPadKoreanPrefix(
-      fieldId,
-      controlledValue,
-      el.value,
-    );
+    // 이 함수는 실제로 el.value에 값이 채워져 있는(=문제가 실제로 발생한)
+    // 경우에만 개입한다. 정상적으로 빈 칸을 선택하는 대부분의 경우엔
+    // el.value도 비어 있으므로 아래 로직이 사실상 아무 것도 하지 않고
+    // 즉시 리턴하며, 화면 깜빡임도 전혀 발생하지 않는다.
+    const tryFix = () => {
+      if (controlledValue || !el.value) return;
 
-    if (nextValue === el.value) return;
+      // 문제가 실제로 감지된 순간에만: 지우는 아주 짧은 순간 동안 글자를
+      // 가려서, 잘못된 값이 화면에 보이는 프레임 자체가 생기지 않게 한다.
+      const previousOpacity = el.style.opacity;
+      el.style.opacity = "0";
 
-    el.value = nextValue;
-
-    requestAnimationFrame(() => {
-      const cleanedValue = removeRepeatedIPadKoreanPrefix(
+      el.value = removeRepeatedIPadKoreanPrefix(
         fieldId,
         controlledValue,
         el.value,
       );
 
-      if (cleanedValue !== el.value) {
-        el.value = cleanedValue;
-      }
-    });
+      requestAnimationFrame(() => {
+        el.style.opacity = previousOpacity;
+      });
+    };
+
+    // 포커스 시점엔 아직 안 채워져 있어도, 아이패드가 뒤늦게(비동기로) 값을
+    // 채워 넣는 경우를 대비해 몇 차례 더 확인한다. 실제로 값이 없으면
+    // tryFix 안에서 바로 리턴되므로 이 반복 검사 자체는 화면에 영향을 주지
+    // 않는다.
+    tryFix();
+    requestAnimationFrame(tryFix);
+    window.setTimeout(tryFix, 0);
+    window.setTimeout(tryFix, 80);
+    window.setTimeout(tryFix, 150);
   };
 
   const getIPadSafeInputValue = (
@@ -3686,7 +3720,7 @@ function AddWord({
   };
 
   const iPadSafeInputProps = (fieldId: string, controlledValue: string) => ({
-    name: `vocab-flow-${fieldId}`,
+    name: getObfuscatedFieldName(fieldId),
     autoComplete: "new-password",
     autoCorrect: "off",
     autoCapitalize: "off",
