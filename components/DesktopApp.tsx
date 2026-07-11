@@ -4303,12 +4303,23 @@ function AddWord({
     <div className="min-h-dvh px-5 pt-7 pb-6">
       {/* 아이패드에서 Tab으로 다음 칸으로 넘어갈 때, 그 사이에 잠깐
           포커스를 얹어두기 위한 화면에 보이지 않는 입력칸. 실제 입력
-          대상이 아니므로 화면/탭 순서/접근성 트리에서 모두 제외한다. */}
+          대상이 아니므로 화면/탭 순서/접근성 트리에서 모두 제외한다.
+          readOnly로 두면 아이패드가 "편집 가능한 칸이 아니다"로 보고
+          입력 세션을 계속 종료 처리해버려서(= 원래 고치려던 깜빡임이
+          그대로 재현됨) 일부러 readOnly를 쓰지 않는다. 다만 혹시라도
+          이 칸에 실수로 글자가 남지 않도록 입력이 들어오면 즉시
+          비운다. */}
       <input
         ref={iPadFocusParkingRef}
         tabIndex={-1}
         aria-hidden="true"
-        readOnly
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        onChange={(e) => {
+          e.currentTarget.value = "";
+        }}
         style={{
           position: "fixed",
           top: 0,
