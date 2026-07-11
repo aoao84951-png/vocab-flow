@@ -3642,19 +3642,11 @@ function AddWord({
     el: HTMLInputElement,
     controlledValue: string,
   ) => {
-    if (controlledValue || !el.value) return;
+    if (controlledValue) return;
 
-    const nextValue = removeRepeatedIPadKoreanPrefix(
-      fieldId,
-      controlledValue,
-      el.value,
-    );
+    const clean = () => {
+      if (controlledValue || !el.value) return;
 
-    if (nextValue === el.value) return;
-
-    el.value = nextValue;
-
-    requestAnimationFrame(() => {
       const cleanedValue = removeRepeatedIPadKoreanPrefix(
         fieldId,
         controlledValue,
@@ -3664,7 +3656,17 @@ function AddWord({
       if (cleanedValue !== el.value) {
         el.value = cleanedValue;
       }
-    });
+    };
+
+    // 포커스 시점에는 아직 브라우저가 이전 칸의 값을 채워 넣지 않은 경우가 많아,
+    // 그 순간 한 번만 검사하면 뒤늦게(비동기로) 채워지는 값을 놓치게 되어
+    // 화면에 이전 단어가 잠깐 나타났다가 사라지는 현상이 발생한다.
+    // 여러 타이밍에 걸쳐 반복 검사해서 언제 채워지든 즉시 지워지도록 한다.
+    clean();
+    requestAnimationFrame(clean);
+    requestAnimationFrame(() => requestAnimationFrame(clean));
+    window.setTimeout(clean, 0);
+    window.setTimeout(clean, 100);
   };
 
   const getIPadSafeInputValue = (
