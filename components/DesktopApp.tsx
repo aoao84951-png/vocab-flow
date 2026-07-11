@@ -3574,12 +3574,11 @@ function AddWord({
     "기타",
   ];
 
-  const iPadImeSessionRef = useRef<{
+  const recentKoreanInputRef = useRef<{
     fieldId: string;
-    element: HTMLInputElement;
+    value: string;
+    at: number;
   } | null>(null);
-
-  const iPadImeFocusTimerRef = useRef<number | null>(null);
 
   const isIPadLikeBrowser = () => {
     if (typeof navigator === "undefined") return false;
@@ -3590,89 +3589,112 @@ function AddWord({
     );
   };
 
-  const finishPreviousIPadImeSession = (
+  const hasKoreanText = (value: string) => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(value);
+
+  const rememberIPadKoreanInput = (fieldId: string, value: string) => {
+    const nextValue = value.trim();
+
+    if (!isIPadLikeBrowser() || !hasKoreanText(nextValue)) return;
+
+    recentKoreanInputRef.current = {
+      fieldId,
+      value: nextValue,
+      at: Date.now(),
+    };
+  };
+
+  const removeRepeatedIPadKoreanPrefix = (
     fieldId: string,
-    target: HTMLInputElement,
+    controlledValue: string,
+    nextValue: string,
   ) => {
-    if (!isIPadLikeBrowser()) return false;
+    const recent = recentKoreanInputRef.current;
 
-    const previous = iPadImeSessionRef.current;
-
-    if (!previous || previous.fieldId === fieldId) {
-      iPadImeSessionRef.current = { fieldId, element: target };
-      return false;
+    if (
+      !isIPadLikeBrowser() ||
+      controlledValue ||
+      !nextValue ||
+      !recent ||
+      recent.fieldId === fieldId ||
+      Date.now() - recent.at > 4000
+    ) {
+      return nextValue;
     }
 
-    /*
-     * iPadOS의 한글 키보드는 조합이 끝난 입력 요소에서 다른 입력 요소로
-     * 포커스가 즉시 이동하면 직전 조합 문자열을 새 요소에 다시 전달하는
-     * 경우가 있다. 새 필드를 활성화하기 전에 이전 요소를 완전히 blur하고,
-     * 한 프레임 뒤 새 요소를 다시 focus하여 IME 세션 자체를 분리한다.
-     */
-    previous.element.blur();
-    target.readOnly = true;
+    const candidates = Array.from(
+      new Set([
+        recent.value,
+        recent.value.slice(-1),
+        recent.value.slice(-2),
+      ].filter(Boolean)),
+    ).sort((a, b) => b.length - a.length);
 
-    if (iPadImeFocusTimerRef.current !== null) {
-      window.cancelAnimationFrame(iPadImeFocusTimerRef.current);
+    for (const prefix of candidates) {
+      if (nextValue === prefix) return "";
+      if (nextValue.startsWith(prefix)) return nextValue.slice(prefix.length);
     }
 
-    iPadImeFocusTimerRef.current = window.requestAnimationFrame(() => {
-      target.readOnly = false;
-      target.focus({ preventScroll: true });
+    return nextValue;
+  };
 
-      const cursor = target.value.length;
-      target.setSelectionRange(cursor, cursor);
+  const preventIPadKoreanAutofill = (
+    fieldId: string,
+    el: HTMLInputElement,
+    controlledValue: string,
+  ) => {
+    if (controlledValue || !el.value) return;
 
-      iPadImeSessionRef.current = { fieldId, element: target };
-      iPadImeFocusTimerRef.current = null;
+    const nextValue = removeRepeatedIPadKoreanPrefix(
+      fieldId,
+      controlledValue,
+      el.value,
+    );
+
+    if (nextValue === el.value) return;
+
+    el.value = nextValue;
+
+    requestAnimationFrame(() => {
+      const cleanedValue = removeRepeatedIPadKoreanPrefix(
+        fieldId,
+        controlledValue,
+        el.value,
+      );
+
+      if (cleanedValue !== el.value) {
+        el.value = cleanedValue;
+      }
     });
-
-    return true;
   };
 
   const getIPadSafeInputValue = (
-    _fieldId: string,
+    fieldId: string,
     el: HTMLInputElement,
-    _controlledValue: string,
-  ) => el.value;
+    controlledValue: string,
+  ) => {
+    const nextValue = removeRepeatedIPadKoreanPrefix(
+      fieldId,
+      controlledValue,
+      el.value,
+    );
 
-  const iPadSafeInputProps = (fieldId: string, _controlledValue: string) => ({
+    if (nextValue !== el.value) {
+      el.value = nextValue;
+    }
+
+    return nextValue;
+  };
+
+  const iPadSafeInputProps = (fieldId: string, controlledValue: string) => ({
     name: `vocab-flow-${fieldId}`,
     autoComplete: "new-password",
     autoCorrect: "off",
     autoCapitalize: "off",
     spellCheck: false,
-    onPointerDown: (e: PointerEvent<HTMLInputElement>) => {
-      if (!isIPadLikeBrowser()) return;
-
-      const target = e.currentTarget;
-      const previous = iPadImeSessionRef.current;
-
-      if (previous && previous.fieldId !== fieldId) {
-        e.preventDefault();
-        finishPreviousIPadImeSession(fieldId, target);
-      }
-    },
-    onFocus: (e: FocusEvent<HTMLInputElement>) => {
-      const target = e.currentTarget;
-
-      if (!finishPreviousIPadImeSession(fieldId, target)) {
-        iPadImeSessionRef.current = { fieldId, element: target };
-      }
-    },
-    onBlur: (e: FocusEvent<HTMLInputElement>) => {
-      if (!isIPadLikeBrowser()) return;
-
-      /*
-       * 마지막으로 사용한 입력 요소는 기억하되 값은 전혀 수정하지 않는다.
-       * 다음 요소의 focus가 pointer가 아닌 Tab 등으로 발생하더라도 직전
-       * IME 세션과 분리할 수 있도록 참조만 유지한다.
-       */
-      iPadImeSessionRef.current = {
-        fieldId,
-        element: e.currentTarget,
-      };
-    },
+    onFocus: (e: FocusEvent<HTMLInputElement>) =>
+      preventIPadKoreanAutofill(fieldId, e.currentTarget, controlledValue),
+    onBlur: (e: FocusEvent<HTMLInputElement>) =>
+      rememberIPadKoreanInput(fieldId, e.currentTarget.value),
   });
 
   const addMeaningGroup = () => {
