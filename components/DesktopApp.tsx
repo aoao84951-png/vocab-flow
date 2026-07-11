@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type {
   Dispatch,
-  FormEvent,
+  FocusEvent,
   MutableRefObject,
   PointerEvent,
   ReactNode,
@@ -3574,6 +3574,13 @@ function AddWord({
     "기타",
   ];
 
+  const iPadImeSessionRef = useRef<{
+    fieldId: string;
+    element: HTMLInputElement;
+  } | null>(null);
+
+  const iPadImeFocusTimerRef = useRef<number | null>(null);
+
   const isIPadLikeBrowser = () => {
     if (typeof navigator === "undefined") return false;
 
@@ -3583,34 +3590,90 @@ function AddWord({
     );
   };
 
-  const iPadSafeInputProps = (_fieldId: string, controlledValue: string) => ({
-    autoComplete: "off",
-    autoCorrect: "off" as const,
-    autoCapitalize: "off" as const,
-    spellCheck: false,
+  const finishPreviousIPadImeSession = (
+    fieldId: string,
+    target: HTMLInputElement,
+  ) => {
+    if (!isIPadLikeBrowser()) return false;
 
-    // iPad 한글 IME가 빈 입력란으로 이동한 직후 이전 입력란의 조합 문자를
-    // deleteContentBackward 이벤트와 함께 되살리는 경우가 있다.
-    // 실제 값이 비어 있을 때의 잘못된 삭제 이벤트만 막고, 정상적인 입력과
-    // 조합 과정에는 개입하지 않는다.
-    onBeforeInput: (e: FormEvent<HTMLInputElement>) => {
-      if (!isIPadLikeBrowser() || controlledValue) return;
+    const previous = iPadImeSessionRef.current;
 
-      const nativeEvent = e.nativeEvent as InputEvent;
-      if (
-        nativeEvent.inputType === "deleteContentBackward" &&
-        e.currentTarget.value === ""
-      ) {
-        e.preventDefault();
-      }
-    },
-  });
+    if (!previous || previous.fieldId === fieldId) {
+      iPadImeSessionRef.current = { fieldId, element: target };
+      return false;
+    }
+
+    /*
+     * iPadOS의 한글 키보드는 조합이 끝난 입력 요소에서 다른 입력 요소로
+     * 포커스가 즉시 이동하면 직전 조합 문자열을 새 요소에 다시 전달하는
+     * 경우가 있다. 새 필드를 활성화하기 전에 이전 요소를 완전히 blur하고,
+     * 한 프레임 뒤 새 요소를 다시 focus하여 IME 세션 자체를 분리한다.
+     */
+    previous.element.blur();
+    target.readOnly = true;
+
+    if (iPadImeFocusTimerRef.current !== null) {
+      window.cancelAnimationFrame(iPadImeFocusTimerRef.current);
+    }
+
+    iPadImeFocusTimerRef.current = window.requestAnimationFrame(() => {
+      target.readOnly = false;
+      target.focus({ preventScroll: true });
+
+      const cursor = target.value.length;
+      target.setSelectionRange(cursor, cursor);
+
+      iPadImeSessionRef.current = { fieldId, element: target };
+      iPadImeFocusTimerRef.current = null;
+    });
+
+    return true;
+  };
 
   const getIPadSafeInputValue = (
     _fieldId: string,
     el: HTMLInputElement,
     _controlledValue: string,
   ) => el.value;
+
+  const iPadSafeInputProps = (fieldId: string, _controlledValue: string) => ({
+    name: `vocab-flow-${fieldId}`,
+    autoComplete: "new-password",
+    autoCorrect: "off",
+    autoCapitalize: "off",
+    spellCheck: false,
+    onPointerDown: (e: PointerEvent<HTMLInputElement>) => {
+      if (!isIPadLikeBrowser()) return;
+
+      const target = e.currentTarget;
+      const previous = iPadImeSessionRef.current;
+
+      if (previous && previous.fieldId !== fieldId) {
+        e.preventDefault();
+        finishPreviousIPadImeSession(fieldId, target);
+      }
+    },
+    onFocus: (e: FocusEvent<HTMLInputElement>) => {
+      const target = e.currentTarget;
+
+      if (!finishPreviousIPadImeSession(fieldId, target)) {
+        iPadImeSessionRef.current = { fieldId, element: target };
+      }
+    },
+    onBlur: (e: FocusEvent<HTMLInputElement>) => {
+      if (!isIPadLikeBrowser()) return;
+
+      /*
+       * 마지막으로 사용한 입력 요소는 기억하되 값은 전혀 수정하지 않는다.
+       * 다음 요소의 focus가 pointer가 아닌 Tab 등으로 발생하더라도 직전
+       * IME 세션과 분리할 수 있도록 참조만 유지한다.
+       */
+      iPadImeSessionRef.current = {
+        fieldId,
+        element: e.currentTarget,
+      };
+    },
+  });
 
   const addMeaningGroup = () => {
     setMeanings((prev) => [
