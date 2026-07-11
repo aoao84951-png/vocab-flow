@@ -3651,26 +3651,50 @@ function AddWord({
 
   const handleIPadSafeTabKeyDown = (
     e: ReactKeyboardEvent<HTMLInputElement>,
+    fieldId: string,
   ) => {
     if (e.key !== "Tab" || !isIPadLikeBrowser()) return;
 
+    // 네이티브 Tab 이동은 항상 막는다(그대로 두면 이전 칸의 입력기 버퍼가
+    // 새어 들어가는 원래 버그가 재현된다).
     e.preventDefault();
 
     const currentEl = e.currentTarget;
-    const focusable = getFocusableFormElements();
-    const currentPos = focusable.indexOf(currentEl);
+    const shiftKey = e.shiftKey;
 
-    if (currentPos === -1) return;
+    const moveFocus = () => {
+      const focusable = getFocusableFormElements();
+      const currentPos = focusable.indexOf(currentEl);
 
-    const nextEl = e.shiftKey
-      ? focusable[currentPos - 1]
-      : focusable[currentPos + 1];
+      if (currentPos === -1) return;
 
-    currentEl.blur();
+      const nextEl = shiftKey
+        ? focusable[currentPos - 1]
+        : focusable[currentPos + 1];
 
-    window.setTimeout(() => {
-      nextEl?.focus();
-    }, 80);
+      currentEl.blur();
+
+      window.setTimeout(() => {
+        nextEl?.focus();
+      }, 80);
+    };
+
+    // 지금 이 칸에서 한글 조합이 아직 끝나지 않았는데 바로 blur해버리면
+    // 조합 중이던 음절이 그 자리에서 깨진다(입력하다 Tab을 누르면 글자가
+    // 나타났다 깜빡이며 사라지는 현상의 직접적인 원인). 조합 중이면 강제로
+    // 끊지 말고, 조합이 자연스럽게 끝나는 순간(compositionend)까지 기다린
+    // 뒤에 안전하게 다음 칸으로 옮긴다.
+    if (e.nativeEvent.isComposing || iPadComposingFieldRef.current === fieldId) {
+      const handleCompositionEnd = () => {
+        currentEl.removeEventListener("compositionend", handleCompositionEnd);
+        moveFocus();
+      };
+
+      currentEl.addEventListener("compositionend", handleCompositionEnd);
+      return;
+    }
+
+    moveFocus();
   };
 
   const hasKoreanText = (value: string) => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(value);
@@ -3821,7 +3845,7 @@ function AddWord({
     // 상태가 새어 들어오지 않도록 한 박자 쉬었다가 포커스를 옮긴다.
     onKeyDown: (e: ReactKeyboardEvent<HTMLInputElement>) => {
       iPadInteractedFieldsRef.current.add(fieldId);
-      handleIPadSafeTabKeyDown(e);
+      handleIPadSafeTabKeyDown(e, fieldId);
     },
     onCompositionStart: () => {
       iPadInteractedFieldsRef.current.add(fieldId);
