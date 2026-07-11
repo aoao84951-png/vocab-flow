@@ -3590,6 +3590,15 @@ function AddWord({
   const iPadComposingFieldRef = useRef<string | null>(null);
   const iPadInteractedFieldsRef = useRef<Set<string>>(new Set());
 
+  // Tab 전환 시 blur → (지연) → focus 사이에 "아무 것도 포커스되지 않은
+  // 순간"이 생기면, 아이패드가 텍스트 입력 세션이 완전히 끝났다고 판단해
+  // 화면 아래 입력 소스 표시("한" 배지 등)를 내렸다가 다음 칸에 포커스가
+  // 들어올 때 다시 올리면서 깜빡이는 게 이 현상의 원인이다. 화면 밖의
+  // 보이지 않는 이 입력칸에 그 사이 잠깐 포커스를 얹어 두면, 아이패드
+  // 입장에서는 "텍스트 입력 세션"이 계속 유지되는 것으로 보여서 표시가
+  // 내려갔다 올라오는 깜빡임 없이 다음 칸으로 자연스럽게 넘어간다.
+  const iPadFocusParkingRef = useRef<HTMLInputElement | null>(null);
+
   // 아이패드 사파리가 "이름이 비슷하게 반복되는 입력칸들"을 같은 종류의
   // 필드로 착각해서 값을 서로 채워 넣는 것이 이 현상의 근본 원인이다.
   // 실제 구조(예: study-0-variant-0-meaning-0-0)를 그대로 name 속성에
@@ -3672,7 +3681,19 @@ function AddWord({
         ? focusable[currentPos - 1]
         : focusable[currentPos + 1];
 
-      currentEl.blur();
+      // currentEl을 그냥 blur만 하면 다음 칸에 포커스가 들어오기 전까지
+      // "아무 것도 포커스되지 않은" 순간이 생기고, 아이패드는 이걸 텍스트
+      // 입력 세션이 끝난 걸로 보고 입력 소스 표시를 내렸다가 다시 올리며
+      // 깜빡인다. 화면에 보이지 않는 parking input에 그 사이 포커스를
+      // 얹어 둬서, 아이패드 입장에서는 계속 어떤 텍스트 칸에 포커스가
+      // 있는 것처럼 보이게 한다(= 깜빡임 방지). 그러면서도 currentEl은
+      // 즉시 blur되므로, 아이패드가 이전 칸의 입력기 상태를 정리할 시간은
+      // 그대로 확보된다.
+      if (iPadFocusParkingRef.current) {
+        iPadFocusParkingRef.current.focus({ preventScroll: true });
+      } else {
+        currentEl.blur();
+      }
 
       window.setTimeout(() => {
         nextEl?.focus();
@@ -4280,6 +4301,38 @@ function AddWord({
 
   return (
     <div className="min-h-dvh px-5 pt-7 pb-6">
+      {/* 아이패드에서 Tab으로 다음 칸으로 넘어갈 때, 그 사이에 잠깐
+          포커스를 얹어두기 위한 화면에 보이지 않는 입력칸.
+
+          한 번은 readOnly로 안 두면(= "진짜 편집 가능한 칸"으로 만들면)
+          아래쪽 입력 소스 표시가 깜빡이는 건 없어지지만, 그 대신 이
+          칸이 진짜 입력 대상 취급을 받으면서 이전 칸의 새는 한글 버퍼를
+          그대로 받아버리고, 그게 다시 다음 칸으로 넘어가면서 원래
+          고쳤던 "글자가 새어 들어오는" 버그가 되살아나는 걸 실제
+          테스트로 확인했다. 즉 "표시 안 깜빡이게 하기"와 "값이 새지
+          않게 하기"가 이 칸의 readOnly 여부를 놓고 서로 충돌한다.
+
+          데이터가 깨지는 것(새는 값)이 화면이 잠깐 깜빡이는 것보다
+          훨씬 심각한 문제이므로, readOnly를 유지해서 "값이 새지 않는
+          것"을 우선한다. 이 경우 아래 입력 소스 표시가 Tab을 누를
+          때마다 잠깐 깜빡이는 건 현재 구조에서 감수해야 하는
+          부작용이다. */}
+      <input
+        ref={iPadFocusParkingRef}
+        tabIndex={-1}
+        aria-hidden="true"
+        readOnly
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: 1,
+          height: 1,
+          opacity: 0,
+          pointerEvents: "none",
+        }}
+      />
+
       <BackButton onClick={onBack} label="뒤로" />
 
       <h1 className="mt-4 text-[28px] font-bold text-[#0f2a5f]">
