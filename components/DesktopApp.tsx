@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type {
   Dispatch,
-  FocusEvent,
+  FormEvent,
   MutableRefObject,
   PointerEvent,
   ReactNode,
@@ -3574,12 +3574,6 @@ function AddWord({
     "기타",
   ];
 
-  const recentKoreanInputRef = useRef<{
-    fieldId: string;
-    value: string;
-    at: number;
-  } | null>(null);
-
   const isIPadLikeBrowser = () => {
     if (typeof navigator === "undefined") return false;
 
@@ -3589,125 +3583,34 @@ function AddWord({
     );
   };
 
-  const hasKoreanText = (value: string) => /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(value);
+  const iPadSafeInputProps = (_fieldId: string, controlledValue: string) => ({
+    autoComplete: "off",
+    autoCorrect: "off" as const,
+    autoCapitalize: "off" as const,
+    spellCheck: false,
 
-  const rememberIPadKoreanInput = (fieldId: string, value: string) => {
-    const nextValue = value.trim();
+    // iPad 한글 IME가 빈 입력란으로 이동한 직후 이전 입력란의 조합 문자를
+    // deleteContentBackward 이벤트와 함께 되살리는 경우가 있다.
+    // 실제 값이 비어 있을 때의 잘못된 삭제 이벤트만 막고, 정상적인 입력과
+    // 조합 과정에는 개입하지 않는다.
+    onBeforeInput: (e: FormEvent<HTMLInputElement>) => {
+      if (!isIPadLikeBrowser() || controlledValue) return;
 
-    if (!isIPadLikeBrowser() || !hasKoreanText(nextValue)) return;
-
-    recentKoreanInputRef.current = {
-      fieldId,
-      value: nextValue,
-      at: Date.now(),
-    };
-  };
-
-  const removeRepeatedIPadKoreanPrefix = (
-    fieldId: string,
-    controlledValue: string,
-    nextValue: string,
-  ) => {
-    const recent = recentKoreanInputRef.current;
-
-    if (
-      !isIPadLikeBrowser() ||
-      controlledValue ||
-      !nextValue ||
-      !recent ||
-      recent.fieldId === fieldId ||
-      Date.now() - recent.at > 4000
-    ) {
-      return nextValue;
-    }
-
-    const candidates = Array.from(
-      new Set([
-        recent.value,
-        recent.value.slice(-1),
-        recent.value.slice(-2),
-      ].filter(Boolean)),
-    ).sort((a, b) => b.length - a.length);
-
-    for (const prefix of candidates) {
-      if (nextValue === prefix) return "";
-      if (nextValue.startsWith(prefix)) return nextValue.slice(prefix.length);
-    }
-
-    return nextValue;
-  };
-
-  const preventIPadKoreanAutofill = (
-    fieldId: string,
-    el: HTMLInputElement,
-    controlledValue: string,
-  ) => {
-    if (controlledValue || !isIPadLikeBrowser()) return;
-
-    // 아이패드 사파리는 포커스가 들어온 뒤 "비동기로" (정확한 타이밍을 예측할 수
-    // 없게) 이전 칸에 입력했던 한글 마지막 글자를 이 칸에 채워 넣는 경우가 있다.
-    // 지워지는 시점을 아무리 앞당겨도 브라우저가 그 값을 화면에 그려버리는
-    // 순간 자체를 코드로 막을 수는 없으므로, 정리가 끝날 때까지 글자 자체를
-    // 투명하게 가려서 잘못된 값이 "보이는" 순간이 애초에 생기지 않도록 한다.
-    const previousOpacity = el.style.opacity;
-    el.style.opacity = "0";
-
-    const clean = () => {
-      if (controlledValue || !el.value) return;
-
-      const cleanedValue = removeRepeatedIPadKoreanPrefix(
-        fieldId,
-        controlledValue,
-        el.value,
-      );
-
-      if (cleanedValue !== el.value) {
-        el.value = cleanedValue;
+      const nativeEvent = e.nativeEvent as InputEvent;
+      if (
+        nativeEvent.inputType === "deleteContentBackward" &&
+        e.currentTarget.value === ""
+      ) {
+        e.preventDefault();
       }
-    };
-
-    const revealWhenSafe = () => {
-      clean();
-      el.style.opacity = previousOpacity;
-    };
-
-    clean();
-    requestAnimationFrame(clean);
-    window.setTimeout(clean, 0);
-    window.setTimeout(clean, 80);
-    // 브라우저의 지연 채움이 끝났을 시점에 마지막으로 한 번 더 정리한 뒤 공개한다.
-    window.setTimeout(revealWhenSafe, 120);
-  };
+    },
+  });
 
   const getIPadSafeInputValue = (
-    fieldId: string,
+    _fieldId: string,
     el: HTMLInputElement,
-    controlledValue: string,
-  ) => {
-    const nextValue = removeRepeatedIPadKoreanPrefix(
-      fieldId,
-      controlledValue,
-      el.value,
-    );
-
-    if (nextValue !== el.value) {
-      el.value = nextValue;
-    }
-
-    return nextValue;
-  };
-
-  const iPadSafeInputProps = (fieldId: string, controlledValue: string) => ({
-    name: `vocab-flow-${fieldId}`,
-    autoComplete: "new-password",
-    autoCorrect: "off",
-    autoCapitalize: "off",
-    spellCheck: false,
-    onFocus: (e: FocusEvent<HTMLInputElement>) =>
-      preventIPadKoreanAutofill(fieldId, e.currentTarget, controlledValue),
-    onBlur: (e: FocusEvent<HTMLInputElement>) =>
-      rememberIPadKoreanInput(fieldId, e.currentTarget.value),
-  });
+    _controlledValue: string,
+  ) => el.value;
 
   const addMeaningGroup = () => {
     setMeanings((prev) => [
