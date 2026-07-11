@@ -3762,52 +3762,19 @@ function AddWord({
     // 시작하게 한다.
     iPadInteractedFieldsRef.current.delete(fieldId);
 
-    // 이 함수는 실제로 el.value에 값이 채워져 있는(=문제가 실제로 발생한)
-    // 경우에만 개입한다. 정상적으로 빈 칸을 선택하는 대부분의 경우엔
-    // el.value도 비어 있으므로 아래 로직이 사실상 아무 것도 하지 않고
-    // 즉시 리턴하며, 화면 깜빡임도 전혀 발생하지 않는다.
-    const tryFix = () => {
-      // controlledValue는 포커스 시점의 값을 클로저로 캡처한 것이라
-      // 이후 타이머(80ms, 150ms)가 실행될 때는 이미 사용자가 실제로
-      // 입력을 시작했을 수 있다. 그 경우 controlledValue만 보고 판단하면
-      // 방금 사용자가 입력한 진짜 글자를 "새어 들어온 값"으로 착각해서
-      // 지워버리게 된다(글자가 나타났다 사라지는 현상의 원인). 따라서
-      // 실제 입력이 시작됐는지(interacted) 또는 지금 한글 조합 중인지
-      // (composing)를 함께 확인해서, 둘 중 하나라도 해당하면 절대 값을
-      // 건드리지 않는다.
-      if (
-        controlledValue ||
-        !el.value ||
-        iPadInteractedFieldsRef.current.has(fieldId) ||
-        iPadComposingFieldRef.current === fieldId
-      )
-        return;
+    // 예전엔 여기서 rAF/setTimeout(0/80/150)으로 몇 차례 더 지연 재검사를
+    // 했었는데, 그 지연된 검사들이 "사용자가 그 사이 실제로 입력을
+    // 시작한" 경우와 겹치면서 오히려 지금 입력 중인 글자(특히 받침이
+    // 붙는 순간)를 지웠다 살렸다 반복하며 깜빡이게 만드는 새로운 버그의
+    // 원인이 됐다. 그래서 지연 재검사는 전부 없애고, 포커스가 들어온
+    // 바로 그 순간에 한 번만 동기적으로 확인한다. 새는 값을 막는 핵심
+    // 방어는 이제 Tab 전환 시점(handleIPadSafeTabKeyDown)에서 미리
+    // 처리하고 있으므로, 여기서는 그걸로 못 잡는 경우(예: 화면을 직접
+    // 터치해서 다음 칸으로 이동하는 경우)에 대한 최소한의 안전망 역할만
+    // 한다.
+    if (!el.value) return;
 
-      // 문제가 실제로 감지된 순간에만: 지우는 아주 짧은 순간 동안 글자를
-      // 가려서, 잘못된 값이 화면에 보이는 프레임 자체가 생기지 않게 한다.
-      const previousOpacity = el.style.opacity;
-      el.style.opacity = "0";
-
-      el.value = removeRepeatedIPadKoreanPrefix(
-        fieldId,
-        controlledValue,
-        el.value,
-      );
-
-      requestAnimationFrame(() => {
-        el.style.opacity = previousOpacity;
-      });
-    };
-
-    // 포커스 시점엔 아직 안 채워져 있어도, 아이패드가 뒤늦게(비동기로) 값을
-    // 채워 넣는 경우를 대비해 몇 차례 더 확인한다. 실제로 값이 없으면
-    // tryFix 안에서 바로 리턴되므로 이 반복 검사 자체는 화면에 영향을 주지
-    // 않는다.
-    tryFix();
-    requestAnimationFrame(tryFix);
-    window.setTimeout(tryFix, 0);
-    window.setTimeout(tryFix, 80);
-    window.setTimeout(tryFix, 150);
+    el.value = removeRepeatedIPadKoreanPrefix(fieldId, controlledValue, el.value);
   };
 
   const getIPadSafeInputValue = (
@@ -3815,17 +3782,15 @@ function AddWord({
     el: HTMLInputElement,
     controlledValue: string,
   ) => {
-    const nextValue = removeRepeatedIPadKoreanPrefix(
-      fieldId,
-      controlledValue,
-      el.value,
-    );
-
-    if (nextValue !== el.value) {
-      el.value = nextValue;
-    }
-
-    return nextValue;
+    // 타이핑 도중(onChange)에는 절대로 값을 임의로 바꾸지 않는다. 이
+    // 시점에 값을 건드리면 지금 한창 조합 중인 글자를 잘못 지울 위험이
+    // 훨씬 크다(받침이 붙는 순간 글자가 깜빡이며 사라지던 버그가 바로
+    // 이 자리에서 값을 고치려던 로직 때문이었다). 새는 값에 대한 방어는
+    // 포커스 시점(preventIPadKoreanAutofill)과 Tab 전환 시점에서만
+    // 수행하고, 타이핑 중에는 브라우저가 만든 값을 그대로 믿는다.
+    void fieldId;
+    void controlledValue;
+    return el.value;
   };
 
   const iPadSafeInputProps = (fieldId: string, controlledValue: string) => ({
