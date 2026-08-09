@@ -1,27 +1,54 @@
 "use client";
 
 import { useState } from "react";
-import { Volume2 } from "lucide-react";
+import type { ReactNode } from "react";
+import { getSelectedEnglishVoice } from "./EnglishAccentSelector";
 
 interface PronounceButtonsProps {
   text: string;
+  children?: ReactNode;
   className?: string;
 }
-
-type Accent = "US" | "UK";
-
-const VOICES: Record<Accent, string> = {
-  US: "en-US-Wavenet-D",
-  UK: "en-GB-Wavenet-B",
-};
 
 const CACHE_NAME = "vocab-flow-tts-cache-v2";
 
 const normalizeText = (value: string) =>
   value
     .replace(/<[^>]*>/g, " ")
+    .replace(/\[\[(.*?)\]\]/g, "$1")
     .replace(/\s+/g, " ")
     .trim();
+
+const getVoice = (text: string) =>
+  /[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(text) ? "ko-KR-Wavenet-A" : getSelectedEnglishVoice();
+
+export const isTtsTextHit = (root: Element, clientX: number, clientY: number) => {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode();
+
+  while (node) {
+    if (node.textContent?.trim()) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+
+      if (
+        Array.from(range.getClientRects()).some(
+          (rect) =>
+            clientX >= rect.left &&
+            clientX <= rect.right &&
+            clientY >= rect.top &&
+            clientY <= rect.bottom,
+        )
+      ) {
+        return true;
+      }
+    }
+
+    node = walker.nextNode();
+  }
+
+  return false;
+};
 
 const toHex = (buffer: ArrayBuffer) =>
   Array.from(new Uint8Array(buffer))
@@ -59,65 +86,43 @@ const playBlob = (blob: Blob) => {
 const fetchTtsAudio = async (text: string, voice: string) => {
   const response = await fetch("/api/tts", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text, voice }),
   });
 
-  if (!response.ok) {
-    throw new Error("TTS 요청에 실패했습니다.");
-  }
-
+  if (!response.ok) throw new Error("TTS 요청에 실패했습니다.");
   return response.blob();
 };
 
 const getCachedAudio = async (cacheKey: string) => {
-  if (typeof window === "undefined" || !("caches" in window)) {
-    return null;
-  }
-
+  if (typeof window === "undefined" || !("caches" in window)) return null;
   const cache = await caches.open(CACHE_NAME);
   const cachedResponse = await cache.match(cacheKey);
-
-  if (!cachedResponse) return null;
-
-  return cachedResponse.blob();
+  return cachedResponse ? cachedResponse.blob() : null;
 };
 
 const saveAudioToCache = async (cacheKey: string, blob: Blob) => {
-  if (typeof window === "undefined" || !("caches" in window)) {
-    return;
-  }
-
+  if (typeof window === "undefined" || !("caches" in window)) return;
   const cache = await caches.open(CACHE_NAME);
-  await cache.put(
-    cacheKey,
-    new Response(blob, {
-      headers: {
-        "Content-Type": "audio/mpeg",
-      },
-    })
-  );
+  await cache.put(cacheKey, new Response(blob, { headers: { "Content-Type": "audio/mpeg" } }));
 };
 
 export default function PronounceButtons({
   text,
+  children,
   className = "",
 }: PronounceButtonsProps) {
-  const [loadingAccent, setLoadingAccent] = useState<Accent | null>(null);
-
-  const cleanedText = normalizeText(
-    text.replace(/\[\[(.*?)\]\]/g, "$1")
-  );
+  const [isLoading, setIsLoading] = useState(false);
+  const cleanedText = normalizeText(text);
 
   if (!cleanedText) return null;
 
-  const speak = async (accent: Accent) => {
-    try {
-      setLoadingAccent(accent);
+  const speak = async () => {
+    if (isLoading) return;
 
-      const voice = VOICES[accent];
+    try {
+      setIsLoading(true);
+      const voice = getVoice(cleanedText);
       const cacheKey = await makeCacheKey(cleanedText, voice);
       const cachedAudio = await getCachedAudio(cacheKey);
 
@@ -133,38 +138,32 @@ export default function PronounceButtons({
       console.error(error);
       alert("발음 오디오를 불러오지 못했습니다.");
     } finally {
-      setLoadingAccent(null);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div
-      className={`inline-flex items-center gap-1 ${className}`}
-      onClick={(e) => e.stopPropagation()}
+    <span
+      role="button"
+      data-tts-trigger="true"
+      tabIndex={0}
+      title="눌러서 듣기"
+      aria-label={`${cleanedText} 듣기`}
+      aria-busy={isLoading}
+      onClick={(event) => {
+        if (!isTtsTextHit(event.currentTarget, event.clientX, event.clientY)) return;
+        event.stopPropagation();
+        void speak();
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        event.stopPropagation();
+        void speak();
+      }}
+      className={`inline-block cursor-pointer ${isLoading ? "opacity-60" : ""} ${className}`}
     >
-      <button
-        type="button"
-        title="American Pronunciation"
-        aria-label="American Pronunciation"
-        disabled={loadingAccent !== null}
-        onClick={() => speak("US")}
-        className="flex h-7 items-center gap-1 rounded-full border border-[#d7ddea] px-2 text-[11px] font-semibold text-[#0f2a5f] transition hover:bg-[#f5f8ff] active:scale-95 disabled:cursor-wait disabled:opacity-60"
-      >
-        <Volume2 size={12} />
-        {loadingAccent === "US" ? "..." : "US"}
-      </button>
-
-      <button
-        type="button"
-        title="British Pronunciation"
-        aria-label="British Pronunciation"
-        disabled={loadingAccent !== null}
-        onClick={() => speak("UK")}
-        className="flex h-7 items-center gap-1 rounded-full border border-[#d7ddea] px-2 text-[11px] font-semibold text-[#0f2a5f] transition hover:bg-[#f5f8ff] active:scale-95 disabled:cursor-wait disabled:opacity-60"
-      >
-        <Volume2 size={12} />
-        {loadingAccent === "UK" ? "..." : "UK"}
-      </button>
-    </div>
+      {children ?? cleanedText}
+    </span>
   );
 }

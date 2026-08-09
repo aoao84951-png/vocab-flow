@@ -11,7 +11,8 @@ import type {
   SetStateAction,
 } from "react";
 import { supabase } from "@/app/lib/supabase";
-import PronounceButtons from "./PronounceButtons";
+import EnglishAccentSelector from "./EnglishAccentSelector";
+import PronounceButtons, { isTtsTextHit } from "./PronounceButtons";
 
 type Meaning = {
   pos: string;
@@ -257,15 +258,20 @@ export default function DesktopApp() {
       const target = event.target;
       if (!(target instanceof Element)) return;
 
-      const clickedButton = target.closest("button");
-      if (!clickedButton) return;
+      const clickedTrigger = target.closest("button, [data-tts-trigger='true']");
+      if (!clickedTrigger) return;
+      if (
+        clickedTrigger.matches("[data-tts-trigger='true']") &&
+        !isTtsTextHit(clickedTrigger, event.clientX, event.clientY)
+      )
+        return;
 
       const activeAudio = audioWindow.__vocabFlowActiveAudio;
       const activeTrigger = audioWindow.__vocabFlowActiveAudioTrigger;
 
       if (
         activeAudio &&
-        activeTrigger === clickedButton &&
+        activeTrigger === clickedTrigger &&
         !activeAudio.paused &&
         !activeAudio.ended
       ) {
@@ -278,7 +284,7 @@ export default function DesktopApp() {
         return;
       }
 
-      audioWindow.__vocabFlowPendingAudioTrigger = clickedButton;
+      audioWindow.__vocabFlowPendingAudioTrigger = clickedTrigger;
     };
 
     document.addEventListener("click", handleClickCapture, true);
@@ -696,7 +702,10 @@ export default function DesktopApp() {
 
     const target = e.target as HTMLElement;
 
+    const ttsTrigger = target.closest("[data-tts-trigger='true']");
+
     if (
+      (ttsTrigger && isTtsTextHit(ttsTrigger, e.clientX, e.clientY)) ||
       target.closest("button") ||
       target.closest("input") ||
       target.closest("textarea") ||
@@ -725,7 +734,7 @@ export default function DesktopApp() {
 
       return Boolean(
         target.closest(
-          'input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]',
+          'input, textarea, select, button, a, [data-tts-trigger="true"], [contenteditable="true"], [role="textbox"]',
         ),
       );
     };
@@ -1970,6 +1979,7 @@ export default function DesktopApp() {
             onPointerDown={handleStudyPointerDown}
             onPointerUp={handleStudyPointerUp}
           >
+            <EnglishAccentSelector className="fixed left-4 top-[88px] z-40" />
             <header
               onClick={(e) => e.stopPropagation()}
               className="sticky top-0 z-20 flex h-[76px] shrink-0 items-center justify-between border-b border-[#d7ddea] bg-[#f8fafc]/95 px-5 shadow-[0_1px_0_rgba(15,42,95,0.03)] backdrop-blur"
@@ -2120,7 +2130,8 @@ export default function DesktopApp() {
                     </button>
                   </div>
 
-                  <h2
+                  <PronounceButtons
+                    text={currentWord.word}
                     className={`ipad-study-word w-full min-w-0 break-words px-10 text-center text-[52px] font-black leading-tight tracking-[-0.045em] ${
                       currentWord.memorized
                         ? "text-[#b0b7c3]"
@@ -2128,8 +2139,7 @@ export default function DesktopApp() {
                     }`}
                   >
                     {currentWord.word}
-                  </h2>
-                  <PronounceButtons text={currentWord.word} className="mt-3" />
+                  </PronounceButtons>
                 </section>
 
                 <section
@@ -2176,9 +2186,9 @@ export default function DesktopApp() {
                                         <span className="mt-[6px] inline-flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
                                           {index + 1}
                                         </span>
-                                        <span className="min-w-0 break-keep">
+                                        <PronounceButtons text={item} className="min-w-0 break-keep">
                                           {item}
-                                        </span>
+                                        </PronounceButtons>
                                       </span>
                                     ))}
                                   </div>
@@ -2204,16 +2214,16 @@ export default function DesktopApp() {
                                       <span className="mt-[6px] inline-flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[10px] font-bold text-white">
                                         {index + 1}
                                       </span>
-                                      <span className="min-w-0 break-keep">
+                                      <PronounceButtons text={item} className="min-w-0 break-keep">
                                         {item}
-                                      </span>
+                                      </PronounceButtons>
                                     </span>
                                   ))}
                                 </span>
                               ) : (
-                                <span className="relative -top-[2px] inline break-keep text-center">
+                                <PronounceButtons text={group.items.join(", ")} className="relative -top-[2px] inline break-keep text-center">
                                   {group.items.join(", ")}
-                                </span>
+                                </PronounceButtons>
                               )}
                             </div>
                           );
@@ -2227,21 +2237,17 @@ export default function DesktopApp() {
                           {currentWord.examples.map((ex, i) => (
                             <div key={`${ex.en}-${i}`} className="pl-[2px]">
                               <div className="flex items-start gap-2">
-                                <p className="ipad-example-en min-w-0 flex-1 text-[14px] leading-relaxed">
+                                <PronounceButtons text={ex.en} className="ipad-example-en min-w-0 flex-1 text-[14px] leading-relaxed">
                                   <HighlightedText
                                     text={ex.en}
                                     keyword={currentWord.word}
                                   />
-                                </p>
-                                <PronounceButtons
-                                  text={ex.en}
-                                  className="shrink-0"
-                                />
+                                </PronounceButtons>
                               </div>
                               {ex.ko && (
-                                <p className="ipad-example-ko mt-0.5 text-[12px] leading-relaxed text-[#8a94a6]">
+                                <PronounceButtons text={ex.ko} className="ipad-example-ko mt-0.5 block text-[12px] leading-relaxed text-[#8a94a6]">
                                   {ex.ko}
-                                </p>
+                                </PronounceButtons>
                               )}
                             </div>
                           ))}
@@ -2282,24 +2288,19 @@ export default function DesktopApp() {
                                   </span>
 
                                   {point.expression && (
-                                    <p className="ipad-study-main text-[14px] font-bold text-[#111827]">
+                                    <PronounceButtons text={point.expression} className="ipad-study-main text-[14px] font-bold text-[#111827]">
                                       <HighlightedText
                                         text={point.expression}
                                         keyword=""
                                       />
-                                    </p>
+                                    </PronounceButtons>
                                   )}
                                 </div>
 
                                 {point.description && (
-                                  <div
-                                    className="ipad-study-main mt-2 pl-[7px] whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
-                                    dangerouslySetInnerHTML={{
-                                      __html: applyBracketHighlightToHtml(
-                                        point.description,
-                                      ),
-                                    }}
-                                  />
+                                  <PronounceButtons text={point.description} className="ipad-study-main mt-2 block pl-[7px] whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
+                                    <span dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }} />
+                                  </PronounceButtons>
                                 )}
 
                                 {(point.variants ?? []).length > 0 && (
@@ -2312,16 +2313,12 @@ export default function DesktopApp() {
                                         >
                                           {variant.word && (
                                             <div className="mb-1.5 flex items-start gap-2">
-                                              <p className="ipad-study-main min-w-0 flex-1 text-[14px] font-bold text-[#111827]">
+                                              <PronounceButtons text={variant.word} className="ipad-study-main min-w-0 flex-1 text-[14px] font-bold text-[#111827]">
                                                 <HighlightedText
                                                   text={variant.word}
                                                   keyword=""
                                                 />
-                                              </p>
-                                              <PronounceButtons
-                                                text={variant.word}
-                                                className="shrink-0"
-                                              />
+                                              </PronounceButtons>
                                             </div>
                                           )}
 
@@ -2350,10 +2347,9 @@ export default function DesktopApp() {
                                                               {itemIndex + 1}
                                                             </span>
                                                           )}
-                                                          <HighlightedText
-                                                            text={item}
-                                                            keyword=""
-                                                          />
+                                                          <PronounceButtons text={item}>
+                                                            <HighlightedText text={item} keyword="" />
+                                                          </PronounceButtons>
                                                         </span>
                                                       ),
                                                     )}
@@ -2370,16 +2366,12 @@ export default function DesktopApp() {
                                               </span>
 
                                               <div className="flex min-w-0 flex-1 items-start gap-2">
-                                                <p className="ipad-study-sub min-w-0 flex-1 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
+                                                <PronounceButtons text={variant.related} className="ipad-study-sub min-w-0 flex-1 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
                                                   <HighlightedText
                                                     text={variant.related}
                                                     keyword=""
                                                   />
-                                                </p>
-                                                <PronounceButtons
-                                                  text={variant.related}
-                                                  className="shrink-0"
-                                                />
+                                                </PronounceButtons>
                                               </div>
                                             </div>
                                           )}
@@ -2413,7 +2405,8 @@ export default function DesktopApp() {
                                           >
                                             {example.en && (
                                               <div className="flex items-start gap-2">
-                                                <div
+                                                <PronounceButtons text={example.en} className="ipad-study-main min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
+                                                <span
                                                   className="ipad-study-main min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
                                                   dangerouslySetInnerHTML={{
                                                     __html:
@@ -2422,22 +2415,20 @@ export default function DesktopApp() {
                                                       ),
                                                   }}
                                                 />
-                                                <PronounceButtons
-                                                  text={example.en}
-                                                  className="shrink-0"
-                                                />
+                                                </PronounceButtons>
                                               </div>
                                             )}
 
                                             {example.ko && (
-                                              <p
-                                                className={`${example.en ? "mt-1" : ""} text-[12px] leading-relaxed text-[#8a94a6] ipad-study-sub`}
+                                              <PronounceButtons
+                                                text={example.ko}
+                                                className={`${example.en ? "mt-1" : ""} block text-[12px] leading-relaxed text-[#8a94a6] ipad-study-sub`}
                                               >
                                                 <HighlightedText
                                                   text={example.ko}
                                                   keyword=""
                                                 />
-                                              </p>
+                                              </PronounceButtons>
                                             )}
                                           </div>
                                         ),
@@ -5419,9 +5410,13 @@ function ChipList({
           {label && <span className={labelClass}>{label}</span>}
 
           {words.map((word, index) => (
-            <span key={`${word}-${index}`} className={wordChipClass}>
+            <PronounceButtons
+              key={`${word}-${index}`}
+              text={word}
+              className={wordChipClass}
+            >
               {word}
-            </span>
+            </PronounceButtons>
           ))}
         </div>
       ))}

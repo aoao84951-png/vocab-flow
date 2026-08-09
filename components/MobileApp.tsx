@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Dispatch, MutableRefObject, PointerEvent, ReactNode, SetStateAction } from "react";
 import { supabase } from "@/app/lib/supabase";
+import EnglishAccentSelector, { getSelectedEnglishVoice } from "./EnglishAccentSelector";
 
 type Meaning = {
   pos: string;
@@ -178,12 +179,7 @@ const resetEditorIfEmpty = (el: HTMLDivElement) => {
   }
 };
 
-type MobileAccent = "US" | "UK";
-
-const MOBILE_TTS_VOICES: Record<MobileAccent, string> = {
-  US: "en-US-Wavenet-D",
-  UK: "en-GB-Wavenet-B",
-};
+type MobileAccent = "EN" | "KO";
 
 const MOBILE_TTS_CACHE_NAME = "vocab-flow-tts-cache-v2";
 
@@ -194,14 +190,39 @@ const normalizeMobileTtsText = (value: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const isSpeakableEnglishOnly = (value: string) => {
+const isSpeakableText = (value: string) => {
   const text = normalizeMobileTtsText(value);
 
   if (!text) return false;
-  if (!/[A-Za-z]/.test(text)) return false;
-  if (/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(text)) return false;
+  return /[A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ]/.test(text);
+};
 
-  return true;
+const isMobileTtsTextHit = (root: Element, clientX: number, clientY: number) => {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode();
+
+  while (node) {
+    if (node.textContent?.trim()) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+
+      if (
+        Array.from(range.getClientRects()).some(
+          (rect) =>
+            clientX >= rect.left &&
+            clientX <= rect.right &&
+            clientY >= rect.top &&
+            clientY <= rect.bottom,
+        )
+      ) {
+        return true;
+      }
+    }
+
+    node = walker.nextNode();
+  }
+
+  return false;
 };
 
 const mobileTtsToHex = (buffer: ArrayBuffer) =>
@@ -246,45 +267,6 @@ const createMobileTtsAbortError = () => {
 const stopActiveMobileTtsPlayback = () => {
   activeMobileTtsPlayback?.stop();
 };
-
-const waitMobileTtsDelay = (ms: number, playback: MobileTtsPlayback) =>
-  new Promise<void>((resolve, reject) => {
-    if (playback.cancelled) {
-      reject(createMobileTtsAbortError());
-      return;
-    }
-
-    let settled = false;
-
-    const finish = (callback: () => void) => {
-      if (settled) return;
-      settled = true;
-      playback.abortHandlers.delete(abortDelay);
-      callback();
-    };
-
-    const abortDelay = () => {
-      if (playback.delayTimer) {
-        window.clearTimeout(playback.delayTimer);
-        playback.delayTimer = null;
-      }
-
-      finish(() => reject(createMobileTtsAbortError()));
-    };
-
-    playback.abortHandlers.add(abortDelay);
-
-    playback.delayTimer = window.setTimeout(() => {
-      playback.delayTimer = null;
-
-      if (playback.cancelled) {
-        finish(() => reject(createMobileTtsAbortError()));
-        return;
-      }
-
-      finish(resolve);
-    }, ms);
-  });
 
 const playMobileTtsBlob = (blob: Blob, playback: MobileTtsPlayback) =>
   new Promise<void>((resolve, reject) => {
@@ -383,9 +365,11 @@ const saveMobileTtsAudioToCache = async (cacheKey: string, blob: Blob) => {
 
 function MobilePronounceButton({
   text,
+  children,
   className = "",
 }: {
   text: string;
+  children?: ReactNode;
   className?: string;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -398,12 +382,12 @@ function MobilePronounceButton({
     };
   }, []);
 
-  if (!isSpeakableEnglishOnly(cleanedText)) return null;
+  if (!isSpeakableText(cleanedText)) return null;
 
   const loadAccentAudio = async (accent: MobileAccent, playback: MobileTtsPlayback) => {
     if (playback.cancelled) throw createMobileTtsAbortError();
 
-    const voice = MOBILE_TTS_VOICES[accent];
+    const voice = accent === "KO" ? "ko-KR-Wavenet-A" : getSelectedEnglishVoice();
     const cacheKey = await makeMobileTtsCacheKey(cleanedText, voice);
     const cachedAudio = await getMobileCachedTtsAudio(cacheKey);
 
@@ -421,7 +405,7 @@ function MobilePronounceButton({
     return audioBlob;
   };
 
-  const playBothAccents = async () => {
+  const playPronunciation = async () => {
     if (playbackRef.current && !playbackRef.current.cancelled) {
       playbackRef.current.stop();
       return;
@@ -464,16 +448,12 @@ function MobilePronounceButton({
 
     try {
       setIsPlaying(true);
-      const [usAudioBlob, ukAudioBlob] = await Promise.all([
-        loadAccentAudio("US", playback),
-        loadAccentAudio("UK", playback),
-      ]);
+      const accent: MobileAccent = /[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(cleanedText) ? "KO" : "EN";
+      const audioBlob = await loadAccentAudio(accent, playback);
 
       if (playback.cancelled) throw createMobileTtsAbortError();
 
-      await playMobileTtsBlob(usAudioBlob, playback);
-      await waitMobileTtsDelay(260, playback);
-      await playMobileTtsBlob(ukAudioBlob, playback);
+      await playMobileTtsBlob(audioBlob, playback);
     } catch (error) {
       if ((error as Error).name !== "AbortError") {
         console.error(error);
@@ -492,44 +472,27 @@ function MobilePronounceButton({
   };
 
   return (
-    <button
-      type="button"
-      title={isPlaying ? "발음 멈추기" : "미국식 발음 후 영국식 발음"}
-      aria-label={isPlaying ? "발음 멈추기" : "미국식 발음 후 영국식 발음"}
+    <span
+      role="button"
+      data-tts-trigger="true"
+      tabIndex={0}
+      title={isPlaying ? "발음 멈추기" : "눌러서 듣기"}
+      aria-label={isPlaying ? `${cleanedText} 발음 멈추기` : `${cleanedText} 듣기`}
       onClick={(e) => {
+        if (!isMobileTtsTextHit(e.currentTarget, e.clientX, e.clientY)) return;
         e.stopPropagation();
-        void playBothAccents();
+        void playPronunciation();
       }}
-      className={`inline-flex h-[16px] w-[16px] shrink-0 items-center justify-center text-[#0f2a5f] transition active:scale-95 ${className}`}
+      onKeyDown={(e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        e.stopPropagation();
+        void playPronunciation();
+      }}
+      className={`inline-block cursor-pointer ${isPlaying ? "opacity-60" : ""} ${className}`}
     >
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M4.75 9.4H8.2L12.4 5.55V18.45L8.2 14.6H4.75V9.4Z"
-          stroke="currentColor"
-          strokeWidth="1.9"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M16.1 8.25C17.15 9.25 17.75 10.55 17.75 12C17.75 13.45 17.15 14.75 16.1 15.75"
-          stroke="currentColor"
-          strokeWidth="1.9"
-          strokeLinecap="round"
-        />
-        <path
-          d="M18.7 5.8C20.35 7.45 21.25 9.6 21.25 12C21.25 14.4 20.35 16.55 18.7 18.2"
-          stroke="currentColor"
-          strokeWidth="1.9"
-          strokeLinecap="round"
-        />
-      </svg>
-    </button>
+      {children ?? cleanedText}
+    </span>
   );
 }
 
@@ -968,7 +931,10 @@ export default function MobileApp() {
 
   const handleStudyPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
+    const ttsTrigger = target.closest("[data-tts-trigger='true']");
+
     if (
+      (ttsTrigger && isMobileTtsTextHit(ttsTrigger, e.clientX, e.clientY)) ||
       target.closest("button") ||
       target.closest("input") ||
       target.closest("textarea") ||
@@ -1140,11 +1106,6 @@ export default function MobileApp() {
                       : "border-[#dce2ee] bg-white"
                   }`}
                 >
-                <MobilePronounceButton
-                  text={displayWord.word}
-                  className="absolute left-5 top-6 scale-150"
-                />
-
                 <div className="absolute right-4 top-4 flex items-center gap-2">
                   <button
                     onClick={(e) => {
@@ -1189,7 +1150,8 @@ export default function MobileApp() {
                   </button>
                 </div>
 
-                <h2
+                <MobilePronounceButton
+                  text={displayWord.word}
                   className={`w-full min-w-0 px-6 text-center font-bold leading-tight tracking-tight ${
                     displayWord.word.includes(" ")
                       ? "break-words text-[34px]"
@@ -1205,7 +1167,7 @@ export default function MobileApp() {
                   }`}
                 >
                   {displayWord.word}
-                </h2>
+                </MobilePronounceButton>
                 </section>
 
                 <section
@@ -1248,9 +1210,9 @@ export default function MobileApp() {
                                         <span className="mt-[4px] inline-flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[9px] font-bold text-white">
                                           {index + 1}
                                         </span>
-                                        <span className="min-w-0 break-keep">
+                                        <MobilePronounceButton text={item} className="min-w-0 break-keep">
                                           {item}
-                                        </span>
+                                        </MobilePronounceButton>
                                       </span>
                                     ))}
                                   </div>
@@ -1276,16 +1238,16 @@ export default function MobileApp() {
                                       <span className="mt-[4px] inline-flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-full bg-[#9aa3b2] text-[9px] font-bold text-white">
                                         {index + 1}
                                       </span>
-                                      <span className="min-w-0 break-keep">
+                                      <MobilePronounceButton text={item} className="min-w-0 break-keep">
                                         {item}
-                                      </span>
+                                      </MobilePronounceButton>
                                     </span>
                                   ))}
                                 </span>
                               ) : (
-                                <span className="relative -top-[2px] inline break-keep text-center">
+                                <MobilePronounceButton text={group.items.join(", ")} className="relative -top-[2px] inline break-keep text-center">
                                   {group.items.join(", ")}
-                                </span>
+                                </MobilePronounceButton>
                               )}
                             </div>
                           );
@@ -1307,16 +1269,15 @@ export default function MobileApp() {
                             <div key={`${ex.en}-${i}`} className="pl-[2px]">
                               {ex.en && (
                                 <div className="flex items-start gap-2">
-                                  <p className="min-w-0 flex-1 text-[14px] leading-relaxed">
+                                  <MobilePronounceButton text={ex.en} className="min-w-0 flex-1 text-[14px] leading-relaxed">
                                     <HighlightedText text={ex.en} keyword={displayWord.word} />
-                                  </p>
-                                  <MobilePronounceButton text={ex.en} />
+                                  </MobilePronounceButton>
                                 </div>
                               )}
                               {ex.ko && (
-                                <p className="mt-0.5 text-[12px] leading-relaxed text-[#8a94a6]">
+                                <MobilePronounceButton text={ex.ko} className="mt-0.5 block text-[12px] leading-relaxed text-[#8a94a6]">
                                   {ex.ko}
-                                </p>
+                                </MobilePronounceButton>
                               )}
                             </div>
                           ))}
@@ -1346,17 +1307,16 @@ export default function MobileApp() {
                                 </span>
 
                                 {point.expression && (
-                                  <p className="text-[14px] font-bold text-[#111827]">
-                                    <HighlightedText text={point.expression} keyword="" />
-                                  </p>
+                                    <MobilePronounceButton text={point.expression} className="text-[14px] font-bold text-[#111827]">
+                                      <HighlightedText text={point.expression} keyword="" />
+                                    </MobilePronounceButton>
                                 )}
                               </div>
 
                               {point.description && (
-                                <div
-                                  className="mt-2 pl-[7px] whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
-                                  dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }}
-                                />
+                                <MobilePronounceButton text={point.description} className="mt-2 block pl-[7px] whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
+                                  <span dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }} />
+                                </MobilePronounceButton>
                               )}
 
                               {(point.variants ?? []).length > 0 && (
@@ -1368,10 +1328,9 @@ export default function MobileApp() {
                                     >
                                       {variant.word && (
                                         <div className="mb-1.5 flex items-center gap-2">
-                                          <p className="min-w-0 flex-1 text-[14px] font-bold text-[#111827]">
+                                          <MobilePronounceButton text={variant.word} className="min-w-0 flex-1 text-[14px] font-bold text-[#111827]">
                                             <HighlightedText text={variant.word} keyword="" />
-                                          </p>
-                                          <MobilePronounceButton text={variant.word} />
+                                          </MobilePronounceButton>
                                         </div>
                                       )}
 
@@ -1396,7 +1355,9 @@ export default function MobileApp() {
                                                       {itemIndex + 1}
                                                     </span>
                                                   )}
-                                                  <HighlightedText text={item} keyword="" />
+                                                  <MobilePronounceButton text={item}>
+                                                    <HighlightedText text={item} keyword="" />
+                                                  </MobilePronounceButton>
                                                 </span>
                                               ))}
                                             </div>
@@ -1410,9 +1371,9 @@ export default function MobileApp() {
                                             =
                                           </span>
 
-                                          <p className="min-w-0 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
+                                          <MobilePronounceButton text={variant.related} className="min-w-0 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
                                             <HighlightedText text={variant.related} keyword="" />
-                                          </p>
+                                          </MobilePronounceButton>
                                         </div>
                                       )}
                                     </div>
@@ -1439,20 +1400,22 @@ export default function MobileApp() {
                                       >
                                         {example.en && (
                                           <div className="flex items-start gap-2">
-                                            <div
+                                            <MobilePronounceButton text={example.en} className="min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
+                                            <span
                                               className="min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
                                               dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(example.en) }}
                                             />
-                                            <MobilePronounceButton text={example.en} />
+                                            </MobilePronounceButton>
                                           </div>
                                         )}
 
                                         {example.ko && (
-                                          <p
-                                            className={`${example.en ? "mt-1" : ""} text-[12px] leading-relaxed text-[#8a94a6]`}
+                                          <MobilePronounceButton
+                                            text={example.ko}
+                                            className={`${example.en ? "mt-1" : ""} block text-[12px] leading-relaxed text-[#8a94a6]`}
                                           >
                                             <HighlightedText text={example.ko} keyword="" />
-                                          </p>
+                                          </MobilePronounceButton>
                                         )}
                                       </div>
                                     ))}
@@ -2570,6 +2533,7 @@ const getDayProgress = (day: Day) => {
               onPointerUp={handleStudyPointerUp}
               onPointerCancel={handleStudyPointerCancel}
             >
+            <EnglishAccentSelector className="fixed left-3 top-[62px] z-40" />
             <header
               onClick={(e) => e.stopPropagation()}
               className="flex h-10 shrink-0 items-center justify-between"
@@ -5038,9 +5002,13 @@ function ChipList({
           {label && <span className={labelClass}>{label}</span>}
 
           {words.map((word, index) => (
-            <span key={`${word}-${index}`} className={wordChipClass}>
+            <MobilePronounceButton
+              key={`${word}-${index}`}
+              text={word}
+              className={wordChipClass}
+            >
               {word}
-            </span>
+            </MobilePronounceButton>
           ))}
         </div>
       ))}
