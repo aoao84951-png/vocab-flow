@@ -21,6 +21,8 @@ const client = new textToSpeech.TextToSpeechClient({
 });
 
 const getLanguageCode = (voice: string) => {
+  if (voice.startsWith("ko-KR")) return "ko-KR";
+  if (voice.startsWith("en-AU")) return "en-AU";
   if (voice.startsWith("en-GB")) return "en-GB";
   return "en-US";
 };
