@@ -604,12 +604,21 @@ export default function MobileApp() {
     .filter(({ word }) => (wordViewMode === "all" ? true : !word.memorized));
 
   useEffect(() => {
+    // A browser history entry represents a screen in the app hierarchy, not
+    // every word viewed while staying on the study screen.
+    const navigationKey = JSON.stringify({
+      step,
+      selectedBookId,
+      folderPath,
+      selectedDayId,
+    });
     const state = {
       step,
       selectedBookId,
       folderPath,
       selectedDayId,
       wordIndex,
+      navigationKey,
     };
   
     if (isHistoryMoving.current) {
@@ -622,7 +631,12 @@ export default function MobileApp() {
       isFirstHistoryState.current = false;
       return;
     }
-  
+
+    if (window.history.state?.navigationKey === navigationKey) {
+      window.history.replaceState(state, "", window.location.href);
+      return;
+    }
+
     window.history.pushState(state, "", window.location.href);
   }, [step, selectedBookId, folderPath, selectedDayId, wordIndex]);
   

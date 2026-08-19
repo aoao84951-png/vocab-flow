@@ -419,12 +419,21 @@ export default function DesktopApp() {
     .filter(({ word }) => (wordViewMode === "all" ? true : !word.memorized));
 
   useEffect(() => {
+    // A browser history entry represents a screen in the app hierarchy, not
+    // every word viewed while staying on the study screen.
+    const navigationKey = JSON.stringify({
+      step,
+      selectedBookId,
+      folderPath,
+      selectedDayId,
+    });
     const state = {
       step,
       selectedBookId,
       folderPath,
       selectedDayId,
       wordIndex,
+      navigationKey,
     };
 
     if (isHistoryMoving.current) {
@@ -435,6 +444,11 @@ export default function DesktopApp() {
     if (isFirstHistoryState.current) {
       window.history.replaceState(state, "", window.location.href);
       isFirstHistoryState.current = false;
+      return;
+    }
+
+    if (window.history.state?.navigationKey === navigationKey) {
+      window.history.replaceState(state, "", window.location.href);
       return;
     }
 
