@@ -1145,7 +1145,7 @@ export default function MobileApp() {
                       e.stopPropagation();
                       toggleMemorized(displayWordIndex);
                     }}
-                    className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
+                    className={`flex h-8 w-8 items-center justify-center rounded-full border ${
                       displayWord.memorized
                         ? "border-[#0f2a5f] bg-[#0f2a5f] shadow-[0_6px_14px_rgba(15,42,95,0.22)]"
                         : "border-[#dce2ee] bg-[#f8fafc]"
