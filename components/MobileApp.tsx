@@ -1385,7 +1385,7 @@ export default function MobileApp() {
                                             =
                                           </span>
 
-                                          <MobilePronounceButton text={variant.related} className="relative -top-[2px] min-w-0 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
+                                          <MobilePronounceButton text={variant.related} className="relative -top-[1.5px] min-w-0 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
                                             <HighlightedText text={variant.related} keyword="" />
                                           </MobilePronounceButton>
                                         </div>
