@@ -84,16 +84,17 @@ type Folder = {
 type StarIconProps = {
   active?: boolean;
   size?: number;
+  animate?: boolean;
 };
 
-function StarIcon({ active = true, size = 15 }: StarIconProps) {
+function StarIcon({ active = true, size = 15, animate = true }: StarIconProps) {
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 24 24"
       aria-hidden="true"
-      className={`shrink-0 transition-all ${
+      className={`shrink-0 ${animate ? "transition-all" : ""} ${
         active
           ? "text-[#ef4444] drop-shadow-[0_2px_5px_rgba(239,68,68,0.18)]"
           : "text-[#c7ceda]"
@@ -1131,7 +1132,7 @@ export default function MobileApp() {
                     title="누를 때마다 중요도 1 → 2 → 3 → 해제로 변경"
                   >
                     <span className="relative flex h-7 w-7 items-center justify-center">
-                      <StarIcon active={Boolean(displayWord.importanceStars)} size={22} />
+                      <StarIcon active={Boolean(displayWord.importanceStars)} size={22} animate={false} />
                       {displayWord.importanceStars ? (
                         <span className="absolute -right-1 -top-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#0f2a5f] px-[3px] text-[8px] font-black leading-none text-white">
                           {displayWord.importanceStars}
