@@ -904,30 +904,35 @@ export default function MobileApp() {
     setStep("study");
   };
 
-  const nextWord = () => {
-    const currentPos = visibleSortedWords.findIndex((item) => item.originalIndex === wordIndex);
-    const safePos = currentPos === -1 ? 0 : currentPos;
-    const next = visibleSortedWords[Math.min(safePos + 1, visibleSortedWords.length - 1)];
+  const getAdjacentStudyWord = (direction: "prev" | "next") => {
+    const currentPos = sortedWords.findIndex((item) => item.originalIndex === wordIndex);
+    if (currentPos === -1) return null;
 
+    const offset = direction === "prev" ? -1 : 1;
+
+    for (
+      let adjacentPos = currentPos + offset;
+      adjacentPos >= 0 && adjacentPos < sortedWords.length;
+      adjacentPos += offset
+    ) {
+      const candidate = sortedWords[adjacentPos];
+
+      if (wordViewMode === "all" || !candidate.word.memorized) {
+        return candidate;
+      }
+    }
+
+    return null;
+  };
+
+  const nextWord = () => {
+    const next = getAdjacentStudyWord("next");
     if (next) setWordIndex(next.originalIndex);
   };
 
   const prevWord = () => {
-    const currentPos = visibleSortedWords.findIndex((item) => item.originalIndex === wordIndex);
-    const safePos = currentPos === -1 ? 0 : currentPos;
-    const prev = visibleSortedWords[Math.max(safePos - 1, 0)];
-
+    const prev = getAdjacentStudyWord("prev");
     if (prev) setWordIndex(prev.originalIndex);
-  };
-
-  const getAdjacentStudyWord = (direction: "prev" | "next") => {
-    const currentPos = visibleSortedWords.findIndex((item) => item.originalIndex === wordIndex);
-    if (currentPos === -1) return null;
-
-    const adjacentPos = direction === "prev" ? currentPos - 1 : currentPos + 1;
-    if (adjacentPos < 0 || adjacentPos >= visibleSortedWords.length) return null;
-
-    return visibleSortedWords[adjacentPos];
   };
 
   const updateStudySwipeDragX = (value: number) => {
