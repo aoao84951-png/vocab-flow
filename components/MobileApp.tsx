@@ -1186,6 +1186,7 @@ export default function MobileApp() {
                 </section>
 
                 <section
+                  key={`study-details-${displayWordIndex}`}
                   className={`relative z-[2] mt-4 min-h-0 flex-1 overflow-hidden transition-opacity duration-200 ${
                     showMeaning
                       ? displayWord.memorized
