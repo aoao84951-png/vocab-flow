@@ -2380,7 +2380,7 @@ export default function DesktopApp() {
                                               </span>
 
                                               <div className="flex min-w-0 flex-1 items-start gap-2">
-                                                <PronounceButtons text={variant.related} className="ipad-study-sub min-w-0 flex-1 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
+                                                <PronounceButtons text={variant.related} className="ipad-study-sub relative -top-[3px] min-w-0 flex-1 text-[12px] font-bold leading-[1.5] tracking-[-0.01em] text-[#4b6cb7]">
                                                   <HighlightedText
                                                     text={variant.related}
                                                     keyword=""
