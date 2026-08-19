@@ -2374,8 +2374,8 @@ export default function DesktopApp() {
                                           </div>
 
                                           {variant.related && (
-                                            <div className="mt-2 flex items-start gap-1.5 pl-[1px]">
-                                              <span className="mt-[1px] text-[13px] font-bold leading-none text-[#4b6cb7]">
+                                            <div className="mt-2 flex items-baseline gap-1.5 pl-[1px]">
+                                              <span className="text-[13px] font-bold leading-none text-[#4b6cb7]">
                                                 =
                                               </span>
 
