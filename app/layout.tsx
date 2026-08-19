@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   description: "VOCAB FLOW",
 
   icons: {
-    icon: "/icon.png",
-    shortcut: "/icon.png",
-    apple: "/apple-icon.png",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon",
   },
 
   appleWebApp: {
