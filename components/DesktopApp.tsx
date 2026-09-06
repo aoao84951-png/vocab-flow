@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import useNavigationHistory from "./useNavigationHistory";
 import { isNavigationEntry, mainScreen, type Screen } from "@/lib/navigationHistory";
+import BottomNavigation from "./BottomNavigation";
 import PointCategoryInput from "./PointCategoryInput";
 import WordSearch from "./WordSearch";
 import { matchesWordSearch } from "@/lib/wordSearch";
@@ -1246,7 +1247,21 @@ export default function DesktopApp() {
   };
 
   return (
-    <main className="min-h-[100svh] overscroll-none bg-white text-[#111827]">
+    <main className="min-h-[100svh] pb-[calc(100px+env(safe-area-inset-bottom))] overscroll-none bg-white text-[#111827]">
+      <BottomNavigation books={books} step={step} path={folderPath} dayId={step === "wordList" || step === "study" ? selectedDayId : ""} onHome={goHome}
+        onNavigate={(path, dayId, index) => {
+          setMenuOpen(false); setActionWordIndex(null); setActionDayId(null); setActionFolderId(null); setSelectedBookId(path[0] || ""); setFolderPath(path);
+          setSelectedDayId(dayId || ""); setWordIndex(index ?? 0); setShowMeaning(false);
+          if (index !== undefined) setWordViewMode("all");
+          setStep(index !== undefined ? "study" : dayId ? "wordList" : "day");
+        }}
+        onAdd={(kind, dayId) => {
+          setMenuOpen(false);
+          if (kind === "word") { setSelectedDayId(dayId || selectedDayId); setStep("addWord"); }
+          else if (kind === "day") setStep("addDay");
+          else setStep(folderPath.length ? "addFolder" : "addBook");
+        }} />
+
       <style>{`
           html,
           body {
@@ -1284,46 +1299,9 @@ export default function DesktopApp() {
           }
         `}</style>
       <section className="min-h-[100svh] w-full bg-white px-3 sm:px-5 md:px-6 lg:px-8">
-        {isStandalone && (
-          <button
-            onClick={() => window.location.reload()}
-            className="fixed bottom-16 right-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border border-[#e4e8f0] bg-white/90 shadow-[0_6px_18px_rgba(15,23,42,0.08)] backdrop-blur transition active:scale-95"
-            aria-label="새로고침"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M20 11A8 8 0 1 0 17.7 16.7"
-                stroke="#587fa3"
-                strokeWidth="2.1"
-                strokeLinecap="round"
-              />
-              <path
-                d="M20 4V11H13"
-                stroke="#587fa3"
-                strokeWidth="2.1"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        )}
+        
 
-        {step !== "book" && selectedBook && activeFolder && (
-          <button
-            onClick={() => setMenuOpen(true)}
-            className="fixed bottom-[calc(116px+env(safe-area-inset-bottom))] right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-[#e4e8f0] bg-white/90 shadow-[0_8px_24px_rgba(15,23,42,0.10)] backdrop-blur transition active:scale-95"
-            aria-label="목록 열기"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M4 7h16M4 12h16M4 17h16"
-                stroke="#587fa3"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        )}
+        
 
         {step === "book" && (
           <div className="min-h-dvh bg-white px-5 pt-8 pb-6">
@@ -1334,13 +1312,8 @@ export default function DesktopApp() {
                 </h1>
 
                 <div className="flex items-center gap-2">
-                <AppearanceSettings />
-                <button
-                  onClick={() => setStep("addBook")}
-                  className="h-[38px] rounded-full bg-[#dceefa] px-5 text-[12px] font-bold text-[#4b5058]"
-                >
-                  + 추가
-                </button>
+                
+                
                 </div>
               </div>
             </div>
@@ -1482,19 +1455,9 @@ export default function DesktopApp() {
               <h1 className="mr-3 min-w-0 flex-1 truncate text-[28px] font-bold tracking-tight text-[#303236]">{activeFolder.title}</h1>
 
               <div className="flex gap-2">
-                <button
-                  onClick={() => setStep("addFolder")}
-                  className="rounded-full bg-[#eff7fc] px-4 py-2 text-[12px] font-bold text-[#303236]"
-                >
-                  + Folder
-                </button>
+                
 
-                <button
-                  onClick={() => setStep("addDay")}
-                  className="rounded-full bg-[#dceefa] px-4 py-2 text-[12px] font-bold text-[#4b5058]"
-                >
-                  + Day
-                </button>
+                
               </div>
             </div>
 
@@ -1607,12 +1570,7 @@ export default function DesktopApp() {
                   view={wordViewMode} onToggleView={() => setWordViewMode(value => value === "all" ? "unmemorized" : "all")}
                   meanings={showListMeanings} onToggleMeanings={() => setShowListMeanings(value => !value)} />
 
-                <button
-                  onClick={() => setStep("addWord")}
-                  className="rounded-full bg-[#dceefa] px-4 py-2 text-[12px] font-bold text-[#4b5058]"
-                >
-                  + 단어
-                </button>
+                
               </div>
             </div>
 
@@ -2187,7 +2145,7 @@ export default function DesktopApp() {
 
                 <footer
                   onClick={(e) => e.stopPropagation()}
-                  className="fixed inset-x-0 bottom-0 z-20 border-t border-[#d7ddea] bg-[#f8fafc]/95 px-6 py-4 pb-[calc(16px+env(safe-area-inset-bottom))] shadow-[0_-1px_0_rgba(88,127,163,0.03)] backdrop-blur"
+                  className="mt-4 mb-20 border-t border-[#d7ddea] bg-[#f8fafc]/95 px-6 py-4 pb-[calc(16px+env(safe-area-inset-bottom))] shadow-[0_-1px_0_rgba(88,127,163,0.03)] backdrop-blur"
                 >
                   <div className="mx-auto flex max-w-[820px] items-center justify-between gap-4">
                     <button

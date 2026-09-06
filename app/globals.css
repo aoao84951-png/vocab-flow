@@ -106,3 +106,6 @@ html[data-app-font="summer"] .folder-subtitle { font-weight: 500; }
 .study-note-page div:has(> [contenteditable="true"]):focus-within > div:first-child:not([contenteditable]) {
   display: flex;
 }
+
+nav[aria-label="주요 메뉴"] button[aria-expanded="true"],
+nav[aria-label="주요 메뉴"] button[aria-current="page"] { color: #587fa3; }
