@@ -91,4 +91,12 @@ nav[aria-label="주요 메뉴"] button[aria-current="page"] { color: #587fa3; }
 [data-rich-field] { -webkit-user-select: text; user-select: text; }
 
 /* Shared boundary: mobile study content meets the bottom navigation without a blank strip. */
-:root { --mobile-bottom-bar-height: calc(69px + env(safe-area-inset-bottom, 0px)); }
+:root {
+  --mobile-bottom-inset: env(safe-area-inset-bottom, 0px);
+  --mobile-bottom-bar-height: calc(69px + var(--mobile-bottom-inset));
+}
+
+/* Installed apps need extra space above the home indicator. */
+@media (display-mode: standalone) {
+  :root { --mobile-bottom-inset: calc(20px + env(safe-area-inset-bottom, 0px)); }
+}

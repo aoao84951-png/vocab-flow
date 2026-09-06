@@ -1914,7 +1914,7 @@ const getDayProgress = (day: Day) => {
   }, [step, currentWord?.id]);
 
   return (
-    <main className="min-h-[100svh] pb-[calc(100px+env(safe-area-inset-bottom))] bg-white text-[#111827]">
+    <main className="min-h-[100svh] pb-[calc(var(--mobile-bottom-bar-height)+31px)] bg-white text-[#111827]">
       <BottomNavigation onManageFolder={setActionFolderId} books={books} step={step} path={folderPath} dayId={step === "wordList" || step === "study" ? selectedDayId : ""} onHome={goHome}
         onNavigate={(path, dayId, index) => {
           setMenuOpen(false); setActionWordIndex(null); setActionDayId(null); setActionFolderId(null); setSelectedBookId(path[0] || ""); setFolderPath(path);
