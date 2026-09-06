@@ -2054,7 +2054,7 @@ const getDayProgress = (day: Day) => {
 
                 return (
                   <div key={book.id} className="relative">
-                      <button type="button" aria-label={`${book.title} 폴더 설정`} onClick={() => { setSelectedBookId(book.id); setActionFolderId(book.id); }} title="폴더 설정" className="folder-symbol absolute left-0 top-2 z-10 flex h-10 w-5 items-center justify-center rounded-lg text-[21px] text-[#858b94] focus-visible:outline-2 focus-visible:outline-[#587fa3]">{book.icon || "#"}</button>
+                      {book.icon !== "" && (<button type="button" aria-label={`${book.title} 폴더 설정`} onClick={() => { setSelectedBookId(book.id); setActionFolderId(book.id); }} title="폴더 설정" className="folder-symbol absolute left-0 top-2 z-10 flex h-10 w-5 items-center justify-center rounded-lg text-[21px] text-[#858b94] focus-visible:outline-2 focus-visible:outline-[#587fa3]">{book.icon || "#"}</button>)}
                     <button
                       onClick={() => {
                         if (didLongPressFolder.current) {
@@ -2098,7 +2098,7 @@ const getDayProgress = (day: Day) => {
                         isOpen ? "border-b border-[#e5e7eb]" : ""
                       }`}
                     >
-                      <span aria-hidden="true" className="mr-3 w-5 shrink-0" />
+                      {book.icon !== "" && <span aria-hidden="true" className="mr-3 w-5 shrink-0" />}
 
                       <div className="min-w-0 flex-1">
                         <span className="folder-title truncate text-[16px] font-medium tracking-[-0.03em] text-[#303236]">
@@ -2162,7 +2162,7 @@ const getDayProgress = (day: Day) => {
                         >
                           <div className="min-w-0 flex-1">
                             <span className="folder-subtitle truncate text-[16px] font-normal tracking-[-0.03em] text-[#666a70]">
-                              <FolderSymbol symbol="→" />{folder.title}
+                              <FolderSymbol symbol={folder.icon === "" ? "" : "→"} />{folder.title}
                             </span>
                           </div>
                         </button>
@@ -3437,7 +3437,7 @@ function AddFolder({
   onSave: (folder: Folder) => void;
 }) {
   const [title, setTitle] = useState(initialFolder?.title || "");
-  const [icon, setIcon] = useState(initialFolder?.icon || "#");
+  const [icon, setIcon] = useState(initialFolder?.icon ?? "#");
   const [dayCount, setDayCount] = useState("");
 
   return (
@@ -3474,7 +3474,7 @@ function AddFolder({
             onSave({
               id: initialFolder?.id || crypto.randomUUID(),
               title: title.trim(),
-              icon: icon || "#",
+              icon,
               desc: "",
               folders: initialFolder?.folders || [],
               days:
