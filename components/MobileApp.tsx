@@ -3321,6 +3321,12 @@ function AddWord({
   onBack: () => void;
   onSave: (dayId: string, word: Word) => void;
 }) {
+  const [formPage, setFormPage] = useState<"basic" | "notes">("basic");
+  const formHeading = useRef<HTMLHeadingElement>(null);
+  const changeFormPage = (page: "basic" | "notes") => {
+    setFormPage(page);
+    requestAnimationFrame(() => formHeading.current?.scrollIntoView({ block: "start" }));
+  };
   const [dayId, setDayId] = useState(defaultDayId || book.days[0]?.id || "");
   const [word, setWord] = useState(initialWord?.word || "");
   const [meanings, setMeanings] = useState<Meaning[]>(
@@ -3538,7 +3544,7 @@ function AddWord({
         related: "",
         exampleEn: "",
         exampleKo: "",
-        examples: [{ en: "", ko: "" }],
+        examples: [],
         variants: [],
       },
     ]);
@@ -3559,7 +3565,7 @@ function AddWord({
               examples: [
                 ...(point.examples?.length
                   ? point.examples
-                  : [{ en: point.exampleEn, ko: point.exampleKo }]),
+                  : (point.exampleEn || point.exampleKo ? [{ en: point.exampleEn, ko: point.exampleKo }] : [])),
                 { en: "", ko: "" },
               ],
             }
@@ -3580,7 +3586,7 @@ function AddWord({
 
         const examples = point.examples?.length
           ? point.examples
-          : [{ en: point.exampleEn, ko: point.exampleKo }];
+          : (point.exampleEn || point.exampleKo ? [{ en: point.exampleEn, ko: point.exampleKo }] : []);
 
         return {
           ...point,
@@ -3599,7 +3605,7 @@ function AddWord({
 
         const examples = point.examples?.length
           ? point.examples
-          : [{ en: point.exampleEn, ko: point.exampleKo }];
+          : (point.exampleEn || point.exampleKo ? [{ en: point.exampleEn, ko: point.exampleKo }] : []);
 
         return {
           ...point,
@@ -3871,13 +3877,15 @@ function AddWord({
 
   return (
     <div className="min-h-dvh px-5 pt-7 pb-6">
-      <BackButton onClick={onBack} label="뒤로" />
+      <BackButton onClick={() => formPage === "notes" ? changeFormPage("basic") : onBack()} label={formPage === "notes" ? "기본 정보로" : "뒤로"} />
 
       <h1 className="mt-5 text-[28px] font-bold text-[#303236]">
-        {initialWord ? "단어 수정" : "단어 추가"}
+        {formPage === "notes" ? "학습 포인트" : initialWord ? "단어 수정" : "단어 추가"}
       </h1>
 
+      {formPage === "notes" && <p className="mt-2 text-sm text-[#858b94]">{word || "새 단어"}</p>}
       <div className="mt-7 space-y-5">
+        <div hidden={formPage !== "basic"} className="space-y-5">
         <label className="block">
           <p className="mb-2 pl-1.5 text-[12px] font-bold text-[#596275]">Day</p>
 
@@ -4059,6 +4067,8 @@ function AddWord({
           onChangeAll={setAntonyms}
         />
 
+        </div>
+        <div hidden={formPage !== "notes"} className="study-note-page">
         <div>
           <div className="mb-2 flex items-center justify-between">
             <p className="pl-1.5 text-[12px] font-bold text-[#596275]">학습 포인트</p>
@@ -4073,9 +4083,9 @@ function AddWord({
 
           <div className="space-y-3">
             {studyPoints.map((point, index) => (
-              <div key={index} className="rounded-2xl border border-[#ddeaf3] p-4">
+              <div key={index} className="study-note border-b border-[#e7edf2] py-5 last:border-b-0">
                 <div className="flex gap-2">
-                <div className="relative flex-1">
+                <div className="relative w-40 max-w-[75%]">
                   <select
                     value={STUDY_CATEGORIES.includes(point.category) ? point.category : "직접입력"}
                     onChange={(e) => {
@@ -4099,7 +4109,7 @@ function AddWord({
 
                   <button
                     onClick={() => removeStudyPoint(index)}
-                    className="h-10 w-10 rounded-xl border border-[#ddeaf3] text-[13px] text-[#8a94a6]"
+                    aria-label="학습 포인트 삭제" className="ml-auto h-10 w-10 text-[18px] text-[#8a94a6]"
                   >
                     ×
                   </button>
@@ -4118,7 +4128,7 @@ function AddWord({
                   value={point.expression}
                   onChange={(e) => updateStudyPoint(index, "expression", e.target.value)}
                   placeholder="제목"
-                  className="mt-3 h-11 w-full rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
+                  className="mt-3 h-12 w-full border-0 bg-transparent px-1 text-[20px] font-semibold outline-none"
                 />
 
                 <div className="mt-2">
@@ -4138,7 +4148,7 @@ function AddWord({
                   />
                 </div>
 
-                <div className="mt-3 rounded-2xl bg-[#f8fafc] p-3">
+                <div className="mt-6">
                   <div className="mb-2 flex items-center justify-between">
                     <p className="pl-1 text-[11px] font-bold text-[#596275]">변형/파생어</p>
 
@@ -4153,7 +4163,7 @@ function AddWord({
 
                   <div className="space-y-2">
                     {(point.variants ?? []).map((variant, variantIndex) => (
-                      <div key={variantIndex} className="rounded-xl border border-[#ddeaf3] bg-white p-3">
+                      <div key={variantIndex} className="border-t border-[#edf0f3] py-3">
                         <div className="flex gap-2">
                           <input
                             value={variant.word}
@@ -4167,7 +4177,7 @@ function AddWord({
                           <button
                             type="button"
                             onClick={() => removeStudyPointVariant(index, variantIndex)}
-                            className="h-10 w-10 rounded-xl border border-[#ddeaf3] text-[13px] text-[#8a94a6]"
+                            aria-label="파생어 삭제" className="ml-auto h-10 w-10 text-[18px] text-[#8a94a6]"
                           >
                             ×
                           </button>
@@ -4227,7 +4237,7 @@ function AddWord({
                                   onClick={() =>
                                     removeStudyPointVariantMeaning(index, variantIndex, meaningIndex)
                                   }
-                                  className="h-10 w-10 rounded-xl border border-[#ddeaf3] text-[13px] text-[#8a94a6]"
+                                  aria-label="품사 삭제" className="ml-auto h-10 w-10 text-[18px] text-[#8a94a6]"
                                 >
                                   ×
                                 </button>
@@ -4261,7 +4271,7 @@ function AddWord({
                                           itemIndex
                                         )
                                       }
-                                      className="h-10 w-10 rounded-xl border border-[#ddeaf3] text-[13px] text-[#8a94a6]"
+                                      aria-label="뜻 삭제" className="ml-auto h-10 w-10 text-[18px] text-[#8a94a6]"
                                     >
                                       −
                                     </button>
@@ -4321,11 +4331,11 @@ function AddWord({
                   <div className="space-y-2">
                     {(point.examples?.length
                       ? point.examples
-                      : [{ en: point.exampleEn, ko: point.exampleKo }]
+                      : (point.exampleEn || point.exampleKo ? [{ en: point.exampleEn, ko: point.exampleKo }] : [])
                     ).map((example, exampleIndex) => (
                       <div
                         key={exampleIndex}
-                        className="rounded-xl border border-[#ddeaf3] bg-white p-3"
+                        className="border-t border-[#edf0f3] py-3"
                       >
                         <div className="mb-2 flex items-center justify-between">
                           <p className="pl-1 text-[11px] font-bold text-[#8a94a6]">
@@ -4375,6 +4385,9 @@ function AddWord({
           </div>
         </div>
 
+        </div>
+        <div className="sticky bottom-0 z-30 flex items-center gap-2 border-t border-[#edf0f3] bg-white/95 py-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur">
+          <button type="button" onClick={() => formPage === "notes" ? changeFormPage("basic") : onBack()} className="h-12 shrink-0 px-3 text-[13px] text-[#737b89]">{formPage === "notes" ? "기본 정보로" : "취소"}</button>
         <button
           onClick={() => {
             if (!word.trim()) return alert("영어 단어를 입력해줘.");
@@ -4439,7 +4452,7 @@ function AddWord({
                     expression || description || related || variants.length > 0 || examples.length > 0;
 
                   return {
-                    category: category || (hasContent ? "기타" : ""),
+                    category: hasContent ? category || "기타" : "",
                     expression,
                     description,
                     related,
@@ -4473,10 +4486,17 @@ function AddWord({
               createdAt: initialWord?.createdAt || new Date().toISOString(),
             });
           }}
-          className="h-12 w-full rounded-full bg-[#dceefa] text-[13px] font-bold text-[#4b5058]"
+          className="h-12 min-w-0 flex-1 rounded-full bg-[#dceefa] text-[13px] font-bold text-[#4b5058]"
         >
           저장
         </button>
+          {formPage === "basic" && <button type="button" onClick={() => {
+            if (!word.trim()) return alert("영어 단어를 입력해줘.");
+            if (!dayId) return alert("Day를 선택해줘.");
+            if (!studyPoints.length) addStudyPoint();
+            changeFormPage("notes");
+          }} className="h-12 min-w-0 flex-1 rounded-full bg-[#eff7fc] px-3 text-[13px] font-semibold text-[#4b5058]">학습 포인트 추가</button>}
+        </div>
       </div>
     </div>
   );

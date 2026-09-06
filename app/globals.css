@@ -76,3 +76,22 @@ html[data-app-font="summer"] body {
 
 html[data-app-font="summer"] .folder-title { font-weight: 600; }
 html[data-app-font="summer"] .folder-subtitle { font-weight: 500; }
+
+/* Learning notes read as a page rather than nested cards. */
+.study-note-page [contenteditable="true"] {
+  border: 0;
+  border-radius: 0;
+  padding: 12px 4px;
+  min-height: 100px;
+}
+.study-note-page div:has(> [contenteditable="true"]) {
+  border-bottom: 1px solid #e7edf2;
+}
+.study-note-page div:has(> [contenteditable="true"]) > div:first-child:not([contenteditable]) {
+  display: none;
+  border: 0;
+  border-radius: 8px;
+}
+.study-note-page div:has(> [contenteditable="true"]):focus-within > div:first-child:not([contenteditable]) {
+  display: flex;
+}
