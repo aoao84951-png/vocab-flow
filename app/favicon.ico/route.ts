@@ -3,5 +3,5 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export function GET(request: Request) {
-  return NextResponse.redirect(new URL("/icon.png?v=3", request.url));
+  return NextResponse.redirect(new URL("/icon.png?v=4", request.url));
 }
