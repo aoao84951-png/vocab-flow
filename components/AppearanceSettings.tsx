@@ -61,29 +61,29 @@ export default function AppearanceSettings() {
     <div ref={panelRef} className="relative">
       <button ref={triggerRef} type="button" aria-label="화면 설정" title="화면 설정" aria-expanded={open}
         onClick={() => setOpen(!open)}
-        className={`flex h-[38px] w-[38px] items-center justify-center rounded-full transition-colors ${open ? "bg-[#eff7fc] text-[#587fa3]" : "text-[#91a8bb] hover:bg-[#f2f8fc]"}`}
+        className={`flex h-[38px] w-[38px] items-center justify-center rounded-full transition-colors ${open ? "bg-[#eff7fc] text-[#303236]" : "text-[#91a8bb] hover:bg-[#f2f8fc]"}`}
       >
         <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
           <circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" />
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 top-12 z-30 w-56 rounded-2xl border border-[#e4eff7] bg-white p-4 shadow-[0_8px_32px_rgba(66,108,143,0.12)]">
-          <p className="mb-3 text-[12px] font-semibold text-[#627f97]">글꼴</p>
-          <div className="flex rounded-xl bg-[#f2f8fc] p-1" role="group" aria-label="앱 글꼴">
-            {([['default', '기본'], ['summer', '여름소리']] as const).map(([value, label]) => (
-              <button key={value} type="button" aria-pressed={font === value}
-                onClick={() => {
-                  currentFont = value;
-                  try { localStorage.setItem(FONT_KEY, value); } catch { /* Keep the in-memory preference when storage is unavailable. */ }
-                  document.documentElement.dataset.appFont = value;
-                  window.dispatchEvent(new Event(CHANGE_EVENT));
-                }}
-                className={`flex-1 rounded-lg px-3 py-2 text-[13px] transition-colors ${font === value ? "bg-white font-semibold text-[#587fa3] shadow-sm" : "text-[#8da2b3]"}`}
-                style={value === "summer" ? { fontFamily: '"Summer Melody", sans-serif', fontWeight: 600 } : undefined}
-              >{label}</button>
-            ))}
-          </div>
+        <div className="absolute right-0 top-12 z-30 w-56 rounded-2xl border border-[#e4eff7] bg-white p-2 shadow-[0_8px_32px_rgba(66,108,143,0.12)]">
+          <button type="button"
+            aria-label={`글꼴 변경 (현재: ${font === "summer" ? "여름소리" : "기본"})`}
+            onClick={() => {
+              const nextFont = font === "summer" ? "default" : "summer";
+              currentFont = nextFont;
+              try { localStorage.setItem(FONT_KEY, nextFont); } catch { /* Keep the preference in memory when storage is unavailable. */ }
+              document.documentElement.dataset.appFont = nextFont;
+              window.dispatchEvent(new Event(CHANGE_EVENT));
+            }}
+            className="flex min-h-11 w-full items-center gap-3 rounded-xl px-2 text-left text-[#666a70] transition-colors hover:bg-[#f5f9fc]"
+          >
+            <span aria-hidden="true" className="font-serif text-[22px] leading-none">T</span>
+            <span className="flex-1 text-[14px] font-medium">글꼴</span>
+            <span aria-live="polite" className="rounded-full bg-[#eaf4fb] px-2.5 py-1 text-[11px] font-medium text-[#626970]">{font === "summer" ? "여름소리" : "기본"}</span>
+          </button>
         </div>
       )}
     </div>

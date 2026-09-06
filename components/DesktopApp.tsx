@@ -654,7 +654,7 @@ export default function DesktopApp() {
       <div className="flex w-[82px] items-center justify-start">
         <button
           onClick={onBack}
-          className="flex h-9 w-9 items-center justify-center pt-[2px] text-[#587fa3]"
+          className="flex h-9 w-9 items-center justify-center pt-[2px] text-[#303236]"
           aria-label="뒤로가기"
         >
           <ChevronLeft />
@@ -1445,7 +1445,7 @@ export default function DesktopApp() {
           <div className="min-h-dvh bg-white px-5 pt-8 pb-6">
             <div>
               <div className="flex items-center justify-between">
-                <h1 className="text-[28px] font-bold tracking-tight text-[#587fa3]">
+                <h1 className="text-[28px] font-bold tracking-tight text-[#303236]">
                   단어장
                 </h1>
 
@@ -1453,7 +1453,7 @@ export default function DesktopApp() {
                 <AppearanceSettings />
                 <button
                   onClick={() => setStep("addBook")}
-                  className="h-[38px] rounded-full bg-[#dceefa] px-5 text-[12px] font-bold text-[#385e7d]"
+                  className="h-[38px] rounded-full bg-[#dceefa] px-5 text-[12px] font-bold text-[#4b5058]"
                 >
                   + 추가
                 </button>
@@ -1596,21 +1596,21 @@ export default function DesktopApp() {
             {renderHomeTopBar(folderBreadcrumb, goBackFromDay)}
 
             <div className="mt-6 flex w-full items-center justify-between px-8 sm:px-10 md:px-11 lg:px-[52px]">
-              <h1 className="text-[28px] font-bold tracking-tight text-[#587fa3]">
+              <h1 className="text-[28px] font-bold tracking-tight text-[#303236]">
                 {activeFolder.title}
               </h1>
 
               <div className="flex gap-2">
                 <button
                   onClick={() => setStep("addFolder")}
-                  className="rounded-full bg-[#eff7fc] px-4 py-2 text-[12px] font-bold text-[#587fa3]"
+                  className="rounded-full bg-[#eff7fc] px-4 py-2 text-[12px] font-bold text-[#303236]"
                 >
                   + Folder
                 </button>
 
                 <button
                   onClick={() => setStep("addDay")}
-                  className="rounded-full bg-[#dceefa] px-4 py-2 text-[12px] font-bold text-[#385e7d]"
+                  className="rounded-full bg-[#dceefa] px-4 py-2 text-[12px] font-bold text-[#4b5058]"
                 >
                   + Day
                 </button>
@@ -1725,7 +1725,7 @@ export default function DesktopApp() {
 
             <div className="mt-6 flex w-full items-center justify-between px-8 sm:px-10 md:px-11 lg:px-[52px]">
               <div>
-                <h1 className="text-[28px] font-bold tracking-tight text-[#587fa3]">
+                <h1 className="text-[28px] font-bold tracking-tight text-[#303236]">
                   {selectedDay.title}
                 </h1>
               </div>
@@ -1780,7 +1780,7 @@ export default function DesktopApp() {
 
                 <button
                   onClick={() => setStep("addWord")}
-                  className="rounded-full bg-[#dceefa] px-4 py-2 text-[12px] font-bold text-[#385e7d]"
+                  className="rounded-full bg-[#dceefa] px-4 py-2 text-[12px] font-bold text-[#4b5058]"
                 >
                   + 단어
                 </button>
@@ -1792,7 +1792,7 @@ export default function DesktopApp() {
                 onClick={() => setWordViewMode("all")}
                 className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
                   wordViewMode === "all"
-                    ? "bg-white text-[#587fa3] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
+                    ? "bg-white text-[#303236] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
                     : "text-[#8a94a6]"
                 }`}
               >
@@ -1803,7 +1803,7 @@ export default function DesktopApp() {
                 onClick={() => setWordViewMode("unmemorized")}
                 className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
                   wordViewMode === "unmemorized"
-                    ? "bg-white text-[#587fa3] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
+                    ? "bg-white text-[#303236] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
                     : "text-[#8a94a6]"
                 }`}
               >
@@ -1908,7 +1908,7 @@ export default function DesktopApp() {
                                 ? "text-[#ef4444]"
                                 : item.highlightColor === "blue"
                                   ? "text-[#2563eb]"
-                                  : "text-[#587fa3]"
+                                  : "text-[#303236]"
                             }`}
                           >
                             {item.word}
@@ -1923,7 +1923,7 @@ export default function DesktopApp() {
                                       key={`${group.pos}-${groupIndex}`}
                                       className="relative flex items-start gap-1.5"
                                     >
-                                      <span className="ipad-pos-badge inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#dceefa] text-[10px] font-bold text-[#385e7d]">
+                                      <span className="ipad-pos-badge inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#dceefa] text-[10px] font-bold text-[#4b5058]">
                                         <span className="ipad-pos-text">
                                           {group.pos}
                                         </span>
@@ -1989,7 +1989,7 @@ export default function DesktopApp() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setStep("wordList")}
-                  className="flex h-9 w-9 items-center justify-center pt-[2px] text-[#587fa3]"
+                  className="flex h-9 w-9 items-center justify-center pt-[2px] text-[#303236]"
                   aria-label="뒤로가기"
                 >
                   <ChevronLeft />
@@ -2052,7 +2052,7 @@ export default function DesktopApp() {
                     e.stopPropagation();
                     setActionWordIndex(wordIndex);
                   }}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-[#587fa3] active:scale-95"
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-[#303236] active:scale-95"
                   aria-label="단어 메뉴"
                 >
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -2096,7 +2096,7 @@ export default function DesktopApp() {
                           size={22}
                         />
                         {currentWord.importanceStars ? (
-                          <span className="absolute -right-1 -top-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#dceefa] px-[3px] text-[8px] font-black leading-none text-[#385e7d]">
+                          <span className="absolute -right-1 -top-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#dceefa] px-[3px] text-[8px] font-black leading-none text-[#4b5058]">
                             {currentWord.importanceStars}
                           </span>
                         ) : null}
@@ -2137,7 +2137,7 @@ export default function DesktopApp() {
                     className={`ipad-study-word w-full min-w-0 break-words px-10 text-center text-[52px] font-black leading-tight tracking-[-0.045em] ${
                       currentWord.memorized
                         ? "text-[#b0b7c3]"
-                        : "text-[#587fa3]"
+                        : "text-[#303236]"
                     }`}
                   >
                     {currentWord.word}
@@ -2174,7 +2174,7 @@ export default function DesktopApp() {
                               className="flex w-full justify-center"
                             >
                               <div className="grid w-fit max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-2">
-                                <span className="ipad-detail-pos inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#dceefa] px-[6px] text-[13px] font-bold text-[#385e7d]">
+                                <span className="ipad-detail-pos inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#dceefa] px-[6px] text-[13px] font-bold text-[#4b5058]">
                                   {group.pos}
                                 </span>
 
@@ -2202,7 +2202,7 @@ export default function DesktopApp() {
                               key={`${group.pos}-${group.items.join("")}`}
                               className="w-full max-w-full text-center"
                             >
-                              <span className="ipad-detail-pos mr-2 inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#dceefa] px-[6px] text-[13px] font-bold text-[#385e7d] align-top">
+                              <span className="ipad-detail-pos mr-2 inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-[7px] bg-[#dceefa] px-[6px] text-[13px] font-bold text-[#4b5058] align-top">
                                 {group.pos}
                               </span>
 
@@ -2285,7 +2285,7 @@ export default function DesktopApp() {
                                 className="px-0 py-4 first:pt-0 last:pb-0"
                               >
                                 <div className="flex items-center gap-2">
-                                  <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#587fa3]">
+                                  <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#303236]">
                                     {point.category}
                                   </span>
 
@@ -2331,7 +2331,7 @@ export default function DesktopApp() {
                                                   key={`${meaning.pos}-${meaningIndex}`}
                                                   className="flex items-start gap-1.5"
                                                 >
-                                                  <span className="ipad-pos-badge inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#dceefa] text-[10px] font-bold text-[#385e7d]">
+                                                  <span className="ipad-pos-badge inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#dceefa] text-[10px] font-bold text-[#4b5058]">
                                                   <span className="ipad-pos-text ipad-variant-pos-text">
                                                     {meaning.pos}
                                                   </span>
@@ -2454,7 +2454,7 @@ export default function DesktopApp() {
                   <div className="mx-auto flex max-w-[820px] items-center justify-between gap-4">
                     <button
                       onClick={prevWord}
-                      className="flex h-12 min-w-[150px] items-center justify-center gap-2 rounded-[14px] border border-[#d7ddea] bg-white text-[15px] font-bold text-[#587fa3] shadow-[0_4px_12px_rgba(88,127,163,0.08)] active:scale-[0.98]"
+                      className="flex h-12 min-w-[150px] items-center justify-center gap-2 rounded-[14px] border border-[#d7ddea] bg-white text-[15px] font-bold text-[#303236] shadow-[0_4px_12px_rgba(88,127,163,0.08)] active:scale-[0.98]"
                     >
                       ← 이전
                     </button>
@@ -2490,7 +2490,7 @@ export default function DesktopApp() {
 
                     <button
                       onClick={nextWord}
-                      className="flex h-12 min-w-[150px] items-center justify-center gap-2 rounded-[14px] bg-[#dceefa] text-[15px] font-bold text-[#385e7d] shadow-[0_5px_14px_rgba(88,127,163,0.16)] active:scale-[0.98]"
+                      className="flex h-12 min-w-[150px] items-center justify-center gap-2 rounded-[14px] bg-[#dceefa] text-[15px] font-bold text-[#4b5058] shadow-[0_5px_14px_rgba(88,127,163,0.16)] active:scale-[0.98]"
                     >
                       다음 →
                     </button>
@@ -2673,7 +2673,7 @@ export default function DesktopApp() {
               label="뒤로"
             />
 
-            <h1 className="mt-4 text-[28px] font-bold text-[#587fa3]">
+            <h1 className="mt-4 text-[28px] font-bold text-[#303236]">
               폴더 이동
             </h1>
 
@@ -2693,7 +2693,7 @@ export default function DesktopApp() {
                   setShowMeaning(false);
                   setStep("book");
                 }}
-                className={`w-full rounded-2xl border border-[#ddeaf3] bg-[#f8fafc] px-4 py-4 text-left text-[14px] font-bold text-[#587fa3] ${
+                className={`w-full rounded-2xl border border-[#ddeaf3] bg-[#f8fafc] px-4 py-4 text-left text-[14px] font-bold text-[#303236] ${
                   books.some((book) => book.id === actionFolderId)
                     ? "opacity-35"
                     : ""
@@ -2736,7 +2736,7 @@ export default function DesktopApp() {
               label="뒤로"
             />
 
-            <h1 className="mt-4 text-[28px] font-bold text-[#587fa3]">
+            <h1 className="mt-4 text-[28px] font-bold text-[#303236]">
               Day 이동
             </h1>
 
@@ -2785,7 +2785,7 @@ export default function DesktopApp() {
               className="h-full w-[min(82vw,320px)] overflow-y-auto bg-white px-[18px] pt-5 pb-5 shadow-[16px_0_40px_rgba(15,23,42,0.12)] sm:w-[300px]"
             >
               <div className="flex items-start justify-between gap-3">
-                <h2 className="pt-1 text-[16px] font-extrabold tracking-[-0.05em] text-[#587fa3]">
+                <h2 className="pt-1 text-[16px] font-extrabold tracking-[-0.05em] text-[#303236]">
                   목차
                 </h2>
 
@@ -2829,7 +2829,7 @@ export default function DesktopApp() {
                       : "border-[#e0e5ef]"
                   }`}
                 >
-                  <span className="min-w-0 flex-1 truncate text-[14px] font-extrabold tracking-[-0.04em] text-[#587fa3]">
+                  <span className="min-w-0 flex-1 truncate text-[14px] font-extrabold tracking-[-0.04em] text-[#303236]">
                     {selectedBook.title}
                   </span>
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[#8a94a6] [&_svg]:h-3 [&_svg]:w-3">
@@ -2869,7 +2869,7 @@ export default function DesktopApp() {
                                 height="14"
                                 viewBox="0 0 24 24"
                                 fill="none"
-                                className="shrink-0 text-[12px] text-[#587fa3]"
+                                className="shrink-0 text-[12px] text-[#303236]"
                                 aria-hidden="true"
                               >
                                 <path
@@ -3062,7 +3062,7 @@ export default function DesktopApp() {
                     onClick={() => {
                       setStep("editDay");
                     }}
-                    className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#587fa3]"
+                    className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#303236]"
                   >
                     Day 수정
                   </button>
@@ -3071,7 +3071,7 @@ export default function DesktopApp() {
                     onClick={() => {
                       setStep("moveDay");
                     }}
-                    className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#587fa3]"
+                    className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#303236]"
                   >
                     Day 이동
                   </button>
@@ -3160,7 +3160,7 @@ export default function DesktopApp() {
                       setActionFolderId(null);
                       setStep("addFolder");
                     }}
-                    className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#587fa3]"
+                    className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#303236]"
                   >
                     하위 폴더 추가
                   </button>
@@ -3169,7 +3169,7 @@ export default function DesktopApp() {
                     onClick={() => {
                       setStep("editFolder");
                     }}
-                    className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#587fa3]"
+                    className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#303236]"
                   >
                     폴더 수정
                   </button>
@@ -3178,7 +3178,7 @@ export default function DesktopApp() {
                     onClick={() => {
                       setStep("moveFolder");
                     }}
-                    className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#587fa3]"
+                    className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#303236]"
                   >
                     폴더 이동
                   </button>
@@ -3232,7 +3232,7 @@ function AddBook({
     <div className="min-h-dvh px-5 pt-7 pb-6">
       <BackButton onClick={onBack} label="뒤로" />
 
-      <h1 className="mt-4 text-[28px] font-bold text-[#587fa3]">
+      <h1 className="mt-4 text-[28px] font-bold text-[#303236]">
         {initialBook ? "단어장 수정" : "단어장 추가"}
       </h1>
 
@@ -3277,7 +3277,7 @@ function AddBook({
                 })),
             });
           }}
-          className="h-12 w-full rounded-full bg-[#dceefa] text-[13px] font-bold text-[#385e7d]"
+          className="h-12 w-full rounded-full bg-[#dceefa] text-[13px] font-bold text-[#4b5058]"
         >
           저장
         </button>
@@ -3318,7 +3318,7 @@ function AddFolder({
     <div className="min-h-dvh px-5 pt-7 pb-6">
       <BackButton onClick={onBack} label="뒤로" />
 
-      <h1 className="mt-4 text-[28px] font-bold text-[#587fa3]">{titleText}</h1>
+      <h1 className="mt-4 text-[28px] font-bold text-[#303236]">{titleText}</h1>
 
       <div className="mt-7 space-y-4">
         <FolderSymbolPicker value={icon} onChange={setIcon} />
@@ -3359,7 +3359,7 @@ function AddFolder({
                   : initialFolder?.days || [],
             });
           }}
-          className="h-12 w-full rounded-full bg-[#dceefa] text-[13px] font-bold text-[#385e7d]"
+          className="h-12 w-full rounded-full bg-[#dceefa] text-[13px] font-bold text-[#4b5058]"
         >
           저장
         </button>
@@ -3385,7 +3385,7 @@ function AddDay({
     <div className="min-h-dvh px-5 pt-7 pb-6">
       <BackButton onClick={onBack} label="뒤로" />
 
-      <h1 className="mt-4 text-[28px] font-bold text-[#587fa3]">{titleText}</h1>
+      <h1 className="mt-4 text-[28px] font-bold text-[#303236]">{titleText}</h1>
 
       <div className="mt-7 space-y-4">
         <Input
@@ -3400,7 +3400,7 @@ function AddDay({
             if (!title.trim()) return alert("Day 이름을 입력해줘.");
             onSave(title.trim());
           }}
-          className="h-12 w-full rounded-full bg-[#dceefa] text-[13px] font-bold text-[#385e7d]"
+          className="h-12 w-full rounded-full bg-[#dceefa] text-[13px] font-bold text-[#4b5058]"
         >
           저장
         </button>
@@ -4332,7 +4332,7 @@ function AddWord({
 
       <BackButton onClick={onBack} label="뒤로" />
 
-      <h1 className="mt-4 text-[28px] font-bold text-[#587fa3]">
+      <h1 className="mt-4 text-[28px] font-bold text-[#303236]">
         {initialWord ? "단어 수정" : "단어 추가"}
       </h1>
 
@@ -4373,7 +4373,7 @@ function AddWord({
             <p className="pl-1.5 text-[12px] font-bold text-[#596275]">뜻</p>
             <button
               onClick={addMeaningGroup}
-              className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
+              className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#303236]"
             >
               + 품사 추가
             </button>
@@ -4420,7 +4420,7 @@ function AddWord({
                     }
                     className={`h-10 flex-1 rounded-xl border text-[12px] font-bold ${
                       group.numbered
-                        ? "border-[#587fa3] bg-[#eff7fc] text-[#587fa3]"
+                        ? "border-[#587fa3] bg-[#eff7fc] text-[#303236]"
                         : "border-[#ddeaf3] text-[#8a94a6]"
                     }`}
                   >
@@ -4490,7 +4490,7 @@ function AddWord({
             </p>
             <button
               onClick={addExample}
-              className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
+              className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#303236]"
             >
               + 예문 추가
             </button>
@@ -4578,7 +4578,7 @@ function AddWord({
 
             <button
               onClick={addStudyPoint}
-              className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
+              className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#303236]"
             >
               + 포인트 추가
             </button>
@@ -4695,7 +4695,7 @@ function AddWord({
                     <button
                       type="button"
                       onClick={() => addStudyPointVariant(index)}
-                      className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
+                      className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#303236]"
                     >
                       + 단어 추가
                     </button>
@@ -4791,7 +4791,7 @@ function AddWord({
                                   }
                                   className={`h-10 flex-1 rounded-xl border text-[12px] font-bold ${
                                     meaning.numbered
-                                      ? "border-[#587fa3] bg-[#eff7fc] text-[#587fa3]"
+                                      ? "border-[#587fa3] bg-[#eff7fc] text-[#303236]"
                                       : "border-[#ddeaf3] text-[#8a94a6]"
                                   }`}
                                 >
@@ -4867,7 +4867,7 @@ function AddWord({
                                       meaningIndex,
                                     )
                                   }
-                                  className="rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
+                                  className="rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#303236]"
                                 >
                                   + 뜻 추가
                                 </button>
@@ -4900,7 +4900,7 @@ function AddWord({
                             onClick={() =>
                               addStudyPointVariantMeaning(index, variantIndex)
                             }
-                            className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
+                            className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#303236]"
                           >
                             + 품사 추가
                           </button>
@@ -4919,7 +4919,7 @@ function AddWord({
                     <button
                       type="button"
                       onClick={() => addStudyPointExample(index)}
-                      className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
+                      className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#303236]"
                     >
                       + 예시 추가
                     </button>
@@ -5112,7 +5112,7 @@ function AddWord({
               createdAt: initialWord?.createdAt || new Date().toISOString(),
             });
           }}
-          className="h-12 w-full rounded-full bg-[#dceefa] text-[13px] font-bold text-[#385e7d]"
+          className="h-12 w-full rounded-full bg-[#dceefa] text-[13px] font-bold text-[#4b5058]"
         >
           저장
         </button>
@@ -5257,7 +5257,7 @@ function LinkedTermEditor({
 
         <button
           onClick={addItem}
-          className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
+          className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#303236]"
         >
           + 추가
         </button>
@@ -5399,7 +5399,7 @@ function ChipList({
   const wordChipClass =
     tone === "red"
       ? "rounded-full bg-[#fdeeee] px-3 py-1 text-[12px] leading-none ipad-chip text-[#b42318]"
-      : "rounded-full bg-[#eff7fc] px-3 py-1 text-[12px] leading-none ipad-chip text-[#587fa3]";
+      : "rounded-full bg-[#eff7fc] px-3 py-1 text-[12px] leading-none ipad-chip text-[#303236]";
 
   const labelClass =
     tone === "red"
@@ -5439,7 +5439,7 @@ function ChevronRight() {
 }
 
 function ChevronDownIcon() {
-  return <span aria-hidden="true" className="folder-symbol text-[20px]">▽</span>;
+  return <span aria-hidden="true" className="folder-symbol text-[14px]">▽</span>;
 }
 
 function HomeIcon() {
@@ -5837,7 +5837,7 @@ function ColorPalette({
           <button
             type="button"
             onClick={() => onAdd(newColor)}
-            className="h-7 rounded-md bg-[#dceefa] px-2 text-[10px] font-bold text-[#385e7d]"
+            className="h-7 rounded-md bg-[#dceefa] px-2 text-[10px] font-bold text-[#4b5058]"
           >
             추가
           </button>
@@ -5943,12 +5943,12 @@ function FolderTreeRows({
                     e.stopPropagation();
                     onToggle(folder.id);
                   }}
-                  className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#dceefa] text-[#385e7d] active:scale-95"
+                  className="ml-2 flex h-7 w-7 shrink-0 items-center justify-center text-[#8a8f98] active:scale-95"
                 >
                   <ChevronToggle open={open} />
                 </button>
               ) : (
-                <span className="ml-2 h-5 w-5 shrink-0" />
+                <span className="ml-2 h-7 w-7 shrink-0" />
               )}
             </div>
 
@@ -6026,7 +6026,7 @@ function MenuContentFolder({
         <button
           type="button"
           onClick={() => onSelectFolder(path)}
-          className={`min-w-0 flex-1 truncate text-left text-[13px] tracking-[-0.04em] ${isSelected ? "font-extrabold text-[#587fa3]" : "font-semibold text-[#47505f]"}`}
+          className={`min-w-0 flex-1 truncate text-left text-[13px] tracking-[-0.04em] ${isSelected ? "font-extrabold text-[#303236]" : "font-semibold text-[#47505f]"}`}
         >
           <FolderSymbol symbol={folder.icon} />{folder.title}
         </button>
@@ -6086,7 +6086,7 @@ function MenuContentDay({
         •
       </span>
       <span
-        className={`min-w-0 flex-1 truncate text-[13px] tracking-[-0.04em] ${selected ? "font-extrabold text-[#587fa3]" : "font-semibold text-[#47505f]"}`}
+        className={`min-w-0 flex-1 truncate text-[13px] tracking-[-0.04em] ${selected ? "font-extrabold text-[#303236]" : "font-semibold text-[#47505f]"}`}
       >
         {day.title}
       </span>
@@ -6125,7 +6125,7 @@ function MenuFolderTree({
     <div>
       <div
         className={`flex w-full items-center rounded-xl px-2.5 py-2 ${
-          isSelected ? "bg-[#f8fbff] text-[#587fa3]" : "text-[#111827]"
+          isSelected ? "bg-[#f8fbff] text-[#303236]" : "text-[#111827]"
         }`}
         style={{ paddingLeft: `${10 + depth * 14}px` }}
       >
@@ -6186,5 +6186,5 @@ function MenuFolderTree({
 }
 
 function ChevronToggle({ open }: { open: boolean }) {
-  return <span aria-hidden="true" className="folder-symbol inline-flex h-5 w-5 items-center justify-center text-[22px]">{open ? "△" : "▽"}</span>;
+  return <span aria-hidden="true" className="folder-symbol inline-flex h-5 w-5 items-center justify-center text-[14px]">{open ? "△" : "▽"}</span>;
 }
