@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import AppearanceSettings from "./AppearanceSettings";
-import LocationMenu from "./LocationMenu";
 import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
 import type { Dispatch, MutableRefObject, PointerEvent, ReactNode, SetStateAction } from "react";
 import { supabase } from "@/app/lib/supabase";
@@ -572,17 +571,17 @@ export default function MobileApp() {
     path: string[]
   ): Folder | undefined => {
     let current: Folder | undefined;
-  
+
     for (const id of path) {
       const list = current ? current.folders : folders;
       current = list.find((folder) => folder.id === id);
-  
+
       if (!current) return undefined;
     }
-  
+
     return current;
   };
-  
+
   const activeFolder = getCurrentFolder(books, folderPath);
   const selectedBook = books.find((book) => book.id === selectedBookId);
   const currentFolderTitle = activeFolder?.title || selectedBook?.title || "";
@@ -626,12 +625,12 @@ export default function MobileApp() {
       navigationKey,
       vocaIndex: window.history.state?.vocaIndex ?? 0,
     };
-  
+
     if (isHistoryMoving.current) {
       isHistoryMoving.current = false;
       return;
     }
-  
+
     if (isFirstHistoryState.current) {
       window.history.replaceState({ ...state, vocaIndex: 0 }, "", window.location.href);
       isFirstHistoryState.current = false;
@@ -645,15 +644,15 @@ export default function MobileApp() {
 
     window.history.pushState({ ...state, vocaIndex: state.vocaIndex + 1 }, "", window.location.href);
   }, [step, selectedBookId, folderPath, selectedDayId, wordIndex]);
-  
+
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       const state = event.state;
-  
+
       if (!state || typeof state.step !== "string") return;
-  
+
       isHistoryMoving.current = true;
-  
+
       setStep(state.step);
       setSelectedBookId(state.selectedBookId || "");
       setFolderPath(state.folderPath || []);
@@ -666,9 +665,9 @@ export default function MobileApp() {
       setActionDayId(null);
       setActionFolderId(null);
     };
-  
+
     window.addEventListener("popstate", handlePopState);
-  
+
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
@@ -676,20 +675,20 @@ export default function MobileApp() {
 
   useEffect(() => {
     const savedState = sessionStorage.getItem("vocab-flow-state");
-  
+
     if (savedState) {
       const parsed = JSON.parse(savedState);
-  
+
       setStep(parsed.step || "book");
       setSelectedBookId(parsed.selectedBookId || "");
       setFolderPath(parsed.folderPath || []);
       setSelectedDayId(parsed.selectedDayId || "");
       setWordIndex(parsed.wordIndex || 0);
     }
-  
+
     fetchBooks();
   }, []);
-  
+
   useEffect(() => {
     sessionStorage.setItem(
       "vocab-flow-state",
@@ -707,7 +706,7 @@ export default function MobileApp() {
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-  
+
     setIsStandalone(standalone);
   }, []);
 
@@ -788,7 +787,7 @@ export default function MobileApp() {
       document.removeEventListener("touchmove", handleTouchMove);
     };
   }, []);
-  
+
   function normalizeFolders(folders: any[]): Folder[] {
     return (folders || []).map((folder) => ({
       id: folder.id || crypto.randomUUID(),
@@ -806,48 +805,48 @@ export default function MobileApp() {
       .select("*")
       .limit(1)
       .maybeSingle();
-  
+
     if (error) {
       console.error(error);
       return;
     }
-  
+
     if (data?.data) {
       setBooks(normalizeFolders(data.data));
     }
   }
-  
+
   async function saveBooks(
     next: Book[] | ((prev: Book[]) => Book[])
   ) {
     const nextBooks =
       typeof next === "function" ? next(books) : next;
-  
+
     setBooks(nextBooks);
-  
+
     const { data: existing, error: selectError } = await supabase
       .from("vocab_data")
       .select("id")
       .limit(1)
       .maybeSingle();
-  
+
     if (selectError) {
       console.error(selectError);
       return;
     }
-  
+
     if (existing?.id) {
       const { error } = await supabase
         .from("vocab_data")
         .update({ data: nextBooks })
         .eq("id", existing.id);
-  
+
       if (error) console.error(error);
     } else {
       const { error } = await supabase
         .from("vocab_data")
         .insert({ data: nextBooks });
-  
+
       if (error) console.error(error);
     }
   }
@@ -888,52 +887,11 @@ export default function MobileApp() {
   };
 
 
-  const navigateToFolder = (path: string[]) => {
-    setSelectedBookId(path[0] || "");
-    setFolderPath(path);
-    setSelectedDayId("");
-    setWordIndex(0);
-    setShowMeaning(false);
-    setMenuOpen(false);
-    setBookDropdownOpen(false);
-    setActionFolderId(null);
-    setStep("day");
-  };
 
-  const renderLocationMenu = (title: string, includeCurrentFolder = false) => (
-    <LocationMenu
-      title={title}
-      ancestors={folderPath.slice(0, includeCurrentFolder ? undefined : -1).map((id, index) => ({
-        label: findFolderById(books, id)?.title || "폴더",
-        path: folderPath.slice(0, index + 1),
-      }))}
-      onHome={goHome}
-      onNavigate={navigateToFolder}
-      onBack={() => {
-        if (window.history.state?.vocaIndex > 0) window.history.back();
-        else if (includeCurrentFolder) navigateToFolder(folderPath);
-        else goBackFromDay();
-      }}
-    />
-  );
 
-  const goBackFromDay = () => {
-    setSelectedDayId("");
-    setWordIndex(0);
-    setShowMeaning(false);
-    setMenuOpen(false);
-    setBookDropdownOpen(false);
-    setActionWordIndex(null);
-    setActionDayId(null);
 
-    if (folderPath.length > 2) {
-      setFolderPath((prev) => prev.slice(0, -1));
-      setStep("day");
-      return;
-    }
 
-    goHome();
-  };
+
 
   const startStudy = (index: number) => {
     setWordIndex(index);
@@ -1072,10 +1030,10 @@ export default function MobileApp() {
 
     studySwipeMoved.current = true;
   };
-  
+
   const handleStudyPointerUp = (e: PointerEvent<HTMLDivElement>) => {
     if (!studyTapStart.current) return;
-  
+
     const movedX = Math.abs(e.clientX - studyTapStart.current.x);
     const movedY = Math.abs(e.clientY - studyTapStart.current.y);
 
@@ -1115,24 +1073,24 @@ export default function MobileApp() {
 
       return;
     }
-  
+
     if (movedX > 10 || movedY > 10) {
       resetStudySwipeState();
       updateStudySwipeDragX(0);
       return;
     }
-  
+
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-  
+
     if (y < 58) {
       resetStudySwipeState();
       return;
     }
-  
+
     const third = rect.width / 3;
-  
+
     if (x < third) {
       prevWord();
     } else if (x > third * 2) {
@@ -1140,7 +1098,7 @@ export default function MobileApp() {
     } else {
       setShowMeaning((prev) => !prev);
     }
-  
+
     resetStudySwipeState();
   };
 
@@ -1493,11 +1451,11 @@ export default function MobileApp() {
 
   const deleteWord = (targetIndex: number) => {
     if (!confirm("이 단어를 삭제할까?")) return;
-  
+
     saveBooks((prev) =>
       deleteWordFromPath(prev, folderPath, selectedDayId, targetIndex)
     );
-  
+
     setWordIndex(0);
     setShowMeaning(false);
     setActionWordIndex(null);
@@ -1537,24 +1495,24 @@ export default function MobileApp() {
         highlightColor: word.highlightColor === color ? "" : color,
       }))
     );
-  
+
     setSwipedIndex(null);
   };
 
   const deleteDay = (targetDayId: string) => {
     if (!confirm("이 Day를 삭제할까? 안에 있는 단어도 같이 삭제돼.")) return;
-  
+
     saveBooks((prev) =>
       deleteDayFromPath(prev, folderPath, targetDayId)
     );
-  
+
     if (selectedDayId === targetDayId) {
       setSelectedDayId("");
       setWordIndex(0);
       setShowMeaning(false);
       setStep("day");
     }
-  
+
     setActionDayId(null);
   };
 
@@ -1564,7 +1522,7 @@ export default function MobileApp() {
     newFolder: Folder
   ): Folder[] => {
     if (path.length === 0) return [...folders, newFolder];
-  
+
     return folders.map((folder) =>
       folder.id === path[0]
         ? {
@@ -1578,7 +1536,7 @@ export default function MobileApp() {
         : folder
     );
   };
-  
+
   const addDayToPath = (
     folders: Folder[],
     path: string[],
@@ -1766,18 +1724,18 @@ export default function MobileApp() {
           }
     );
   };
-  
+
   const findFolderById = (
     folders: Folder[],
     targetFolderId: string
   ): Folder | undefined => {
     for (const folder of folders) {
       if (folder.id === targetFolderId) return folder;
-  
+
       const found = findFolderById(folder.folders, targetFolderId);
       if (found) return found;
     }
-  
+
     return undefined;
   };
 
@@ -1788,13 +1746,13 @@ export default function MobileApp() {
   ): string[] | null => {
     for (const folder of folders) {
       const nextPath = [...path, folder.id];
-  
+
       if (folder.id === targetFolderId) return nextPath;
-  
+
       const found = findFolderPathById(folder.folders, targetFolderId, nextPath);
       if (found) return found;
     }
-  
+
     return null;
   };
 
@@ -1812,24 +1770,24 @@ export default function MobileApp() {
     direction: "up" | "down"
   ): Folder[] => {
     const index = folders.findIndex((folder) => folder.id === targetFolderId);
-  
+
     if (index !== -1) {
       const nextIndex = direction === "up" ? index - 1 : index + 1;
-  
+
       if (nextIndex < 0 || nextIndex >= folders.length) return folders;
-  
+
       const copied = [...folders];
       [copied[index], copied[nextIndex]] = [copied[nextIndex], copied[index]];
-  
+
       return copied;
     }
-  
+
     return folders.map((folder) => ({
       ...folder,
       folders: moveFolderOrder(folder.folders, targetFolderId, direction),
     }));
   };
-  
+
   const moveDayOrderFromPath = (
     folders: Folder[],
     path: string[],
@@ -1844,13 +1802,13 @@ export default function MobileApp() {
               days: (() => {
                 const index = folder.days.findIndex((day) => day.id === targetDayId);
                 if (index === -1) return folder.days;
-  
+
                 const nextIndex = direction === "up" ? index - 1 : index + 1;
                 if (nextIndex < 0 || nextIndex >= folder.days.length) return folder.days;
-  
+
                 const copied = [...folder.days];
                 [copied[index], copied[nextIndex]] = [copied[nextIndex], copied[index]];
-  
+
                 return copied;
               })(),
             }
@@ -1873,7 +1831,7 @@ export default function MobileApp() {
     targetFolderId: string | null
   ): Folder[] => {
     let movingFolder: Folder | null = null;
-  
+
     const removeFolder = (list: Folder[]): Folder[] =>
       list
         .filter((folder) => {
@@ -1887,21 +1845,21 @@ export default function MobileApp() {
           ...folder,
           folders: removeFolder(folder.folders),
         }));
-  
+
     const removed = removeFolder(folders);
     if (!movingFolder) return folders;
-  
+
     if (targetFolderId === null) {
       return [...removed, movingFolder];
     }
-  
+
     const insertFolder = (list: Folder[]): Folder[] =>
       list.map((folder) =>
         folder.id === targetFolderId
           ? { ...folder, folders: [...folder.folders, movingFolder!] }
           : { ...folder, folders: insertFolder(folder.folders) }
       );
-  
+
     return insertFolder(removed);
   };
 
@@ -1965,21 +1923,21 @@ export default function MobileApp() {
                     ),
                   };
                 }
-  
+
                 if (day.id === fromDayId) {
                   return {
                     ...day,
                     words: day.words.filter((_, i) => i !== targetIndex),
                   };
                 }
-  
+
                 if (day.id === toDayId) {
                   return {
                     ...day,
                     words: [...day.words, editedWord],
                   };
                 }
-  
+
                 return day;
               }),
             }
@@ -2039,7 +1997,7 @@ const getDayProgress = (day: Day) => {
   );
 };
 
-  
+
   return (
     <main className="min-h-[100svh] bg-white text-[#111827]">
       <section className="mx-auto min-h-[100svh] w-full max-w-[430px] bg-white">
@@ -2221,7 +2179,7 @@ const getDayProgress = (day: Day) => {
           <div className="min-h-dvh px-5 pt-7 pb-6">
 
             <div className="flex items-center justify-between">
-              {renderLocationMenu(activeFolder.title)}
+              <h1 className="mr-3 min-w-0 flex-1 truncate text-[28px] font-bold tracking-tight text-[#303236]">{activeFolder.title}</h1>
 
               <div className="flex gap-2">
                 <button
@@ -2342,7 +2300,7 @@ const getDayProgress = (day: Day) => {
           <div className="min-h-dvh px-5 pt-7 pb-6">
 
             <div className="flex items-center justify-between">
-              {renderLocationMenu(selectedDay.title, true)}
+              <h1 className="mr-3 min-w-0 flex-1 truncate text-[28px] font-bold tracking-tight text-[#303236]">{selectedDay.title}</h1>
 
               <div className="flex items-center gap-2">
                 <div className="relative h-8 w-8 shrink-0">
@@ -2436,22 +2394,22 @@ const getDayProgress = (day: Day) => {
                         aria-label="빨간색 표시"
                       />
                     </div>
-                
+
                     <button
                       onClick={() => startStudy(originalIndex)}
                       onTouchStart={(e) => {
                         touchStartX.current = e.touches[0].clientX;
                         setDraggingIndex(originalIndex);
-                
+
                         const base = swipedIndex === originalIndex ? SWIPE_WIDTH : 0;
                         setDragX(base);
                       }}
                       onTouchMove={(e) => {
                         if (touchStartX.current === null) return;
-                
+
                         const diff = e.touches[0].clientX - touchStartX.current;
                         const base = swipedIndex === originalIndex ? SWIPE_WIDTH : 0;
-                
+
                         setDragX(Math.max(0, Math.min(base + diff, SWIPE_WIDTH)));
                       }}
                       onTouchEnd={() => {
@@ -2460,7 +2418,7 @@ const getDayProgress = (day: Day) => {
                         } else {
                           setSwipedIndex(null);
                         }
-                
+
                         setDraggingIndex(null);
                         setDragX(0);
                         touchStartX.current = null;
@@ -2499,13 +2457,13 @@ const getDayProgress = (day: Day) => {
                                   key={`${group.pos}-${groupIndex}`}
                                   className="relative flex items-start gap-1.5"
                                 >
-                            
+
                                   <span
                                     className="mt-[1px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-[4px] bg-[#dceefa] text-[9px] font-bold text-[#4b5058]"
                                   >
                                     {group.pos}
                                   </span>
-                            
+
                                   <div
                                     className="mt-[0px] min-w-0 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.5] text-[#596275]"
                                   >
@@ -2530,7 +2488,7 @@ const getDayProgress = (day: Day) => {
                           </div>
                         )}
                         </div>
-                
+
                         <span
                           onClick={(e) => {
                             e.stopPropagation();
@@ -2964,7 +2922,7 @@ const getDayProgress = (day: Day) => {
                     saveBooks((prev) =>
                       moveFolderToFolder(prev, actionFolderId, targetId)
                     );
-                
+
                     setActionFolderId(null);
                     setSelectedBookId("");
                     setFolderPath([]);
@@ -3601,9 +3559,9 @@ function AddWord({
 
   const toLinkedTerms = (items?: (string | LinkedTerm)[]): LinkedTerm[] => {
     if (!items?.length) return [{ text: "", meaningRef: "", meaningLabel: "" }];
-  
+
     const grouped = new Map<string, LinkedTerm>();
-  
+
     items.forEach((item) => {
       const next =
         typeof item === "string"
@@ -3613,9 +3571,9 @@ function AddWord({
               meaningRef: item.meaningRef ?? "",
               meaningLabel: item.meaningLabel ?? "",
             };
-  
+
       const key = `${next.meaningRef || ""}__${next.meaningLabel || ""}`;
-  
+
       if (grouped.has(key)) {
         const prev = grouped.get(key)!;
         grouped.set(key, {
@@ -3626,14 +3584,14 @@ function AddWord({
         grouped.set(key, next);
       }
     });
-  
+
     return Array.from(grouped.values()).filter((item) => item.text);
   };
-  
+
   const [synonyms, setSynonyms] = useState<LinkedTerm[]>(
     toLinkedTerms(initialWord?.synonyms)
   );
-  
+
   const [antonyms, setAntonyms] = useState<LinkedTerm[]>(
     toLinkedTerms(initialWord?.antonyms)
   );
@@ -4125,7 +4083,7 @@ function AddWord({
       text: item,
     }))
   );
-  
+
   const cleanLinkedTerms = (items: LinkedTerm[]) =>
     items
       .map((item) => ({
@@ -4979,16 +4937,16 @@ function ChipList({
 
   const formatLabel = (label?: string, ref?: string) => {
     if (!label) return "";
-  
+
     const [pos, num] = label.split(" ");
-  
+
     if (!ref) return pos;
-  
+
     const [groupIndex] = ref.split(":").map(Number);
     const group = meanings[groupIndex];
-  
+
     if (!group?.numbered) return pos;
-  
+
     const displayNum = circledNums[Number(num) - 1] || num;
     return num ? `${pos} ${displayNum}` : pos;
   };
@@ -4999,15 +4957,15 @@ function ChipList({
       typeof item === "string"
         ? ""
         : formatLabel(item.meaningLabel, item.meaningRef);
-  
+
     const words = text
       .split(",")
       .map((word) => word.trim())
       .filter(Boolean);
-  
+
     if (!acc[label]) acc[label] = [];
     acc[label].push(...words);
-  
+
     return acc;
   }, {});
 

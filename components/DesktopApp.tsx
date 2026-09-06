@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import AppearanceSettings from "./AppearanceSettings";
-import LocationMenu from "./LocationMenu";
 import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
 import type {
   Dispatch,
@@ -605,52 +604,11 @@ export default function DesktopApp() {
     setStep("wordList");
   };
 
-  const navigateToFolder = (path: string[]) => {
-    setSelectedBookId(path[0] || "");
-    setFolderPath(path);
-    setSelectedDayId("");
-    setWordIndex(0);
-    setShowMeaning(false);
-    setMenuOpen(false);
-    setBookDropdownOpen(false);
-    setActionFolderId(null);
-    setStep("day");
-  };
 
-  const renderLocationMenu = (title: string, includeCurrentFolder = false) => (
-    <LocationMenu
-      title={title}
-      ancestors={folderPath.slice(0, includeCurrentFolder ? undefined : -1).map((id, index) => ({
-        label: findFolderById(books, id)?.title || "폴더",
-        path: folderPath.slice(0, index + 1),
-      }))}
-      onHome={goHome}
-      onNavigate={navigateToFolder}
-      onBack={() => {
-        if (window.history.state?.vocaIndex > 0) window.history.back();
-        else if (includeCurrentFolder) navigateToFolder(folderPath);
-        else goBackFromDay();
-      }}
-    />
-  );
 
-  const goBackFromDay = () => {
-    setSelectedDayId("");
-    setWordIndex(0);
-    setShowMeaning(false);
-    setMenuOpen(false);
-    setBookDropdownOpen(false);
-    setActionWordIndex(null);
-    setActionDayId(null);
 
-    if (folderPath.length > 2) {
-      setFolderPath((prev) => prev.slice(0, -1));
-      setStep("day");
-      return;
-    }
 
-    goHome();
-  };
+
 
   const startStudy = (index: number) => {
     setWordIndex(index);
@@ -1569,7 +1527,7 @@ export default function DesktopApp() {
           <div className="-mx-3 min-h-dvh bg-white px-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8">
 
             <div className="pt-8 flex w-full items-center justify-between px-8 sm:px-10 md:px-11 lg:px-[52px]">
-              {renderLocationMenu(activeFolder.title)}
+              <h1 className="mr-3 min-w-0 flex-1 truncate text-[28px] font-bold tracking-tight text-[#303236]">{activeFolder.title}</h1>
 
               <div className="flex gap-2">
                 <button
@@ -1689,7 +1647,7 @@ export default function DesktopApp() {
           <div className="-mx-3 min-h-dvh bg-white px-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8">
 
             <div className="pt-8 flex w-full items-center justify-between px-8 sm:px-10 md:px-11 lg:px-[52px]">
-              {renderLocationMenu(selectedDay.title, true)}
+              <h1 className="mr-3 min-w-0 flex-1 truncate text-[28px] font-bold tracking-tight text-[#303236]">{selectedDay.title}</h1>
 
               <div className="flex items-center gap-2">
                 <div className="relative h-8 w-8 shrink-0">
