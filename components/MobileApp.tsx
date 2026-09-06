@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import useNavigationHistory from "./useNavigationHistory";
 import { isNavigationEntry, mainScreen, type Screen } from "@/lib/navigationHistory";
+import WordOptionsMenu from "./WordOptionsMenu";
 import AppearanceSettings from "./AppearanceSettings";
 import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
 import type { Dispatch, MutableRefObject, PointerEvent, ReactNode, SetStateAction } from "react";
@@ -2246,26 +2247,10 @@ const getDayProgress = (day: Day) => {
               <h1 className="mr-3 min-w-0 flex-1 truncate text-[28px] font-bold tracking-tight text-[#303236]">{selectedDay.title}</h1>
 
               <div className="flex items-center gap-2">
-                <div className="relative h-8 w-8 shrink-0">
-                  <select
-                    value={wordSortOrder}
-                    onChange={(e) => setWordSortOrder(e.target.value as "latest" | "oldest")}
-                    className="absolute inset-0 z-10 h-8 w-8 cursor-pointer appearance-none opacity-0"
-                    aria-label="정렬"
-                  >
-                    <option value="latest">최신순</option>
-                    <option value="oldest">오래된순</option>
-                  </select>
-
-                  <div className="pointer-events-none flex h-8 w-8 items-center justify-center text-[#8a94a6]">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <path d="M4 8H20" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
-                      <circle cx="9" cy="8" r="2.7" fill="white" stroke="currentColor" strokeWidth="2.3" />
-                      <path d="M4 16H20" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
-                      <circle cx="15" cy="16" r="2.7" fill="white" stroke="currentColor" strokeWidth="2.3" />
-                    </svg>
-                  </div>
-                </div>
+                <WordOptionsMenu mode="list" sort={wordSortOrder}
+                  onToggleSort={() => setWordSortOrder(value => value === "latest" ? "oldest" : "latest")}
+                  view={wordViewMode} onToggleView={() => setWordViewMode(value => value === "all" ? "unmemorized" : "all")}
+                  meanings={showListMeanings} onToggleMeanings={() => setShowListMeanings(value => !value)} />
 
                 <button
                   onClick={() => setStep("addWord")}
@@ -2275,37 +2260,6 @@ const getDayProgress = (day: Day) => {
                 </button>
               </div>
             </div>
-
-            <div className="mt-4 flex rounded-full bg-[#f5f6fa] p-1">
-              <button
-                onClick={() => setWordViewMode("all")}
-                className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
-                  wordViewMode === "all"
-                    ? "bg-white text-[#303236] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
-                    : "text-[#8a94a6]"
-                }`}
-              >
-                전체보기
-              </button>
-
-              <button
-                onClick={() => setWordViewMode("unmemorized")}
-                className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
-                  wordViewMode === "unmemorized"
-                    ? "bg-white text-[#303236] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
-                    : "text-[#8a94a6]"
-                }`}
-              >
-                미암기만
-              </button>
-            </div>
-
-            <button
-              onClick={() => setShowListMeanings((prev) => !prev)}
-              className="mt-2 h-8 w-full rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275]"
-            >
-              {showListMeanings ? "뜻 숨기기" : "뜻 보기"}
-            </button>
 
             <div className="mt-7 space-y-2">
               {visibleSortedWords.length === 0 ? (
@@ -2461,7 +2415,7 @@ const getDayProgress = (day: Day) => {
             <EnglishAccentSelector className="fixed left-3 top-[62px] z-40" />
             <header
               onClick={(e) => e.stopPropagation()}
-              className="flex h-10 shrink-0 items-center justify-between"
+              className="relative flex h-10 shrink-0 items-center justify-between"
             >
               <div className="flex items-center gap-1">
                 <button
@@ -2481,141 +2435,15 @@ const getDayProgress = (day: Day) => {
                 </button>
               </div>
 
-              <p className="max-w-[160px] truncate text-center text-[11px] text-[#596275]">
-                {currentFolderTitle} 〉 {selectedDay.title} 〉{" "}
-                {`${visibleSortedWords.length ? visibleSortedWords.findIndex((item) => item.originalIndex === wordIndex) + 1 : 0} / ${visibleSortedWords.length}`}
+              <p className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-center text-[13px] tabular-nums text-[#737b89]">
+                {`${visibleSortedWords.length ? visibleSortedWords.findIndex((item) => item.originalIndex === wordIndex) + 1 : 0}/${visibleSortedWords.length}`}
               </p>
 
-              <div className="flex items-center gap-1">
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setWordViewMode((prev) =>
-                    prev === "all" ? "unmemorized" : "all"
-                  );
-                }}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f5f6fa] text-[#596275] active:scale-95"
-                aria-label="보기 변경"
-              >
-                {wordViewMode === "all" ? (
-                  // 전체보기 아이콘 (눈 + 빗금)
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M4 12C6.5 7.5 9.5 5 12 5C14.5 5 17.5 7.5 20 12C17.5 16.5 14.5 19 12 19C9.5 19 6.5 16.5 4 12Z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="2.5"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M5 19L19 5"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                ) : (
-                  // 미암기만 아이콘 (눈)
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M4 12C6.5 7.5 9.5 5 12 5C14.5 5 17.5 7.5 20 12C17.5 16.5 14.5 19 12 19C9.5 19 6.5 16.5 4 12Z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="2.5"
-                      fill="currentColor"
-                    />
-                  </svg>
-                )}
-              </button>
-
-              <button
-                onClick={() => { editWordReturnStep.current = "study"; setStep("editWord"); }}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-[#303236] active:scale-95"
-                aria-label="수정"
-              >
-                <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M4.5 19.5L8.8 18.6L18.9 8.5C19.5 7.9 19.5 6.9 18.9 6.3L17.7 5.1C17.1 4.5 16.1 4.5 15.5 5.1L5.4 15.2L4.5 19.5Z"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M14.4 6.2L17.8 9.6"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-
-              <button
-                onClick={() => deleteWord(wordIndex)}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-[#cf231c] active:scale-95"
-                aria-label="삭제"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  {/* 손잡이 */}
-                  <rect
-                    x="9"
-                    y="3.8"
-                    width="6"
-                    height="2.2"
-                    rx="1.1"
-                    fill="currentColor"
-                  />
-
-                  {/* 뚜껑 */}
-                  <rect
-                    x="4"
-                    y="6.2"
-                    width="16"
-                    height="2.4"
-                    rx="1.2"
-                    fill="currentColor"
-                  />
-
-                  {/* 몸통 */}
-                  <path
-                    d="M7.3 9.2H16.7L15.9 19C15.82 19.95 15.03 20.7 14.08 20.7H9.92C8.97 20.7 8.18 19.95 8.1 19L7.3 9.2Z"
-                    stroke="currentColor"
-                    strokeWidth="2.3"
-                    strokeLinejoin="round"
-                    fill="white"
-                  />
-
-                  {/* 내부선 */}
-                  <rect
-                    x="9.5"
-                    y="11.4"
-                    width="1.9"
-                    height="5.8"
-                    rx="0.95"
-                    fill="currentColor"
-                  />
-
-                  <rect
-                    x="12.6"
-                    y="11.4"
-                    width="1.9"
-                    height="5.8"
-                    rx="0.95"
-                    fill="currentColor"
-                  />
-                </svg>
-              </button>
-              </div>
+              <WordOptionsMenu mode="study" view={wordViewMode}
+                onToggleView={() => setWordViewMode(value => value === "all" ? "unmemorized" : "all")}
+                disabled={!currentWord}
+                onEdit={() => { editWordReturnStep.current = "study"; setStep("editWord"); }}
+                onDelete={() => deleteWord(wordIndex)} />
             </header>
 
             {!currentWord ? (

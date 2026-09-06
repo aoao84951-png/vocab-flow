@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import useNavigationHistory from "./useNavigationHistory";
 import { isNavigationEntry, mainScreen, type Screen } from "@/lib/navigationHistory";
+import WordOptionsMenu from "./WordOptionsMenu";
 import AppearanceSettings from "./AppearanceSettings";
 import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
 import type {
@@ -1593,52 +1594,10 @@ export default function DesktopApp() {
               <h1 className="mr-3 min-w-0 flex-1 truncate text-[28px] font-bold tracking-tight text-[#303236]">{selectedDay.title}</h1>
 
               <div className="flex items-center gap-2">
-                <div className="relative h-8 w-8 shrink-0">
-                  <select
-                    value={wordSortOrder}
-                    onChange={(e) =>
-                      setWordSortOrder(e.target.value as "latest" | "oldest")
-                    }
-                    className="absolute inset-0 z-10 h-8 w-8 cursor-pointer appearance-none opacity-0"
-                    aria-label="정렬"
-                  >
-                    <option value="latest">최신순</option>
-                    <option value="oldest">오래된순</option>
-                  </select>
-
-                  <div className="pointer-events-none flex h-8 w-8 items-center justify-center text-[#8a94a6]">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M4 8H20"
-                        stroke="currentColor"
-                        strokeWidth="2.3"
-                        strokeLinecap="round"
-                      />
-                      <circle
-                        cx="9"
-                        cy="8"
-                        r="2.7"
-                        fill="white"
-                        stroke="currentColor"
-                        strokeWidth="2.3"
-                      />
-                      <path
-                        d="M4 16H20"
-                        stroke="currentColor"
-                        strokeWidth="2.3"
-                        strokeLinecap="round"
-                      />
-                      <circle
-                        cx="15"
-                        cy="16"
-                        r="2.7"
-                        fill="white"
-                        stroke="currentColor"
-                        strokeWidth="2.3"
-                      />
-                    </svg>
-                  </div>
-                </div>
+                <WordOptionsMenu mode="list" sort={wordSortOrder}
+                  onToggleSort={() => setWordSortOrder(value => value === "latest" ? "oldest" : "latest")}
+                  view={wordViewMode} onToggleView={() => setWordViewMode(value => value === "all" ? "unmemorized" : "all")}
+                  meanings={showListMeanings} onToggleMeanings={() => setShowListMeanings(value => !value)} />
 
                 <button
                   onClick={() => setStep("addWord")}
@@ -1648,37 +1607,6 @@ export default function DesktopApp() {
                 </button>
               </div>
             </div>
-
-            <div className="mx-8 mt-4 flex rounded-full bg-[#f5f6fa] p-1 sm:mx-10 md:mx-11 lg:mx-[52px]">
-              <button
-                onClick={() => setWordViewMode("all")}
-                className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
-                  wordViewMode === "all"
-                    ? "bg-white text-[#303236] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
-                    : "text-[#8a94a6]"
-                }`}
-              >
-                전체보기
-              </button>
-
-              <button
-                onClick={() => setWordViewMode("unmemorized")}
-                className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
-                  wordViewMode === "unmemorized"
-                    ? "bg-white text-[#303236] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
-                    : "text-[#8a94a6]"
-                }`}
-              >
-                미암기만
-              </button>
-            </div>
-
-            <button
-              onClick={() => setShowListMeanings((prev) => !prev)}
-              className="mx-8 mt-2 block h-8 w-[calc(100%-64px)] rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275] sm:mx-10 sm:w-[calc(100%-80px)] md:mx-11 md:w-[calc(100%-88px)] lg:mx-[52px] lg:w-[calc(100%-104px)]"
-            >
-              {showListMeanings ? "뜻 숨기기" : "뜻 보기"}
-            </button>
 
             <div className="mt-5 w-full space-y-1 px-8 sm:px-10 md:px-11 lg:px-[52px]">
               {visibleSortedWords.length === 0 ? (
