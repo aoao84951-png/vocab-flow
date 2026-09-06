@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import useNavigationHistory from "./useNavigationHistory";
 import { isNavigationEntry, mainScreen, type Screen } from "@/lib/navigationHistory";
+import WordSearch from "./WordSearch";
+import { matchesWordSearch } from "@/lib/wordSearch";
 import WordOptionsMenu from "./WordOptionsMenu";
 import AppearanceSettings from "./AppearanceSettings";
 import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
@@ -400,9 +402,13 @@ export default function DesktopApp() {
         })
     : [];
 
+  const [search, setSearch] = useState({ dayId: "", query: "" });
+  const searchQuery = search.dayId === selectedDayId ? search.query : "";
   const visibleSortedWords = sortedWords.filter(({ word }) =>
     wordViewMode === "all" ? true : !word.memorized,
   );
+
+  const searchedWords = visibleSortedWords.filter(({ word }) => matchesWordSearch(word, searchQuery));
 
   const studyIndexes = words
     .map((word, originalIndex) => ({ word, originalIndex }))
@@ -1608,11 +1614,15 @@ export default function DesktopApp() {
               </div>
             </div>
 
+            <div className="px-8 sm:px-10 md:px-11 lg:px-[52px]">
+              <WordSearch query={searchQuery} onChange={query => setSearch({ dayId: selectedDayId, query })} total={words.length} shown={searchedWords.length} />
+            </div>
+
             <div className="mt-5 w-full space-y-1 px-8 sm:px-10 md:px-11 lg:px-[52px]">
-              {visibleSortedWords.length === 0 ? (
-                <Empty text="이 Day에는 아직 단어가 없어." />
+              {searchedWords.length === 0 ? (
+                <Empty text={searchQuery.trim() ? "검색 결과가 없어." : words.length ? "미암기 단어가 없어." : "이 Day에는 아직 단어가 없어."} />
               ) : (
-                visibleSortedWords.map(({ word: item, originalIndex }) => (
+                searchedWords.map(({ word: item, originalIndex }) => (
                   <div
                     key={item.id}
                     className={`relative overflow-hidden rounded-[18px] ${
@@ -1787,78 +1797,14 @@ export default function DesktopApp() {
               </div>
 
               <p className="min-w-0 flex-1 truncate px-3 text-center text-[12px] font-semibold tracking-[-0.01em] text-[#596275]">
-                {currentFolderTitle} 〉 {selectedDay.title} 〉{" "}
-                {`${visibleSortedWords.length ? visibleSortedWords.findIndex((item) => item.originalIndex === wordIndex) + 1 : 0} / ${visibleSortedWords.length}`}
+                {`${visibleSortedWords.length ? visibleSortedWords.findIndex((item) => item.originalIndex === wordIndex) + 1 : 0}/${visibleSortedWords.length}`}
               </p>
 
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setWordViewMode((prev) =>
-                      prev === "all" ? "unmemorized" : "all",
-                    );
-                  }}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f5f6fa] text-[#596275] active:scale-95"
-                  aria-label="보기 변경"
-                >
-                  {wordViewMode === "all" ? (
-                    // 전체보기 아이콘 (눈 + 빗금)
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M4 12C6.5 7.5 9.5 5 12 5C14.5 5 17.5 7.5 20 12C17.5 16.5 14.5 19 12 19C9.5 19 6.5 16.5 4 12Z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      />
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="2.5"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      />
-                      <path
-                        d="M5 19L19 5"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  ) : (
-                    // 미암기만 아이콘 (눈)
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M4 12C6.5 7.5 9.5 5 12 5C14.5 5 17.5 7.5 20 12C17.5 16.5 14.5 19 12 19C9.5 19 6.5 16.5 4 12Z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      />
-                      <circle cx="12" cy="12" r="2.5" fill="currentColor" />
-                    </svg>
-                  )}
-                </button>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActionWordIndex(wordIndex);
-                  }}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-[#303236] active:scale-95"
-                  aria-label="단어 메뉴"
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="9.2"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                    />
-                    <circle cx="8.5" cy="12" r="1.15" fill="currentColor" />
-                    <circle cx="12" cy="12" r="1.15" fill="currentColor" />
-                    <circle cx="15.5" cy="12" r="1.15" fill="currentColor" />
-                  </svg>
-                </button>
-              </div>
+              <WordOptionsMenu mode="study" view={wordViewMode}
+                onToggleView={() => setWordViewMode(value => value === "all" ? "unmemorized" : "all")}
+                disabled={!currentWord}
+                onEdit={() => { editWordReturnStep.current = "study"; setStep("editWord"); }}
+                onDelete={() => deleteWord(wordIndex)} />
             </header>
 
             {!currentWord ? (

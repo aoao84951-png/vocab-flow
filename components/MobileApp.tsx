@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import useNavigationHistory from "./useNavigationHistory";
 import { isNavigationEntry, mainScreen, type Screen } from "@/lib/navigationHistory";
+import WordSearch from "./WordSearch";
+import { matchesWordSearch } from "@/lib/wordSearch";
 import WordOptionsMenu from "./WordOptionsMenu";
 import AppearanceSettings from "./AppearanceSettings";
 import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
@@ -601,10 +603,14 @@ export default function MobileApp() {
       })
   : [];
 
+  const [search, setSearch] = useState({ dayId: "", query: "" });
+  const searchQuery = search.dayId === selectedDayId ? search.query : "";
   const visibleSortedWords = sortedWords.filter(({ word }) =>
     wordViewMode === "all" ? true : !word.memorized
   );
 
+
+  const searchedWords = visibleSortedWords.filter(({ word }) => matchesWordSearch(word, searchQuery));
 
   const studyIndexes = words
     .map((word, originalIndex) => ({ word, originalIndex }))
@@ -2261,11 +2267,15 @@ const getDayProgress = (day: Day) => {
               </div>
             </div>
 
+            <div className="">
+              <WordSearch query={searchQuery} onChange={query => setSearch({ dayId: selectedDayId, query })} total={words.length} shown={searchedWords.length} />
+            </div>
+
             <div className="mt-7 space-y-2">
-              {visibleSortedWords.length === 0 ? (
-                <Empty text="이 Day에는 아직 단어가 없어." />
+              {searchedWords.length === 0 ? (
+                <Empty text={searchQuery.trim() ? "검색 결과가 없어." : words.length ? "미암기 단어가 없어." : "이 Day에는 아직 단어가 없어."} />
               ) : (
-                visibleSortedWords.map(({ word: item, originalIndex }) => (
+                searchedWords.map(({ word: item, originalIndex }) => (
                   <div
                     key={item.id}
                     className={`relative overflow-hidden rounded-[18px] ${
@@ -2426,13 +2436,7 @@ const getDayProgress = (day: Day) => {
                   ☰
                 </button>
 
-                <button
-                  onClick={() => setStep("wordList")}
-                  className="flex h-9 w-9 items-center justify-center pt-[2px] text-[#303236]"
-                  aria-label="뒤로가기"
-                >
-                  <ChevronLeft />
-                </button>
+
               </div>
 
               <p className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-center text-[13px] tabular-nums text-[#737b89]">
