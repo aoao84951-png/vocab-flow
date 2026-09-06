@@ -20,3 +20,21 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@font-face {
+  font-family: "Summer Melody";
+  src: url("/fonts/aa-summer-melody.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+html[data-app-font="summer"] body {
+  font-family: "Summer Melody", Arial, sans-serif;
+  --font-sans: "Summer Melody", Arial, sans-serif;
+}
+
+.folder-symbol {
+  font-family: "Summer Melody", sans-serif;
+  line-height: 1;
+}

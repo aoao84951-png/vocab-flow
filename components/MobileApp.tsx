@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import AppearanceSettings from "./AppearanceSettings";
+import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
 import type { Dispatch, MutableRefObject, PointerEvent, ReactNode, SetStateAction } from "react";
 import { supabase } from "@/app/lib/supabase";
 import EnglishAccentSelector, { getSelectedEnglishVoice } from "./EnglishAccentSelector";
@@ -74,6 +76,7 @@ type Day = {
 };
 
 type Folder = {
+  icon?: string;
   id: string;
   title: string;
   desc?: string;
@@ -785,6 +788,7 @@ export default function MobileApp() {
     return (folders || []).map((folder) => ({
       id: folder.id || crypto.randomUUID(),
       title: folder.title || "",
+      icon: typeof folder.icon === "string" ? folder.icon : "#",
       desc: folder.desc || "",
       folders: normalizeFolders(folder.folders || []),
       days: folder.days || [],
@@ -2046,6 +2050,8 @@ const getDayProgress = (day: Day) => {
             </div>
           </div>
 
+          <AppearanceSettings />
+
           <div className="mt-7">
             {books.length === 0 ? (
               <Empty text="아직 단어장이 없어. 먼저 단어장을 추가해줘." />
@@ -2054,7 +2060,8 @@ const getDayProgress = (day: Day) => {
                 const isOpen = expandedFolderIds.includes(book.id);
 
                 return (
-                  <div key={book.id}>
+                  <div key={book.id} className="relative">
+                      <button type="button" aria-label={`${book.title} 폴더 설정`} onClick={() => { setSelectedBookId(book.id); setActionFolderId(book.id); }} title="폴더 설정" className="folder-symbol absolute left-0 top-2 z-10 flex h-10 w-5 items-center justify-center rounded-lg text-[21px] text-[#858b94] focus-visible:outline-2 focus-visible:outline-[#0f2a5f]">{book.icon || "#"}</button>
                     <button
                       onClick={() => {
                         if (didLongPressFolder.current) {
@@ -2098,19 +2105,7 @@ const getDayProgress = (day: Day) => {
                         isOpen ? "border-b border-[#e5e7eb]" : ""
                       }`}
                     >
-                      <span
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`"${book.title}" 안에 하위 폴더를 추가할까?`)) {
-                            setSelectedBookId(book.id);
-                            setFolderPath([book.id]);
-                            setStep("addFolder");
-                          }
-                        }}
-                        className="mr-3 flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-[5px] border border-[#9ca3af] text-[15px] font-light leading-none text-[#8a8f98] active:scale-95"
-                      >
-                        +
-                      </span>
+                      <span aria-hidden="true" className="mr-3 w-5 shrink-0" />
 
                       <div className="min-w-0 flex-1">
                         <span className="truncate text-[16px] font-medium tracking-[-0.03em] text-[#303236]">
@@ -2174,7 +2169,7 @@ const getDayProgress = (day: Day) => {
                         >
                           <div className="min-w-0 flex-1">
                             <span className="truncate text-[16px] font-normal tracking-[-0.03em] text-[#666a70]">
-                              {folder.title}
+                              <FolderSymbol symbol={folder.icon} />{folder.title}
                             </span>
                           </div>
                         </button>
@@ -2903,6 +2898,7 @@ const getDayProgress = (day: Day) => {
                 editFolderInPath(prev, actionFolderId, (folder) => ({
                   ...folder,
                   title: editedFolder.title,
+                  icon: editedFolder.icon,
                   days: editedFolder.days.length ? editedFolder.days : folder.days,
                 }))
               );
@@ -3089,7 +3085,7 @@ const getDayProgress = (day: Day) => {
                       className="w-full rounded-[16px] border border-[#e4e8f0] bg-[#f8fafc] px-3 py-4 text-left"
                     >
                       <p className="text-[17px] font-bold text-[#111827]">
-                        {folder.title}
+                        <FolderSymbol symbol={folder.icon} />{folder.title}
                       </p>
 
                       <p className="mt-1 text-[10px] text-[#a3abb8]">
@@ -3472,6 +3468,7 @@ function AddFolder({
   onSave: (folder: Folder) => void;
 }) {
   const [title, setTitle] = useState(initialFolder?.title || "");
+  const [icon, setIcon] = useState(initialFolder?.icon || "#");
   const [dayCount, setDayCount] = useState("");
 
   return (
@@ -3483,6 +3480,7 @@ function AddFolder({
       </h1>
 
       <div className="mt-7 space-y-4">
+        <FolderSymbolPicker value={icon} onChange={setIcon} />
         <Input
           label={labelText}
           value={title}
@@ -3507,6 +3505,7 @@ function AddFolder({
             onSave({
               id: initialFolder?.id || crypto.randomUUID(),
               title: title.trim(),
+              icon: icon || "#",
               desc: "",
               folders: initialFolder?.folders || [],
               days:
@@ -5163,7 +5162,7 @@ function MoveFolderList({
           disabled ? "opacity-35" : ""
         }`}
       >
-        {folder.title}
+        <FolderSymbol symbol={folder.icon} />{folder.title}
       </button>
 
       {folder.folders.length > 0 && (
@@ -5556,7 +5555,7 @@ function FolderTreeRows({
                       : "text-[14px] font-medium text-[#666a70]"
                   }`}
                 >
-                  {folder.title}
+                  <FolderSymbol symbol={folder.icon} />{folder.title}
                 </span>
               </button>
 
@@ -5645,7 +5644,7 @@ function MenuFolderTree({
                 : "text-[12px] font-semibold"
             }`}
           >
-            {folder.title}
+            <FolderSymbol symbol={folder.icon} />{folder.title}
           </p>
 
           {hasChildren && (
