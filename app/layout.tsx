@@ -13,12 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VOCAB FLOW",
-  description: "VOCAB FLOW",
+  title: "ᴠᴏᴄᴀ",
+  description: "ᴠᴏᴄᴀ",
 
   appleWebApp: {
     capable: true,
-    title: "VOCAB FLOW",
+    title: "ᴠᴏᴄᴀ",
     statusBarStyle: "default",
   },
 };

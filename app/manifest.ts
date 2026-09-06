@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "VOCAB FLOW",
-    short_name: "VOCAB FLOW",
-    description: "VOCAB FLOW",
+    name: "ᴠᴏᴄᴀ",
+    short_name: "ᴠᴏᴄᴀ",
+    description: "ᴠᴏᴄᴀ",
     id: "/",
     start_url: "/",
     scope: "/",
