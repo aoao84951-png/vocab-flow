@@ -1570,66 +1570,13 @@ export default function DesktopApp() {
                         : "bg-[#f1f3f6]"
                     } ${item.memorized ? "opacity-45" : ""}`}
                   >
-                    <div className="absolute inset-y-0 left-0 flex w-[145px] items-center justify-center gap-10 bg-[#eef0f3]">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          changeWordColor(originalIndex, "blue");
-                        }}
-                        className="h-[11px] w-[11px] rounded-full border border-white bg-[#3b82f6] shadow-[0_1px_3px_rgba(15,23,42,0.18)]"
-                        aria-label="파란색 표시"
-                      />
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          changeWordColor(originalIndex, "red");
-                        }}
-                        className="h-[11px] w-[11px] rounded-full border border-white bg-[#ef4444] shadow-[0_1px_3px_rgba(15,23,42,0.18)]"
-                        aria-label="빨간색 표시"
-                      />
-                    </div>
-
                     <button
                       onClick={() => startStudy(originalIndex)}
-                      onTouchStart={(e) => {
-                        touchStartX.current = e.touches[0].clientX;
-                        setDraggingIndex(originalIndex);
-
-                        const base =
-                          swipedIndex === originalIndex ? SWIPE_WIDTH : 0;
-                        setDragX(base);
-                      }}
-                      onTouchMove={(e) => {
-                        if (touchStartX.current === null) return;
-
-                        const diff = e.touches[0].clientX - touchStartX.current;
-                        const base =
-                          swipedIndex === originalIndex ? SWIPE_WIDTH : 0;
-
-                        setDragX(
-                          Math.max(0, Math.min(base + diff, SWIPE_WIDTH)),
-                        );
-                      }}
-                      onTouchEnd={() => {
-                        if (dragX > SWIPE_WIDTH / 2) {
-                          setSwipedIndex(originalIndex);
-                        } else {
-                          setSwipedIndex(null);
-                        }
-
-                        setDraggingIndex(null);
-                        setDragX(0);
-                        touchStartX.current = null;
-                      }}
                       className={`relative z-10 w-full rounded-[18px] border px-4 py-4 text-left shadow-[0_3px_10px_rgba(15,23,42,0.04)] transition-transform active:scale-[0.99] ${
                         item.importanceStars
                           ? "border-[#b9c9ed] bg-[#f8fbff] shadow-[0_5px_16px_rgba(88,127,163,0.10)]"
                           : "border-[#e4e8f0] bg-white"
                       }`}
-                      style={{
-                        transform: `translateX(${getSwipeX(originalIndex)}px)`,
-                      }}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
