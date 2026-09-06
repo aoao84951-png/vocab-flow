@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCw, Settings2 } from "lucide-react";
+import { RotateCw, Settings2, Type } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 const FONT_KEY = "voca-font";
@@ -86,16 +86,16 @@ export function AppearanceActions() {
               document.documentElement.dataset.appFont = nextFont;
               window.dispatchEvent(new Event(CHANGE_EVENT));
             }}
-            className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-[#666a70] transition-colors hover:bg-[#f5f9fc]"
+            className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-[#4b5058] transition-colors hover:bg-[#f5f9fc]"
           >
-            <span aria-hidden="true" className="font-serif text-[22px] leading-none">T</span>
-            <span className="flex-1 text-[14px] font-medium">글꼴</span>
-            <span aria-live="polite" className="rounded-full bg-[#eaf4fb] px-2.5 py-1 text-[11px] font-medium text-[#626970]">{font === "summer" ? "여름소리" : "기본"}</span>
+            <span aria-hidden="true" className="flex h-[18px] w-[18px] shrink-0 items-center justify-center"><Type size={16} strokeWidth={1.6} /></span>
+            <span className="flex-1 text-sm">글꼴</span>
+            <span aria-live="polite" className="ml-auto rounded-full bg-[#eaf4fc] px-2.5 py-1 text-xs text-[#4b5058]">{font === "summer" ? "여름소리" : "기본"}</span>
           </button>
           <button type="button" onClick={() => window.location.reload()}
-            className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-[#666a70] transition-colors hover:bg-[#f5f9fc]">
-            <RotateCw aria-hidden="true" size={20} strokeWidth={1.7} />
-            <span className="text-[14px] font-medium">새로고침</span>
+            className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-[#4b5058] transition-colors hover:bg-[#f5f9fc]">
+            <span aria-hidden="true" className="flex h-[18px] w-[18px] shrink-0 items-center justify-center"><RotateCw size={16} strokeWidth={1.6} /></span>
+            <span className="text-sm">새로고침</span>
           </button>
   </>;
 }
