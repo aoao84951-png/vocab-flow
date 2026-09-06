@@ -5745,28 +5745,18 @@ function MenuContentFolder({
       >
         <button
           type="button"
-          onClick={() =>
-            hasChildren ? onToggle(folder.id) : onSelectFolder(path)
-          }
-          className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#eef3fb] text-[#4b6cb7] transition active:scale-95 [&_svg]:h-3 [&_svg]:w-3"
-          aria-label={
-            isOpen ? `${folder.title} 접기` : `${folder.title} 펼치기`
-          }
-        >
-          {hasChildren ? (
-            <ChevronToggle open={isOpen} />
-          ) : (
-            <span className="h-1.5 w-1.5 rounded-full bg-[#b6c0d0]" />
-          )}
-        </button>
-
-        <button
-          type="button"
           onClick={() => onSelectFolder(path)}
           className={`min-w-0 flex-1 truncate text-left text-[13px] tracking-[-0.04em] ${isSelected ? "font-extrabold text-[#303236]" : "font-semibold text-[#47505f]"}`}
         >
           <FolderSymbol symbol={folder.icon} />{folder.title}
         </button>
+        {hasChildren && (
+          <button type="button" onClick={() => onToggle(folder.id)}
+            className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center text-[#858b94]"
+            aria-expanded={isOpen} aria-label={`${folder.title} ${isOpen ? "접기" : "펼치기"}`}>
+            <ChevronToggle open={isOpen} />
+          </button>
+        )}
       </div>
 
       {hasChildren && isOpen && (
@@ -5898,7 +5888,7 @@ function MenuFolderTree({
           }}
           className="flex h-5 w-5 shrink-0 items-center justify-center text-[13px] text-[#8a94a6]"
         >
-          {hasChildren ? (isOpen ? "⌃" : "⌄") : isSelected ? "✓" : ""}
+          {hasChildren ? <ChevronToggle open={isOpen} /> : isSelected ? <span className="folder-symbol">✓</span> : ""}
         </button>
       </div>
 

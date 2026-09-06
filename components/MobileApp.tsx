@@ -2784,7 +2784,7 @@ const getDayProgress = (day: Day) => {
                   className="flex w-full items-center justify-between rounded-xl border border-[#587fa3] bg-[#f8fbff] px-4 py-3 text-left text-[13px] font-bold text-[#303236]"
                 >
                   <span className="truncate">{currentFolderTitle || selectedBook.title}</span>
-                  <span className="text-[12px]">{bookDropdownOpen ? "⌃" : "⌄"}</span>
+                  <ChevronToggle open={bookDropdownOpen} />
                 </button>
 
                 {bookDropdownOpen && (
@@ -5375,7 +5375,7 @@ function MenuFolderTree({
           }}
           className="flex h-7 w-7 shrink-0 items-center justify-center text-[13px] text-[#8a94a6]"
         >
-          {hasChildren ? (isOpen ? "⌃" : "⌄") : isSelected ? "✓" : ""}
+          {hasChildren ? <ChevronToggle open={isOpen} /> : isSelected ? <span className="folder-symbol">✓</span> : ""}
         </button>
       </div>
 
