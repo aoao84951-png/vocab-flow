@@ -1,8 +1,8 @@
 import { ImageResponse } from "next/og";
 
 export const size = {
-  width: 512,
-  height: 512,
+  width: 1024,
+  height: 1024,
 };
 
 export const contentType = "image/png";
@@ -12,25 +12,23 @@ export default function Icon() {
     (
       <div
         style={{
-          width: "512px",
-          height: "512px",
+          width: "100%",
+          height: "100%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: "116px",
+          // Keep the canvas opaque and square; the OS applies its own icon mask.
           background: "linear-gradient(145deg, #3e4650 0%, #252b33 100%)",
           overflow: "hidden",
-          boxShadow:
-            "inset 0 5px 12px rgba(255,255,255,0.13), inset 0 -10px 20px rgba(0,0,0,0.2)",
         }}
       >
         <svg
-          width="300"
-          height="280"
+          width="600"
+          height="560"
           viewBox="0 0 350 330"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          style={{ marginTop: "10px" }}
+          style={{ marginTop: "20px" }}
         >
           <path
             d="M54 30 Q54 22 62 22 H132 Q139 22 141 29 L175 178 L209 29 Q211 22 218 22 H288 Q296 22 296 30 Q296 33 295 36 L214 284 Q211 294 201 294 H149 Q139 294 136 284 L55 36 Q54 33 54 30 Z"
