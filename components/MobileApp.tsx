@@ -2271,7 +2271,7 @@ const getDayProgress = (day: Day) => {
               <WordSearch query={searchQuery} onChange={query => setSearch({ dayId: selectedDayId, query })} total={words.length} shown={searchedWords.length} />
             </div>
 
-            <div className="mt-7 space-y-2">
+            <div className="mt-2 space-y-2">
               {searchedWords.length === 0 ? (
                 <Empty text={searchQuery.trim() ? "검색 결과가 없어." : words.length ? "미암기 단어가 없어." : "이 Day에는 아직 단어가 없어."} />
               ) : (

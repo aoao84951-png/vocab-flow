@@ -1618,7 +1618,7 @@ export default function DesktopApp() {
               <WordSearch query={searchQuery} onChange={query => setSearch({ dayId: selectedDayId, query })} total={words.length} shown={searchedWords.length} />
             </div>
 
-            <div className="mt-5 w-full space-y-1 px-8 sm:px-10 md:px-11 lg:px-[52px]">
+            <div className="mt-2 w-full space-y-1 px-8 sm:px-10 md:px-11 lg:px-[52px]">
               {searchedWords.length === 0 ? (
                 <Empty text={searchQuery.trim() ? "검색 결과가 없어." : words.length ? "미암기 단어가 없어." : "이 Day에는 아직 단어가 없어."} />
               ) : (
@@ -2569,7 +2569,7 @@ export default function DesktopApp() {
                     {selectedBook.title}
                   </span>
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[#8a94a6] [&_svg]:h-3 [&_svg]:w-3">
-                    {bookDropdownOpen ? <ChevronDownIcon /> : <ChevronRight />}
+                    <ChevronToggle open={!bookDropdownOpen} />
                   </span>
                 </button>
 
@@ -2625,7 +2625,7 @@ export default function DesktopApp() {
                 )}
               </div>
 
-              <div className="mt-5 space-y-1">
+              <div className="mt-3 space-y-0.5">
                 {activeFolder.folders.map((folder) => (
                   <MenuContentFolder
                     key={folder.id}
@@ -5740,8 +5740,8 @@ function MenuContentFolder({
   return (
     <div>
       <div
-        className={`flex min-h-[42px] w-full items-center rounded-2xl px-3 py-2 transition active:scale-[0.99] ${isSelected ? "bg-[#f2f5fa]" : "bg-white"}`}
-        style={{ paddingLeft: `${12 + depth * 18}px` }}
+        className={`flex min-h-[36px] w-full items-center rounded-xl px-3 py-0 transition active:scale-[0.99] ${isSelected ? "bg-[#f2f5fa]" : "bg-white"}`}
+        style={{ paddingLeft: 12 }}
       >
         <button
           type="button"
@@ -5760,7 +5760,7 @@ function MenuContentFolder({
       </div>
 
       {hasChildren && isOpen && (
-        <div className="mt-1 space-y-1">
+        <div className="ml-5 border-l border-[#e4e9ef] pl-2">
           {folder.folders.map((child) => (
             <MenuContentFolder
               key={child.id}
@@ -5806,12 +5806,9 @@ function MenuContentDay({
     <button
       type="button"
       onClick={onSelect}
-      className={`flex min-h-[42px] w-full items-center rounded-2xl pr-3 text-left transition active:scale-[0.99] ${selected ? "bg-[#f2f5fa]" : "bg-white"}`}
-      style={{ paddingLeft: `${12 + depth * 18}px` }}
+      className={`flex min-h-[36px] w-full items-center rounded-xl pr-3 text-left transition active:scale-[0.99] ${selected ? "bg-[#f2f5fa]" : "bg-white"}`}
+      style={{ paddingLeft: 12 }}
     >
-      <span className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center text-[11px] font-black leading-none text-[#b3bccb]">
-        •
-      </span>
       <span
         className={`min-w-0 flex-1 truncate text-[13px] tracking-[-0.04em] ${selected ? "font-extrabold text-[#303236]" : "font-semibold text-[#47505f]"}`}
       >
