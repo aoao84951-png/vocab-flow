@@ -1,5 +1,6 @@
 "use client";
 
+import WordActionPopover from "./WordActionPopover";
 import { applyFolderAction } from "@/lib/folderActions";
 import { useEffect, useRef, useState } from "react";
 import useNavigationHistory from "./useNavigationHistory";
@@ -495,6 +496,7 @@ export default function MobileApp() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [bookDropdownOpen, setBookDropdownOpen] = useState(false);
   const [menuExpandedFolderIds, setMenuExpandedFolderIds] = useState<string[]>([]);
+  const [wordActionAnchor, setWordActionAnchor] = useState<HTMLElement | null>(null);
   const [actionWordIndex, setActionWordIndex] = useState<number | null>(null);
   const [actionDayId, setActionDayId] = useState<string | null>(null);
   const [actionFolderId, setActionFolderId] = useState<string | null>(null);
@@ -2147,6 +2149,7 @@ const getDayProgress = (day: Day) => {
                         <span
                           onClick={(e) => {
                             e.stopPropagation();
+                            setWordActionAnchor(e.currentTarget);
                             setActionWordIndex(originalIndex);
                           }}
                           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f5f6fa] text-[#8a94a6]"
@@ -2610,48 +2613,13 @@ const getDayProgress = (day: Day) => {
           </div>
         )}
 
-        {actionWordIndex !== null && selectedDay && (
-          <div
-            onClick={() => setActionWordIndex(null)}
-            className="fixed inset-0 z-30 flex items-end bg-black/25"
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="mx-auto w-full max-w-[430px] rounded-t-[24px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
-            >
-              <p className="text-[16px] font-bold text-[#111827]">
-                {selectedDay.words[actionWordIndex]?.word}
-              </p>
-
-              <div className="mt-5 space-y-2">
-                <button
-                  onClick={() => {
-                    setWordIndex(actionWordIndex);
-                    setActionWordIndex(null);
-                    editWordReturnStep.current = step === "study" ? "study" : "wordList";
-                    setStep("editWord");
-                  }}
-                  className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#303236]"
-                >
-                  수정
-                </button>
-
-                <button
-                  onClick={() => deleteWord(actionWordIndex)}
-                  className="h-12 w-full rounded-2xl bg-[#fdeeee] text-[13px] font-bold text-[#b42318]"
-                >
-                  삭제
-                </button>
-
-                <button
-                  onClick={() => setActionWordIndex(null)}
-                  className="h-12 w-full rounded-2xl border border-[#ddeaf3] text-[13px] text-[#596275]"
-                >
-                  취소
-                </button>
-              </div>
-            </div>
-          </div>
+        {actionWordIndex !== null && selectedDay && wordActionAnchor && (
+          <WordActionPopover anchor={wordActionAnchor} onClose={() => setActionWordIndex(null)} onEdit={() => {
+            setWordIndex(actionWordIndex);
+            setActionWordIndex(null);
+            editWordReturnStep.current = step === "study" ? "study" : "wordList";
+            setStep("editWord");
+          }} onDelete={() => deleteWord(actionWordIndex)} />
         )}
 
         {actionDayId !== null &&
