@@ -107,28 +107,7 @@ type StarIconProps = {
 };
 
 function StarIcon({ active = true, size = 15 }: StarIconProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className={`shrink-0 transition-all ${
-        active
-          ? "text-[#ef4444] drop-shadow-[0_2px_5px_rgba(239,68,68,0.18)]"
-          : "text-[#c7ceda]"
-      }`}
-    >
-      <path
-        d="M12 3.15 14.67 8.84 20.9 9.6 16.32 13.9 17.52 20.08 12 17.02 6.48 20.08 7.68 13.9 3.1 9.6 9.33 8.84 12 3.15Z"
-        fill={active ? "currentColor" : "none"}
-        stroke="currentColor"
-        strokeWidth="1.85"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <span aria-hidden="true" className={`folder-symbol inline-flex shrink-0 items-center justify-center leading-none ${active ? "" : "grayscale opacity-45"}`} style={{ width: size, height: size, fontSize: size }}>☆</span>;
 }
 
 type ImportanceStarsProps = {
