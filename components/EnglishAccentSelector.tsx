@@ -46,7 +46,7 @@ export default function EnglishAccentSelector({ className = "" }: { className?: 
           setAccent(nextAccent);
           window.localStorage.setItem(STORAGE_KEY, nextAccent);
         }}
-        className="cursor-pointer appearance-none bg-transparent pr-3 text-[11px] font-bold text-[#0f2a5f] outline-none"
+        className="cursor-pointer appearance-none bg-transparent pr-3 text-[11px] font-bold text-[#75639b] outline-none"
       >
         <option value="US">미국식</option>
         <option value="UK">영국식</option>

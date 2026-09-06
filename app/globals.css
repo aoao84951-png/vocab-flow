@@ -8,7 +8,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: "Summer Symbols", var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -18,23 +18,61 @@ body {
   min-height: 100%;
   background: #ffffff;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Summer Symbols", Arial, Helvetica, sans-serif;
 }
 
 @font-face {
   font-family: "Summer Melody";
-  src: url("/fonts/aa-summer-melody.ttf") format("truetype");
+  src: url("/fonts/aa-summer-melody-400.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 html[data-app-font="summer"] body {
-  font-family: "Summer Melody", Arial, sans-serif;
-  --font-sans: "Summer Melody", Arial, sans-serif;
+  font-family: "Summer Symbols", "Summer Melody", Arial, sans-serif;
+  --font-sans: "Summer Symbols", "Summer Melody", Arial, sans-serif;
 }
 
 .folder-symbol {
-  font-family: "Summer Melody", sans-serif;
+  font-family: "Summer Symbols", "Summer Melody", sans-serif;
+  font-weight: 400;
   line-height: 1;
 }
+
+@font-face {
+  font-family: "Summer Melody";
+  src: url("/fonts/aa-summer-melody-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Summer Melody";
+  src: url("/fonts/aa-summer-melody-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Summer Melody";
+  src: url("/fonts/aa-summer-melody-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Keep the original colored symbols independent of the selected text font. */
+@font-face {
+  font-family: "Summer Symbols";
+  src: url("/fonts/aa-summer-melody.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0021-002F, U+003A-0040, U+005B-0060, U+007B-007E, U+2000-2BFF, U+E000-F8FF;
+}
+
+html[data-app-font="summer"] .folder-title { font-weight: 600; }
+html[data-app-font="summer"] .folder-subtitle { font-weight: 500; }
