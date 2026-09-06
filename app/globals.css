@@ -77,20 +77,31 @@ html[data-app-font="summer"] body {
 html[data-app-font="summer"] .folder-title { font-weight: 600; }
 html[data-app-font="summer"] .folder-subtitle { font-weight: 500; }
 
-/* Learning notes read as a page rather than nested cards. */
+/* Consistent, compact writing fields for optional learning notes. */
+.study-note-page div:has(> [contenteditable="true"]) {
+  overflow: hidden;
+  border: 1px solid #ddeaf3;
+  border-radius: 12px;
+  background: white;
+}
+.study-note-page div:has(> [contenteditable="true"]):focus-within {
+  border-color: #91bad6;
+}
 .study-note-page [contenteditable="true"] {
   border: 0;
   border-radius: 0;
-  padding: 12px 4px;
-  min-height: 100px;
+  padding: 12px;
+  min-height: 88px;
 }
-.study-note-page div:has(> [contenteditable="true"]) {
-  border-bottom: 1px solid #e7edf2;
+.study-note-page [contenteditable="true"][data-placeholder="영어 예시"] {
+  min-height: 44px;
 }
 .study-note-page div:has(> [contenteditable="true"]) > div:first-child:not([contenteditable]) {
   display: none;
   border: 0;
-  border-radius: 8px;
+  border-bottom: 1px solid #edf0f3;
+  border-radius: 0;
+  background: #fafcfd;
 }
 .study-note-page div:has(> [contenteditable="true"]):focus-within > div:first-child:not([contenteditable]) {
   display: flex;

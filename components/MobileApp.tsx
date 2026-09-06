@@ -3876,14 +3876,14 @@ function AddWord({
       .filter((item) => item.text);
 
   return (
-    <div className="min-h-dvh px-5 pt-7 pb-6">
+    <div className={`min-h-dvh px-5 pt-7 pb-6 ${formPage === "notes" ? "mx-auto w-full max-w-[760px]" : ""}`}>
       <BackButton onClick={() => formPage === "notes" ? changeFormPage("basic") : onBack()} label={formPage === "notes" ? "기본 정보로" : "뒤로"} />
 
       <h1 className="mt-5 text-[28px] font-bold text-[#303236]">
         {formPage === "notes" ? "학습 포인트" : initialWord ? "단어 수정" : "단어 추가"}
       </h1>
 
-      {formPage === "notes" && <p className="mt-2 text-sm text-[#858b94]">{word || "새 단어"}</p>}
+      {formPage === "notes" && <div className="mt-3 flex items-baseline gap-3"><span className="text-xs text-[#858b94]">작성 중인 단어</span><span className="text-lg font-semibold text-[#303236]">{word || "새 단어"}</span></div>}
       <div className="mt-7 space-y-5">
         <div hidden={formPage !== "basic"} className="space-y-5">
         <label className="block">
@@ -4071,7 +4071,7 @@ function AddWord({
         <div hidden={formPage !== "notes"} className="study-note-page">
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <p className="pl-1.5 text-[12px] font-bold text-[#596275]">학습 포인트</p>
+            <p className="pl-1.5 text-[12px] font-bold text-[#596275]">포인트 {studyPoints.length}개</p>
 
             <button
               onClick={addStudyPoint}
@@ -4083,7 +4083,7 @@ function AddWord({
 
           <div className="space-y-3">
             {studyPoints.map((point, index) => (
-              <div key={index} className="study-note border-b border-[#e7edf2] py-5 last:border-b-0">
+              <div key={index} className="study-note py-3 [&+&]:mt-6">
                 <div className="flex gap-2">
                 <div className="relative w-40 max-w-[75%]">
                   <select
@@ -4127,8 +4127,8 @@ function AddWord({
                 <input
                   value={point.expression}
                   onChange={(e) => updateStudyPoint(index, "expression", e.target.value)}
-                  placeholder="제목"
-                  className="mt-3 h-12 w-full border-0 bg-transparent px-1 text-[20px] font-semibold outline-none"
+                  aria-label="포인트 제목" placeholder="포인트 제목"
+                  className="mt-3 h-11 w-full rounded-xl border border-[#ddeaf3] bg-white px-3 text-[15px] font-semibold outline-none focus:border-[#91bad6]"
                 />
 
                 <div className="mt-2">
@@ -4143,7 +4143,7 @@ function AddWord({
                       studyDescriptionRefs.current[index] = el;
                     }}
                     defaultHtml={point.description}
-                    placeholder="설명"
+                    placeholder="설명이나 기억할 내용을 적어주세요"
                     onBlur={(html) => updateStudyPoint(index, "description", html)}
                   />
                 </div>
@@ -4163,7 +4163,7 @@ function AddWord({
 
                   <div className="space-y-2">
                     {(point.variants ?? []).map((variant, variantIndex) => (
-                      <div key={variantIndex} className="border-t border-[#edf0f3] py-3">
+                      <div key={variantIndex} className="py-2">
                         <div className="flex gap-2">
                           <input
                             value={variant.word}
@@ -4185,7 +4185,7 @@ function AddWord({
 
                         <div className="mt-3 space-y-3">
                           {variant.meanings.map((meaning, meaningIndex) => (
-                            <div key={meaningIndex} className="rounded-xl bg-[#f5f6fa] p-3">
+                            <div key={meaningIndex} className="space-y-2">
                               <div className="flex gap-2">
                                 <div className="relative w-[66px] shrink-0">
                                   <select
@@ -4222,7 +4222,7 @@ function AddWord({
                                       numbered: !meaning.numbered,
                                     })
                                   }
-                                  className={`h-10 flex-1 rounded-xl border text-[12px] font-bold ${
+                                  className={`h-10 shrink-0 rounded-xl border px-3 text-[12px] font-medium ${
                                     meaning.numbered
                                       ? "border-[#587fa3] bg-[#eff7fc] text-[#303236]"
                                       : "border-[#ddeaf3] text-[#8a94a6]"
@@ -4335,7 +4335,7 @@ function AddWord({
                     ).map((example, exampleIndex) => (
                       <div
                         key={exampleIndex}
-                        className="border-t border-[#edf0f3] py-3"
+                        className="py-2"
                       >
                         <div className="mb-2 flex items-center justify-between">
                           <p className="pl-1 text-[11px] font-bold text-[#8a94a6]">
