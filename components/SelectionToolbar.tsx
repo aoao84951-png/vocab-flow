@@ -1,12 +1,13 @@
 "use client";
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useLayoutEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
 import {Bold,Italic,Underline,Strikethrough,Palette,RemoveFormatting} from 'lucide-react';
+import { selectionToolbarPosition } from "@/lib/selectionToolbarPosition";
 const colors=['#303236','#858585','#a77c65','#d57a36','#c79832','#4e9473','#397dcc','#9268bb','#c54b88','#d9514d'];
 const backgrounds=['transparent','#efefed','#f4eae5','#fdebdc','#fff4cc','#e5f2e9','#e3f0ff','#f0e8fb','#fbe5ef','#fde5e4'];
 export default function SelectionToolbar(){
  const range=useRef<Range|null>(null);const editor=useRef<HTMLElement|null>(null);const toolbar=useRef<HTMLDivElement>(null);
- const [position,setPosition]=useState<{left:number;top:number}|null>(null);const [palette,setPalette]=useState(false);
+ const [position,setPosition]=useState<{left:number;right:number;top:number;bottom:number}|null>(null);const [palette,setPalette]=useState(false);
  useEffect(()=>{
   const update=()=>{
    const selection=window.getSelection();
@@ -16,10 +17,8 @@ export default function SelectionToolbar(){
    const field=(node instanceof Element?node:node.parentElement)?.closest<HTMLElement>('[contenteditable="true"]');
    if(!field?.closest('[data-word-editor]')){setPosition(null);return;}
    range.current=next.cloneRange();editor.current=field;
-   const rect=next.getBoundingClientRect();const viewport=window.visualViewport;
-   const leftEdge=viewport?.offsetLeft||0,topEdge=viewport?.offsetTop||0;
-   const width=viewport?.width||window.innerWidth;
-   setPosition({left:Math.max(leftEdge+8,Math.min(rect.left+rect.width/2-132,leftEdge+width-272)),top:rect.top-topEdge>60?rect.top-52:rect.bottom+8});
+   const rect=next.getBoundingClientRect();
+   setPosition({left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom});
   };
   document.addEventListener('selectionchange',update);document.addEventListener('pointerup',update);
   const hide=()=>{setPosition(null);setPalette(false);};
@@ -28,6 +27,24 @@ export default function SelectionToolbar(){
   document.addEventListener('scroll',scroll,true);window.visualViewport?.addEventListener('resize',hide);document.addEventListener('keydown',key);
   return()=>{document.removeEventListener('selectionchange',update);document.removeEventListener('pointerup',update);document.removeEventListener('scroll',scroll,true);window.visualViewport?.removeEventListener('resize',hide);document.removeEventListener('keydown',key);};
  },[]);
+ useLayoutEffect(()=>{
+  const element=toolbar.current;
+  if(!element||!position)return;
+  const place=()=>{
+   const viewport=window.visualViewport;
+   element.style.maxHeight='none';
+   const bounds=selectionToolbarPosition(position, {
+    left:viewport?.offsetLeft || 0, top:viewport?.offsetTop || 0,
+    width:viewport?.width || window.innerWidth, height:viewport?.height || window.innerHeight,
+   }, element.getBoundingClientRect().width, element.scrollHeight + 2);
+   element.style.left=`${bounds.left}px`;
+   element.style.top=`${bounds.top}px`;
+   element.style.maxHeight=`${bounds.maxHeight}px`;
+   element.style.visibility=bounds.maxHeight > 0 ? 'visible' : 'hidden';
+  };
+  place();
+ },[position,palette]);
+
  const command=(name:string,value?:string)=>{
   if(!range.current||!editor.current?.isConnected)return;
   const selection=window.getSelection();editor.current.focus();selection?.removeAllRanges();selection?.addRange(range.current);
@@ -36,8 +53,8 @@ export default function SelectionToolbar(){
   if(selection?.rangeCount)range.current=selection.getRangeAt(0).cloneRange();
  };
  if(!position)return null;
- return createPortal(<div ref={toolbar} role="toolbar" aria-label="텍스트 서식" style={{left:position.left,top:Math.max(window.visualViewport?.offsetTop || 8, Math.min(position.top, (window.visualViewport?.offsetTop || 0) + (window.visualViewport?.height || window.innerHeight) - (palette ? 292 : 52)))}}
-  className="fixed z-[200] w-[264px] rounded-2xl border border-[#e2e7ed] bg-white p-1.5 text-[#535b65] shadow-[0_5px_24px_rgba(40,60,80,0.16)]"
+ return createPortal(<div ref={toolbar} role="toolbar" aria-label="텍스트 서식" style={{visibility:"hidden"}}
+  className="fixed z-[200] w-[264px] max-w-[calc(100vw-16px)] overflow-y-auto overscroll-contain rounded-2xl border border-[#e2e7ed] bg-white p-1.5 text-[#535b65] shadow-[0_5px_24px_rgba(40,60,80,0.16)]"
   onPointerDown={event=>event.preventDefault()} onMouseDown={event=>event.preventDefault()}>
   <div className="flex justify-between">{[[Bold,'굵게','bold'],[Underline,'밑줄','underline'],[Italic,'기울임','italic'],[Strikethrough,'취소선','strikeThrough'],[RemoveFormatting,'서식 지우기','removeFormat']].map(([Icon,label,action])=>{
    const Component=Icon as typeof Bold;return <button type="button" key={String(action)} aria-label={String(label)} title={String(label)} className="flex h-9 w-10 items-center justify-center rounded-lg hover:bg-[#eff7fc]" onClick={()=>command(String(action))}><Component size={18}/></button>;
