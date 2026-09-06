@@ -2191,7 +2191,6 @@ const getDayProgress = (day: Day) => {
                   onToggleSort={() => setWordSortOrder(value => value === "latest" ? "oldest" : "latest")}
                   view={wordViewMode} onToggleView={() => setWordViewMode(value => value === "all" ? "unmemorized" : "all")}
                   meanings={showListMeanings} onToggleMeanings={() => setShowListMeanings(value => !value)} />
-                <AppearanceSettings />
 
                 
               </div>
@@ -2326,7 +2325,6 @@ const getDayProgress = (day: Day) => {
                 disabled={!currentWord}
                 onEdit={() => { editWordReturnStep.current = "study"; setStep("editWord"); }}
                 onDelete={() => deleteWord(wordIndex)} />
-                <AppearanceSettings />
               </div>
             </header>
 

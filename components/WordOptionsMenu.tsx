@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { ArrowDownUp, Eye, MoreHorizontal, Pencil, SlidersHorizontal, Trash2 } from "lucide-react";
+import { ArrowDownUp, Eye, Pencil, Settings2, Trash2 } from "lucide-react";
+
+import { AppearanceActions } from "./AppearanceSettings";
 
 type Props = {
   mode: "list" | "study";
@@ -41,8 +43,8 @@ export default function WordOptionsMenu(props: Props) {
   return (
     <div ref={container} className="relative z-50 shrink-0" onPointerDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}>
       <button ref={trigger} type="button" aria-label={props.mode === "list" ? "목록 설정" : "단어 메뉴"} aria-expanded={open} aria-controls={open ? id : undefined}
-        onClick={() => setOpen(value => !value)} className="flex h-10 w-10 items-center justify-center rounded-full text-[#737b89] hover:bg-[#f0f7fd]">
-        {props.mode === "list" ? <SlidersHorizontal size={20} /> : <MoreHorizontal size={22} />}
+        onClick={() => setOpen(value => !value)} className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${open ? "bg-[#eff7fc] text-[#587fa3]" : "text-[#91a8bb] hover:bg-[#f2f8fc]"}`}>
+        <Settings2 aria-hidden="true" size={20} strokeWidth={1.7} />
       </button>
       {open && <div id={id} role="group" aria-label={props.mode === "list" ? "목록 설정" : "단어 메뉴"} className="absolute right-0 top-full mt-2 w-[260px] max-w-[calc(100vw-40px)] rounded-2xl border border-[#e3edf5] bg-white p-2 shadow-[0_12px_36px_rgba(40,60,80,0.12)]">
         {props.mode === "list" && <button className={row} onClick={props.onToggleSort} aria-label={`정렬: ${props.sort === "latest" ? "최신순" : "오래된순"}`}><ArrowDownUp size={18} /><span>정렬</span><span className={badge}>{props.sort === "latest" ? "최신순" : "오래된순"}</span></button>}
@@ -52,6 +54,8 @@ export default function WordOptionsMenu(props: Props) {
           <button disabled={props.disabled} className={`${row} disabled:opacity-40`} onClick={() => { setOpen(false); props.onEdit?.(); }}><Pencil size={18} />수정</button>
           <button disabled={props.disabled} className={`${row} disabled:opacity-40`} onClick={() => { setOpen(false); props.onDelete?.(); }}><Trash2 size={18} className="text-[#bf5555]" />삭제</button>
         </>}
+        <div className="my-2 border-t border-[#edf1f4]" />
+        <AppearanceActions />
       </div>}
     </div>
   );

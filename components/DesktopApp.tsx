@@ -1524,7 +1524,6 @@ export default function DesktopApp() {
                   onToggleSort={() => setWordSortOrder(value => value === "latest" ? "oldest" : "latest")}
                   view={wordViewMode} onToggleView={() => setWordViewMode(value => value === "all" ? "unmemorized" : "all")}
                   meanings={showListMeanings} onToggleMeanings={() => setShowListMeanings(value => !value)} />
-                <AppearanceSettings />
 
                 
               </div>
@@ -1669,7 +1668,6 @@ export default function DesktopApp() {
                 disabled={!currentWord}
                 onEdit={() => { editWordReturnStep.current = "study"; setStep("editWord"); }}
                 onDelete={() => deleteWord(wordIndex)} />
-                <AppearanceSettings />
               </div>
             </header>
 

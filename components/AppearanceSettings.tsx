@@ -34,7 +34,6 @@ export function FontPreference() {
 }
 
 export default function AppearanceSettings() {
-  const font = useFont();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -68,6 +67,16 @@ export default function AppearanceSettings() {
       </button>
       {open && (
         <div className="absolute right-0 top-12 z-30 w-56 rounded-2xl border border-[#e4eff7] bg-white p-2 shadow-[0_8px_32px_rgba(66,108,143,0.12)]">
+          <AppearanceActions />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function AppearanceActions() {
+  const font = useFont();
+  return <>
           <button type="button"
             aria-label={`글꼴 변경 (현재: ${font === "summer" ? "여름소리" : "기본"})`}
             onClick={() => {
@@ -77,19 +86,16 @@ export default function AppearanceSettings() {
               document.documentElement.dataset.appFont = nextFont;
               window.dispatchEvent(new Event(CHANGE_EVENT));
             }}
-            className="flex min-h-11 w-full items-center gap-3 rounded-xl px-2 text-left text-[#666a70] transition-colors hover:bg-[#f5f9fc]"
+            className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-[#666a70] transition-colors hover:bg-[#f5f9fc]"
           >
             <span aria-hidden="true" className="font-serif text-[22px] leading-none">T</span>
             <span className="flex-1 text-[14px] font-medium">글꼴</span>
             <span aria-live="polite" className="rounded-full bg-[#eaf4fb] px-2.5 py-1 text-[11px] font-medium text-[#626970]">{font === "summer" ? "여름소리" : "기본"}</span>
           </button>
           <button type="button" onClick={() => window.location.reload()}
-            className="flex min-h-11 w-full items-center gap-3 rounded-xl px-2 text-left text-[#666a70] transition-colors hover:bg-[#f5f9fc]">
+            className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-[#666a70] transition-colors hover:bg-[#f5f9fc]">
             <RotateCw aria-hidden="true" size={20} strokeWidth={1.7} />
             <span className="text-[14px] font-medium">새로고침</span>
           </button>
-        </div>
-      )}
-    </div>
-  );
+  </>;
 }
