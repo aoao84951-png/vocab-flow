@@ -42,8 +42,8 @@ export default function DailyHome({books,onOpen,onContents}:{books:Folder[];onOp
  const cards=useMemo(()=>daily?.ids.flatMap(id=>{const entry=entries.find(entry=>entry.word.id===id);return entry?[entry]:[];})||[],[daily,entries]);
  const current=cards[Math.min(index,Math.max(0,cards.length-1))];
  const resume=entries.find(entry=>entry.word.id===last);
- const locationResume=lastLocation?.dayId ? entries.find(entry=>entry.dayId===lastLocation.dayId) : undefined;
- const resumeTarget=lastLocation?.dayId ? locationResume : resume;
+ const locationResume=lastLocation?.dayId ? entries.find(entry=>entry.dayId===lastLocation.dayId && (lastLocation.index < 0 || entry.index===lastLocation.index)) : undefined;
+ const resumeTarget=lastLocation?.dayId ? (locationResume || entries.find(entry=>entry.dayId===lastLocation.dayId)) : resume;
  const move=(offset:number)=>{setIndex(value=>Math.max(0,Math.min(cards.length-1,value+offset)));setRevealed(false);};
  useEffect(()=>{
   const key=(event:KeyboardEvent)=>{
