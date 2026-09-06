@@ -1392,7 +1392,7 @@ export default function DesktopApp() {
                           >
                             <div className="min-w-0 flex-1">
                               <span className="ipad-list-subtext folder-subtitle truncate text-[16px] font-normal tracking-[-0.03em] text-[#666a70]">
-                                <FolderSymbol symbol={folder.icon === "" ? "" : "→"} />{folder.title}
+                                <FolderSymbol symbol={folder.icon} />{folder.title}
                               </span>
                             </div>
                           </button>
@@ -2651,11 +2651,12 @@ export default function DesktopApp() {
           step !== "editFolder" && (
             <div
               onClick={() => setActionFolderId(null)}
-              className="fixed inset-0 z-30 flex items-end bg-black/25"
+              className="fixed inset-0 z-[90] flex items-center justify-center bg-black/25 p-6"
             >
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="mx-auto w-full max-w-[430px] rounded-t-[24px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))]"
+                role="dialog" aria-modal="true" aria-label="폴더 메뉴"
+                className="mx-auto max-h-[calc(100dvh-48px)] w-full max-w-[430px] overflow-y-auto overscroll-contain rounded-[24px] bg-white p-5 shadow-xl"
               >
                 <div className="flex select-none items-center justify-between">
                   <p className="translate-x-[8px] text-[16px] font-bold tracking-[-0.03em] text-[#111827]">

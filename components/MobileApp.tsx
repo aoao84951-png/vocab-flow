@@ -2058,7 +2058,7 @@ const getDayProgress = (day: Day) => {
                         >
                           <div className="min-w-0 flex-1">
                             <span className="folder-subtitle truncate text-[16px] font-normal tracking-[-0.03em] text-[#666a70]">
-                              <FolderSymbol symbol={folder.icon === "" ? "" : "→"} />{folder.title}
+                              <FolderSymbol symbol={folder.icon} />{folder.title}
                             </span>
                           </div>
                         </button>
