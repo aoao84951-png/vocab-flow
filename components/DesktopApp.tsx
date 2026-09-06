@@ -1737,7 +1737,7 @@ export default function DesktopApp() {
 
         {step === "study" && selectedBook && selectedDay && (
           <div
-            className="relative -mx-3 flex min-h-[100svh] flex-col bg-white px-0 pt-0 pb-[calc(86px+env(safe-area-inset-bottom))] sm:-mx-5 md:-mx-6 lg:-mx-8"
+            className="relative -mx-3 flex min-h-[100svh] flex-col bg-white px-0 pt-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8"
             onPointerDown={handleStudyPointerDown}
             onPointerUp={handleStudyPointerUp}
           >
@@ -2143,55 +2143,7 @@ export default function DesktopApp() {
                   </div>
                 </section>
 
-                <footer
-                  onClick={(e) => e.stopPropagation()}
-                  className="mt-4 mb-20 border-t border-[#d7ddea] bg-[#f8fafc]/95 px-6 py-4 pb-[calc(16px+env(safe-area-inset-bottom))] shadow-[0_-1px_0_rgba(88,127,163,0.03)] backdrop-blur"
-                >
-                  <div className="mx-auto flex max-w-[820px] items-center justify-between gap-4">
-                    <button
-                      onClick={prevWord}
-                      className="flex h-12 min-w-[150px] items-center justify-center gap-2 rounded-[14px] border border-[#d7ddea] bg-white text-[15px] font-bold text-[#303236] shadow-[0_4px_12px_rgba(88,127,163,0.08)] active:scale-[0.98]"
-                    >
-                      ← 이전
-                    </button>
 
-                    <button
-                      onClick={() => setMenuOpen(true)}
-                      className="flex h-12 items-center justify-center gap-2 px-4 text-[14px] font-bold text-[#26364f] active:scale-[0.98]"
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <rect
-                          x="4"
-                          y="4"
-                          width="16"
-                          height="16"
-                          rx="2.5"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        />
-                        <path
-                          d="M8 8H9.5M8 12H9.5M8 16H9.5M12 8H16M12 12H16M12 16H16"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      단어장
-                    </button>
-
-                    <button
-                      onClick={nextWord}
-                      className="flex h-12 min-w-[150px] items-center justify-center gap-2 rounded-[14px] bg-[#dceefa] text-[15px] font-bold text-[#4b5058] shadow-[0_5px_14px_rgba(88,127,163,0.16)] active:scale-[0.98]"
-                    >
-                      다음 →
-                    </button>
-                  </div>
-                </footer>
               </>
             )}
           </div>
