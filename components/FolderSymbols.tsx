@@ -18,7 +18,7 @@ export function FolderSymbolPicker({ value, onChange }: { value: string; onChang
         {(expanded ? [...common, ...more] : common).map((symbol) => (
           <button key={symbol} type="button" aria-label={`기호 ${symbol}`} aria-pressed={value === symbol}
             onClick={() => onChange(symbol)}
-            className={`folder-symbol flex h-10 items-center justify-center rounded-xl border text-[23px] transition-colors ${value === symbol ? "border-[#75639b] bg-[#f3eff9] text-[#75639b]" : "border-transparent bg-[#f7f7f6] text-[#737b88] hover:bg-[#eeeeed]"}`}
+            className={`folder-symbol flex h-10 items-center justify-center rounded-xl border text-[23px] transition-colors ${value === symbol ? "border-[#587fa3] bg-[#eff7fc] text-[#587fa3]" : "border-transparent bg-[#f7f7f6] text-[#737b88] hover:bg-[#eeeeed]"}`}
           >{symbol}</button>
         ))}
       </div>

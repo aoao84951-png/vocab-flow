@@ -1126,8 +1126,8 @@ export default function MobileApp() {
                 <section
                   className={`relative mt-3 flex h-[155px] shrink-0 items-center justify-center rounded-[22px] border ${
                     displayWord.importanceStars
-                      ? "border-[#b9c9ed] bg-[#f8fbff] shadow-[0_8px_22px_rgba(117,99,155,0.12)]"
-                      : "border-[#e5deef] bg-white"
+                      ? "border-[#b9c9ed] bg-[#f8fbff] shadow-[0_8px_22px_rgba(88,127,163,0.12)]"
+                      : "border-[#ddeaf3] bg-white"
                   }`}
                 >
                 <div className="absolute right-4 top-4 flex items-center gap-2">
@@ -1143,7 +1143,7 @@ export default function MobileApp() {
                     <span className="relative flex h-7 w-7 items-center justify-center">
                       <StarIcon active={Boolean(displayWord.importanceStars)} size={22} animate={false} />
                       {displayWord.importanceStars ? (
-                        <span className="absolute -right-1 -top-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#e3daf5] px-[3px] text-[8px] font-black leading-none text-[#51426c]">
+                        <span className="absolute -right-1 -top-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#dceefa] px-[3px] text-[8px] font-black leading-none text-[#385e7d]">
                           {displayWord.importanceStars}
                         </span>
                       ) : null}
@@ -1157,15 +1157,15 @@ export default function MobileApp() {
                     }}
                     className={`flex h-8 w-8 items-center justify-center rounded-full border ${
                       displayWord.memorized
-                        ? "border-[#75639b] bg-[#e3daf5] shadow-[0_6px_14px_rgba(117,99,155,0.22)]"
-                        : "border-[#e5deef] bg-[#f8fafc]"
+                        ? "border-[#587fa3] bg-[#dceefa] shadow-[0_6px_14px_rgba(88,127,163,0.22)]"
+                        : "border-[#ddeaf3] bg-[#f8fafc]"
                     }`}
                     aria-label="암기완료"
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                       <path
                         d="M5.5 12.5L10 17L18.8 7.5"
-                        stroke={displayWord.memorized ? "#75639b" : "#9aa3b2"}
+                        stroke={displayWord.memorized ? "#587fa3" : "#9aa3b2"}
                         strokeWidth="3"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -1187,7 +1187,7 @@ export default function MobileApp() {
                   } ${
                     displayWord.memorized
                       ? "text-[#b0b7c3]"
-                      : "text-[#75639b]"
+                      : "text-[#587fa3]"
                   }`}
                 >
                   {displayWord.word}
@@ -1221,7 +1221,7 @@ export default function MobileApp() {
                               className="flex w-full justify-center"
                             >
                               <div className="grid w-fit max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-[7px]">
-                                <span className="mt-[2px] inline-flex h-[19px] min-w-[19px] shrink-0 items-center justify-center rounded-[5px] bg-[#e3daf5] text-[11px] font-bold text-[#51426c]">
+                                <span className="mt-[2px] inline-flex h-[19px] min-w-[19px] shrink-0 items-center justify-center rounded-[5px] bg-[#dceefa] text-[11px] font-bold text-[#385e7d]">
                                   {group.pos}
                                 </span>
 
@@ -1249,7 +1249,7 @@ export default function MobileApp() {
                               key={`${group.pos}-${group.items.join("")}`}
                               className="w-full max-w-full text-center"
                             >
-                              <span className="mr-[7px] inline-flex h-[19px] min-w-[19px] shrink-0 items-center justify-center rounded-[5px] bg-[#e3daf5] text-[11px] font-bold text-[#51426c] align-top">
+                              <span className="mr-[7px] inline-flex h-[19px] min-w-[19px] shrink-0 items-center justify-center rounded-[5px] bg-[#dceefa] text-[11px] font-bold text-[#385e7d] align-top">
                                 {group.pos}
                               </span>
 
@@ -1327,7 +1327,7 @@ export default function MobileApp() {
                           {(displayWord.studyPoints ?? []).map((point, index) => (
                             <div key={index} className="rounded-2xl bg-[#f5f6fa] px-3 py-3">
                               <div className="flex items-center gap-2">
-                                <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#75639b]">
+                                <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#587fa3]">
                                   {point.category}
                                 </span>
 
@@ -1365,7 +1365,7 @@ export default function MobileApp() {
                                             key={`${meaning.pos}-${meaningIndex}`}
                                             className="flex items-start gap-1.5"
                                           >
-                                            <span className="mt-[1px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-[4px] bg-[#e3daf5] text-[9px] font-bold text-[#51426c]">
+                                            <span className="mt-[1px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-[4px] bg-[#dceefa] text-[9px] font-bold text-[#385e7d]">
                                               {meaning.pos}
                                             </span>
 
@@ -2018,13 +2018,13 @@ const getDayProgress = (day: Day) => {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <path
               d="M20 11A8 8 0 1 0 17.7 16.7"
-              stroke="#75639b"
+              stroke="#587fa3"
               strokeWidth="2.1"
               strokeLinecap="round"
             />
             <path
               d="M20 4V11H13"
-              stroke="#75639b"
+              stroke="#587fa3"
               strokeWidth="2.1"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -2037,7 +2037,7 @@ const getDayProgress = (day: Day) => {
         <div className="min-h-dvh bg-white px-5 pt-8 pb-6">
           <div>
             <div className="flex items-center justify-between">
-              <h1 className="text-[28px] font-bold tracking-tight text-[#75639b]">
+              <h1 className="text-[28px] font-bold tracking-tight text-[#587fa3]">
                 단어장
               </h1>
 
@@ -2045,7 +2045,7 @@ const getDayProgress = (day: Day) => {
                 <AppearanceSettings />
                 <button
                 onClick={() => setStep("addBook")}
-                className="h-[38px] rounded-full bg-[#e3daf5] px-5 text-[12px] font-bold text-[#51426c]"
+                className="h-[38px] rounded-full bg-[#dceefa] px-5 text-[12px] font-bold text-[#385e7d]"
               >
                 + 추가
               </button>
@@ -2062,7 +2062,7 @@ const getDayProgress = (day: Day) => {
 
                 return (
                   <div key={book.id} className="relative">
-                      <button type="button" aria-label={`${book.title} 폴더 설정`} onClick={() => { setSelectedBookId(book.id); setActionFolderId(book.id); }} title="폴더 설정" className="folder-symbol absolute left-0 top-2 z-10 flex h-10 w-5 items-center justify-center rounded-lg text-[21px] text-[#858b94] focus-visible:outline-2 focus-visible:outline-[#75639b]">{book.icon || "#"}</button>
+                      <button type="button" aria-label={`${book.title} 폴더 설정`} onClick={() => { setSelectedBookId(book.id); setActionFolderId(book.id); }} title="폴더 설정" className="folder-symbol absolute left-0 top-2 z-10 flex h-10 w-5 items-center justify-center rounded-lg text-[21px] text-[#858b94] focus-visible:outline-2 focus-visible:outline-[#587fa3]">{book.icon || "#"}</button>
                     <button
                       onClick={() => {
                         if (didLongPressFolder.current) {
@@ -2170,7 +2170,7 @@ const getDayProgress = (day: Day) => {
                         >
                           <div className="min-w-0 flex-1">
                             <span className="folder-subtitle truncate text-[16px] font-normal tracking-[-0.03em] text-[#666a70]">
-                              <FolderSymbol symbol={folder.icon} />{folder.title}
+                              <FolderSymbol symbol="→" />{folder.title}
                             </span>
                           </div>
                         </button>
@@ -2197,21 +2197,21 @@ const getDayProgress = (day: Day) => {
             </div>
 
             <div className="mt-5 flex items-center justify-between">
-              <h1 className="text-[28px] font-bold tracking-tight text-[#75639b]">
+              <h1 className="text-[28px] font-bold tracking-tight text-[#587fa3]">
                 {activeFolder.title}
               </h1>
 
               <div className="flex gap-2">
                 <button
                   onClick={() => setStep("addFolder")}
-                  className="rounded-full bg-[#f3eff9] px-4 py-2 text-[12px] font-bold text-[#75639b]"
+                  className="rounded-full bg-[#eff7fc] px-4 py-2 text-[12px] font-bold text-[#587fa3]"
                 >
                   + Folder
                 </button>
 
                 <button
                   onClick={() => setStep("addDay")}
-                  className="rounded-full bg-[#e3daf5] px-4 py-2 text-[12px] font-bold text-[#51426c]"
+                  className="rounded-full bg-[#dceefa] px-4 py-2 text-[12px] font-bold text-[#385e7d]"
                 >
                   + Day
                 </button>
@@ -2328,7 +2328,7 @@ const getDayProgress = (day: Day) => {
 
             <div className="mt-5 flex items-center justify-between">
               <div>
-                <h1 className="text-[28px] font-bold tracking-tight text-[#75639b]">
+                <h1 className="text-[28px] font-bold tracking-tight text-[#587fa3]">
                   {selectedDay.title}
                 </h1>
               </div>
@@ -2357,7 +2357,7 @@ const getDayProgress = (day: Day) => {
 
                 <button
                   onClick={() => setStep("addWord")}
-                  className="rounded-full bg-[#e3daf5] px-4 py-2 text-[12px] font-bold text-[#51426c]"
+                  className="rounded-full bg-[#dceefa] px-4 py-2 text-[12px] font-bold text-[#385e7d]"
                 >
                   + 단어
                 </button>
@@ -2369,7 +2369,7 @@ const getDayProgress = (day: Day) => {
                 onClick={() => setWordViewMode("all")}
                 className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
                   wordViewMode === "all"
-                    ? "bg-white text-[#75639b] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
+                    ? "bg-white text-[#587fa3] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
                     : "text-[#8a94a6]"
                 }`}
               >
@@ -2380,7 +2380,7 @@ const getDayProgress = (day: Day) => {
                 onClick={() => setWordViewMode("unmemorized")}
                 className={`h-8 flex-1 rounded-full text-[12px] font-bold ${
                   wordViewMode === "unmemorized"
-                    ? "bg-white text-[#75639b] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
+                    ? "bg-white text-[#587fa3] shadow-[0_2px_8px_rgba(15,23,42,0.06)]"
                     : "text-[#8a94a6]"
                 }`}
               >
@@ -2456,7 +2456,7 @@ const getDayProgress = (day: Day) => {
                       }}
                       className={`relative z-10 w-full rounded-[18px] border px-4 py-4 text-left shadow-[0_3px_10px_rgba(15,23,42,0.04)] transition-transform active:scale-[0.99] ${
                         item.importanceStars
-                          ? "border-[#b9c9ed] bg-[#f8fbff] shadow-[0_5px_16px_rgba(117,99,155,0.10)]"
+                          ? "border-[#b9c9ed] bg-[#f8fbff] shadow-[0_5px_16px_rgba(88,127,163,0.10)]"
                           : "border-[#e4e8f0] bg-white"
                       }`}
                       style={{ transform: `translateX(${getSwipeX(originalIndex)}px)` }}
@@ -2474,7 +2474,7 @@ const getDayProgress = (day: Day) => {
                               ? "text-[#ef4444]"
                               : item.highlightColor === "blue"
                               ? "text-[#2563eb]"
-                              : "text-[#75639b]"
+                              : "text-[#587fa3]"
                           }`}
                         >
                           {item.word}
@@ -2490,7 +2490,7 @@ const getDayProgress = (day: Day) => {
                                 >
                             
                                   <span
-                                    className="mt-[1px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-[4px] bg-[#e3daf5] text-[9px] font-bold text-[#51426c]"
+                                    className="mt-[1px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-[4px] bg-[#dceefa] text-[9px] font-bold text-[#385e7d]"
                                   >
                                     {group.pos}
                                   </span>
@@ -2554,7 +2554,7 @@ const getDayProgress = (day: Day) => {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setMenuOpen(true)}
-                  className="h-9 w-9 text-[20px] text-[#75639b]"
+                  className="h-9 w-9 text-[20px] text-[#587fa3]"
                   aria-label="메뉴"
                 >
                   ☰
@@ -2562,7 +2562,7 @@ const getDayProgress = (day: Day) => {
 
                 <button
                   onClick={() => setStep("wordList")}
-                  className="flex h-9 w-9 items-center justify-center pt-[2px] text-[#75639b]"
+                  className="flex h-9 w-9 items-center justify-center pt-[2px] text-[#587fa3]"
                   aria-label="뒤로가기"
                 >
                   <ChevronLeft />
@@ -2629,7 +2629,7 @@ const getDayProgress = (day: Day) => {
 
               <button
                 onClick={() => setStep("editWord")}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-[#75639b] active:scale-95"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-[#587fa3] active:scale-95"
                 aria-label="수정"
               >
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
@@ -2920,7 +2920,7 @@ const getDayProgress = (day: Day) => {
               label="뒤로"
             />
 
-            <h1 className="mt-5 text-[28px] font-bold text-[#75639b]">
+            <h1 className="mt-5 text-[28px] font-bold text-[#587fa3]">
               폴더 이동
             </h1>
 
@@ -2938,7 +2938,7 @@ const getDayProgress = (day: Day) => {
                 setShowMeaning(false);
                 setStep("book");
               }}
-              className={`w-full rounded-2xl border border-[#e5deef] bg-[#f8fafc] px-4 py-4 text-left text-[14px] font-bold text-[#75639b] ${
+              className={`w-full rounded-2xl border border-[#ddeaf3] bg-[#f8fafc] px-4 py-4 text-left text-[14px] font-bold text-[#587fa3] ${
                 books.some((book) => book.id === actionFolderId) ? "opacity-35" : ""
               }`}
             >
@@ -2980,7 +2980,7 @@ const getDayProgress = (day: Day) => {
               label="뒤로"
             />
 
-            <h1 className="mt-5 text-[28px] font-bold text-[#75639b]">
+            <h1 className="mt-5 text-[28px] font-bold text-[#587fa3]">
               Day 이동
             </h1>
 
@@ -3038,7 +3038,7 @@ const getDayProgress = (day: Day) => {
 
                 <button
                   onClick={() => setBookDropdownOpen((prev) => !prev)}
-                  className="flex w-full items-center justify-between rounded-xl border border-[#75639b] bg-[#f8fbff] px-4 py-3 text-left text-[13px] font-bold text-[#75639b]"
+                  className="flex w-full items-center justify-between rounded-xl border border-[#587fa3] bg-[#f8fbff] px-4 py-3 text-left text-[13px] font-bold text-[#587fa3]"
                 >
                   <span className="truncate">{currentFolderTitle || selectedBook.title}</span>
                   <span className="text-[12px]">{bookDropdownOpen ? "⌃" : "⌄"}</span>
@@ -3110,7 +3110,7 @@ const getDayProgress = (day: Day) => {
                       }}
                       className={`w-full rounded-xl border px-4 py-3 text-left text-[13px] ${
                         day.id === selectedDayId
-                          ? "border-[#75639b] bg-[#f8fbff] font-bold text-[#75639b]"
+                          ? "border-[#587fa3] bg-[#f8fbff] font-bold text-[#587fa3]"
                           : "border-[#e3e7ef] text-[#596275]"
                       }`}
                     >
@@ -3143,7 +3143,7 @@ const getDayProgress = (day: Day) => {
                     setActionWordIndex(null);
                     setStep("editWord");
                   }}
-                  className="h-12 w-full rounded-2xl bg-[#f3eff9] text-[13px] font-bold text-[#75639b]"
+                  className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#587fa3]"
                 >
                   수정
                 </button>
@@ -3157,7 +3157,7 @@ const getDayProgress = (day: Day) => {
 
                 <button
                   onClick={() => setActionWordIndex(null)}
-                  className="h-12 w-full rounded-2xl border border-[#e5deef] text-[13px] text-[#596275]"
+                  className="h-12 w-full rounded-2xl border border-[#ddeaf3] text-[13px] text-[#596275]"
                 >
                   취소
                 </button>
@@ -3231,7 +3231,7 @@ const getDayProgress = (day: Day) => {
                   onClick={() => {
                     setStep("editDay");
                   }}
-                  className="h-12 w-full rounded-2xl bg-[#f3eff9] text-[13px] font-bold text-[#75639b]"
+                  className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#587fa3]"
                 >
                   Day 수정
                 </button>
@@ -3240,7 +3240,7 @@ const getDayProgress = (day: Day) => {
                   onClick={() => {
                     setStep("moveDay");
                   }}
-                  className="h-12 w-full rounded-2xl bg-[#f3eff9] text-[13px] font-bold text-[#75639b]"
+                  className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#587fa3]"
                 >
                   Day 이동
                 </button>
@@ -3254,7 +3254,7 @@ const getDayProgress = (day: Day) => {
 
                 <button
                   onClick={() => setActionDayId(null)}
-                  className="h-12 w-full rounded-2xl border border-[#e5deef] text-[13px] text-[#596275]"
+                  className="h-12 w-full rounded-2xl border border-[#ddeaf3] text-[13px] text-[#596275]"
                 >
                   취소
                 </button>
@@ -3324,7 +3324,7 @@ const getDayProgress = (day: Day) => {
                     setActionFolderId(null);
                     setStep("addFolder");
                   }}
-                  className="h-12 w-full rounded-2xl bg-[#f3eff9] text-[13px] font-bold text-[#75639b]"
+                  className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#587fa3]"
                 >
                   하위 폴더 추가
                 </button>
@@ -3333,7 +3333,7 @@ const getDayProgress = (day: Day) => {
                   onClick={() => {
                     setStep("editFolder");
                   }}
-                  className="h-12 w-full rounded-2xl bg-[#f3eff9] text-[13px] font-bold text-[#75639b]"
+                  className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#587fa3]"
                 >
                   폴더 수정
                 </button>
@@ -3342,7 +3342,7 @@ const getDayProgress = (day: Day) => {
                   onClick={() => {
                     setStep("moveFolder");
                   }}
-                  className="h-12 w-full rounded-2xl bg-[#f3eff9] text-[13px] font-bold text-[#75639b]"
+                  className="h-12 w-full rounded-2xl bg-[#eff7fc] text-[13px] font-bold text-[#587fa3]"
                 >
                   폴더 이동
                 </button>
@@ -3367,7 +3367,7 @@ const getDayProgress = (day: Day) => {
 
                 <button
                   onClick={() => setActionFolderId(null)}
-                  className="h-12 w-full rounded-2xl border border-[#e5deef]"
+                  className="h-12 w-full rounded-2xl border border-[#ddeaf3]"
                 >
                   취소
                 </button>
@@ -3400,7 +3400,7 @@ function AddBook({
     <div className="min-h-dvh px-5 pt-7 pb-6">
       <BackButton onClick={onBack} label="뒤로" />
 
-      <h1 className="mt-5 text-[28px] font-bold text-[#75639b]">
+      <h1 className="mt-5 text-[28px] font-bold text-[#587fa3]">
         {initialBook ? "단어장 수정" : "단어장 추가"}
       </h1>
 
@@ -3435,7 +3435,7 @@ function AddBook({
                 })),
             });
           }}
-          className="h-12 w-full rounded-full bg-[#e3daf5] text-[13px] font-bold text-[#51426c]"
+          className="h-12 w-full rounded-full bg-[#dceefa] text-[13px] font-bold text-[#385e7d]"
         >
           저장
         </button>
@@ -3476,7 +3476,7 @@ function AddFolder({
     <div className="min-h-dvh px-5 pt-7 pb-6">
       <BackButton onClick={onBack} label="뒤로" />
 
-      <h1 className="mt-5 text-[28px] font-bold text-[#75639b]">
+      <h1 className="mt-5 text-[28px] font-bold text-[#587fa3]">
         {titleText}
       </h1>
 
@@ -3519,7 +3519,7 @@ function AddFolder({
                   : initialFolder?.days || [],
             });
           }}
-          className="h-12 w-full rounded-full bg-[#e3daf5] text-[13px] font-bold text-[#51426c]"
+          className="h-12 w-full rounded-full bg-[#dceefa] text-[13px] font-bold text-[#385e7d]"
         >
           저장
         </button>
@@ -3545,7 +3545,7 @@ function AddDay({
     <div className="min-h-dvh px-5 pt-7 pb-6">
       <BackButton onClick={onBack} label="뒤로" />
 
-      <h1 className="mt-5 text-[28px] font-bold text-[#75639b]">{titleText}</h1>
+      <h1 className="mt-5 text-[28px] font-bold text-[#587fa3]">{titleText}</h1>
 
       <div className="mt-7 space-y-4">
         <Input label="Day 이름" value={title} onChange={setTitle} placeholder="Day 11" />
@@ -3555,7 +3555,7 @@ function AddDay({
             if (!title.trim()) return alert("Day 이름을 입력해줘.");
             onSave(title.trim());
           }}
-          className="h-12 w-full rounded-full bg-[#e3daf5] text-[13px] font-bold text-[#51426c]"
+          className="h-12 w-full rounded-full bg-[#dceefa] text-[13px] font-bold text-[#385e7d]"
         >
           저장
         </button>
@@ -4129,7 +4129,7 @@ function AddWord({
     <div className="min-h-dvh px-5 pt-7 pb-6">
       <BackButton onClick={onBack} label="뒤로" />
 
-      <h1 className="mt-5 text-[28px] font-bold text-[#75639b]">
+      <h1 className="mt-5 text-[28px] font-bold text-[#587fa3]">
         {initialWord ? "단어 수정" : "단어 추가"}
       </h1>
 
@@ -4141,7 +4141,7 @@ function AddWord({
             <select
               value={dayId}
               onChange={(e) => setDayId(e.target.value)}
-              className="h-12 w-full appearance-none rounded-2xl border border-[#e5deef] px-4 pr-11 text-[14px] outline-none"
+              className="h-12 w-full appearance-none rounded-2xl border border-[#ddeaf3] px-4 pr-11 text-[14px] outline-none"
             >
               {book.days.map((day) => (
                 <option key={day.id} value={day.id}>
@@ -4163,7 +4163,7 @@ function AddWord({
             <p className="pl-1.5 text-[12px] font-bold text-[#596275]">뜻</p>
             <button
               onClick={addMeaningGroup}
-              className="rounded-full bg-[#f3eff9] px-3 py-1.5 text-[11px] font-bold text-[#75639b]"
+              className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
             >
               + 품사 추가
             </button>
@@ -4171,7 +4171,7 @@ function AddWord({
 
           <div className="space-y-3">
             {meanings.map((group, groupIndex) => (
-              <div key={groupIndex} className="rounded-2xl border border-[#e5deef] p-4">
+              <div key={groupIndex} className="rounded-2xl border border-[#ddeaf3] p-4">
                 <div className="flex gap-2">
                   <div className="relative w-[66px] shrink-0">
                     <select
@@ -4179,7 +4179,7 @@ function AddWord({
                       onChange={(e) =>
                         updateMeaningGroup(groupIndex, { pos: e.target.value })
                       }
-                      className="h-10 w-full appearance-none rounded-xl border border-[#e5deef] pl-5 pr-7 text-[13px] outline-none"
+                      className="h-10 w-full appearance-none rounded-xl border border-[#ddeaf3] pl-5 pr-7 text-[13px] outline-none"
                     >
                       <option value="동">동</option>
                       <option value="명">명</option>
@@ -4207,8 +4207,8 @@ function AddWord({
                     }
                     className={`h-10 flex-1 rounded-xl border text-[12px] font-bold ${
                       group.numbered
-                        ? "border-[#75639b] bg-[#f3eff9] text-[#75639b]"
-                        : "border-[#e5deef] text-[#8a94a6]"
+                        ? "border-[#587fa3] bg-[#eff7fc] text-[#587fa3]"
+                        : "border-[#ddeaf3] text-[#8a94a6]"
                     }`}
                   >
                     <span className="tracking-[0.08em]">① ②</span>
@@ -4217,7 +4217,7 @@ function AddWord({
 
                   <button
                     onClick={() => removeMeaningGroup(groupIndex)}
-                    className="h-10 w-10 rounded-xl border border-[#e5deef] text-[13px] text-[#8a94a6]"
+                    className="h-10 w-10 rounded-xl border border-[#ddeaf3] text-[13px] text-[#8a94a6]"
                   >
                     ×
                   </button>
@@ -4230,7 +4230,7 @@ function AddWord({
                         value={item}
                         onChange={(e) => updateMeaningItem(groupIndex, itemIndex, e.target.value)}
                         placeholder={group.numbered ? `${itemIndex + 1}번째 뜻` : "뜻 입력"}
-                        className="h-11 w-full rounded-xl border border-[#e5deef] px-3 pr-10 text-[13px] outline-none"
+                        className="h-11 w-full rounded-xl border border-[#ddeaf3] px-3 pr-10 text-[13px] outline-none"
                       />
 
                       <button
@@ -4260,7 +4260,7 @@ function AddWord({
             <p className="pl-1.5 text-[12px] font-bold text-[#596275]">예시문장</p>
             <button
               onClick={addExample}
-              className="rounded-full bg-[#f3eff9] px-3 py-1.5 text-[11px] font-bold text-[#75639b]"
+              className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
             >
               + 예문 추가
             </button>
@@ -4268,7 +4268,7 @@ function AddWord({
 
           <div className="space-y-3">
             {examples.map((example, index) => (
-              <div key={index} className="rounded-2xl border border-[#e5deef] p-4">
+              <div key={index} className="rounded-2xl border border-[#ddeaf3] p-4">
                 <div className="mb-2 flex items-center justify-between">
                 <p className="pl-1.5 text-[12px] font-bold text-[#8a94a6]">
                   예문 {index + 1}
@@ -4285,14 +4285,14 @@ function AddWord({
                   value={example.en}
                   onChange={(e) => updateExample(index, "en", e.target.value)}
                   placeholder="영어 예문"
-                  className="h-11 w-full rounded-xl border border-[#e5deef] px-3 text-[13px] outline-none"
+                  className="h-11 w-full rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
                 />
 
                 <input
                   value={example.ko}
                   onChange={(e) => updateExample(index, "ko", e.target.value)}
                   placeholder="한국어 해석"
-                  className="mt-2 h-11 w-full rounded-xl border border-[#e5deef] px-3 text-[13px] outline-none"
+                  className="mt-2 h-11 w-full rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
                 />
               </div>
             ))}
@@ -4321,7 +4321,7 @@ function AddWord({
 
             <button
               onClick={addStudyPoint}
-              className="rounded-full bg-[#f3eff9] px-3 py-1.5 text-[11px] font-bold text-[#75639b]"
+              className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
             >
               + 포인트 추가
             </button>
@@ -4329,7 +4329,7 @@ function AddWord({
 
           <div className="space-y-3">
             {studyPoints.map((point, index) => (
-              <div key={index} className="rounded-2xl border border-[#e5deef] p-4">
+              <div key={index} className="rounded-2xl border border-[#ddeaf3] p-4">
                 <div className="flex gap-2">
                 <div className="relative flex-1">
                   <select
@@ -4338,7 +4338,7 @@ function AddWord({
                       const value = e.target.value;
                       updateStudyPoint(index, "category", value === "직접입력" ? "" : value);
                     }}
-                    className="h-10 w-full appearance-none rounded-xl border border-[#e5deef] px-3 pr-9 text-[13px] outline-none"
+                    className="h-10 w-full appearance-none rounded-xl border border-[#ddeaf3] px-3 pr-9 text-[13px] outline-none"
                   >
                     {STUDY_CATEGORIES.map((category) => (
                       <option key={category} value={category}>
@@ -4355,7 +4355,7 @@ function AddWord({
 
                   <button
                     onClick={() => removeStudyPoint(index)}
-                    className="h-10 w-10 rounded-xl border border-[#e5deef] text-[13px] text-[#8a94a6]"
+                    className="h-10 w-10 rounded-xl border border-[#ddeaf3] text-[13px] text-[#8a94a6]"
                   >
                     ×
                   </button>
@@ -4366,7 +4366,7 @@ function AddWord({
                     value={point.category}
                     onChange={(e) => updateStudyPoint(index, "category", e.target.value)}
                     placeholder="유형 직접입력"
-                    className="mt-3 h-10 w-full rounded-xl border border-[#e5deef] px-3 text-[13px] outline-none"
+                    className="mt-3 h-10 w-full rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
                   />
                 )}
 
@@ -4374,7 +4374,7 @@ function AddWord({
                   value={point.expression}
                   onChange={(e) => updateStudyPoint(index, "expression", e.target.value)}
                   placeholder="제목"
-                  className="mt-3 h-11 w-full rounded-xl border border-[#e5deef] px-3 text-[13px] outline-none"
+                  className="mt-3 h-11 w-full rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
                 />
 
                 <div className="mt-2">
@@ -4401,7 +4401,7 @@ function AddWord({
                     <button
                       type="button"
                       onClick={() => addStudyPointVariant(index)}
-                      className="rounded-full bg-[#f3eff9] px-3 py-1.5 text-[11px] font-bold text-[#75639b]"
+                      className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
                     >
                       + 단어 추가
                     </button>
@@ -4409,7 +4409,7 @@ function AddWord({
 
                   <div className="space-y-2">
                     {(point.variants ?? []).map((variant, variantIndex) => (
-                      <div key={variantIndex} className="rounded-xl border border-[#e5deef] bg-white p-3">
+                      <div key={variantIndex} className="rounded-xl border border-[#ddeaf3] bg-white p-3">
                         <div className="flex gap-2">
                           <input
                             value={variant.word}
@@ -4417,13 +4417,13 @@ function AddWord({
                               updateStudyPointVariantWord(index, variantIndex, e.target.value)
                             }
                             placeholder="변형 단어 예: advanced, advance"
-                            className="h-10 min-w-0 flex-1 rounded-xl border border-[#e5deef] px-3 text-[13px] outline-none"
+                            className="h-10 min-w-0 flex-1 rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
                           />
 
                           <button
                             type="button"
                             onClick={() => removeStudyPointVariant(index, variantIndex)}
-                            className="h-10 w-10 rounded-xl border border-[#e5deef] text-[13px] text-[#8a94a6]"
+                            className="h-10 w-10 rounded-xl border border-[#ddeaf3] text-[13px] text-[#8a94a6]"
                           >
                             ×
                           </button>
@@ -4441,7 +4441,7 @@ function AddWord({
                                         pos: e.target.value,
                                       })
                                     }
-                                    className="h-10 w-full appearance-none rounded-xl border border-[#e5deef] pl-5 pr-7 text-[13px] outline-none"
+                                    className="h-10 w-full appearance-none rounded-xl border border-[#ddeaf3] pl-5 pr-7 text-[13px] outline-none"
                                   >
                                     <option value="동">동</option>
                                     <option value="명">명</option>
@@ -4470,8 +4470,8 @@ function AddWord({
                                   }
                                   className={`h-10 flex-1 rounded-xl border text-[12px] font-bold ${
                                     meaning.numbered
-                                      ? "border-[#75639b] bg-[#f3eff9] text-[#75639b]"
-                                      : "border-[#e5deef] text-[#8a94a6]"
+                                      ? "border-[#587fa3] bg-[#eff7fc] text-[#587fa3]"
+                                      : "border-[#ddeaf3] text-[#8a94a6]"
                                   }`}
                                 >
                                   <span className="tracking-[0.08em]">① ②</span>
@@ -4483,7 +4483,7 @@ function AddWord({
                                   onClick={() =>
                                     removeStudyPointVariantMeaning(index, variantIndex, meaningIndex)
                                   }
-                                  className="h-10 w-10 rounded-xl border border-[#e5deef] text-[13px] text-[#8a94a6]"
+                                  className="h-10 w-10 rounded-xl border border-[#ddeaf3] text-[13px] text-[#8a94a6]"
                                 >
                                   ×
                                 </button>
@@ -4504,7 +4504,7 @@ function AddWord({
                                         )
                                       }
                                       placeholder="뜻"
-                                      className="h-10 min-w-0 flex-1 rounded-xl border border-[#e5deef] px-3 text-[13px] outline-none"
+                                      className="h-10 min-w-0 flex-1 rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
                                     />
 
                                     <button
@@ -4517,7 +4517,7 @@ function AddWord({
                                           itemIndex
                                         )
                                       }
-                                      className="h-10 w-10 rounded-xl border border-[#e5deef] text-[13px] text-[#8a94a6]"
+                                      className="h-10 w-10 rounded-xl border border-[#ddeaf3] text-[13px] text-[#8a94a6]"
                                     >
                                       −
                                     </button>
@@ -4531,7 +4531,7 @@ function AddWord({
                                   onClick={() =>
                                     addStudyPointVariantMeaningItem(index, variantIndex, meaningIndex)
                                   }
-                                  className="rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#75639b]"
+                                  className="rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
                                 >
                                   + 뜻 추가
                                 </button>
@@ -4544,14 +4544,14 @@ function AddWord({
                           value={variant.related ?? ""}
                           onChange={(e) => updateStudyPointVariantRelated(index, variantIndex, e.target.value)}
                           placeholder="유의어/동의어 예: on request, reply to, react to"
-                          className="mt-3 h-10 w-full rounded-xl border border-[#e5deef] px-3 text-[13px] outline-none"
+                          className="mt-3 h-10 w-full rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
                         />
 
                         <div className="mt-2 flex justify-end">
                           <button
                             type="button"
                             onClick={() => addStudyPointVariantMeaning(index, variantIndex)}
-                            className="rounded-full bg-[#f3eff9] px-3 py-1.5 text-[11px] font-bold text-[#75639b]"
+                            className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
                           >
                             + 품사 추가
                           </button>
@@ -4568,7 +4568,7 @@ function AddWord({
                     <button
                       type="button"
                       onClick={() => addStudyPointExample(index)}
-                      className="rounded-full bg-[#f3eff9] px-3 py-1.5 text-[11px] font-bold text-[#75639b]"
+                      className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
                     >
                       + 예시 추가
                     </button>
@@ -4581,7 +4581,7 @@ function AddWord({
                     ).map((example, exampleIndex) => (
                       <div
                         key={exampleIndex}
-                        className="rounded-xl border border-[#e5deef] bg-white p-3"
+                        className="rounded-xl border border-[#ddeaf3] bg-white p-3"
                       >
                         <div className="mb-2 flex items-center justify-between">
                           <p className="pl-1 text-[11px] font-bold text-[#8a94a6]">
@@ -4620,7 +4620,7 @@ function AddWord({
                             updateStudyPointExample(index, exampleIndex, "ko", e.target.value)
                           }
                           placeholder="한국어 해석"
-                          className="mt-2 h-11 w-full rounded-xl border border-[#e5deef] px-3 text-[13px] outline-none"
+                          className="mt-2 h-11 w-full rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
                         />
                       </div>
                     ))}
@@ -4730,7 +4730,7 @@ function AddWord({
               createdAt: initialWord?.createdAt || new Date().toISOString(),
             });
           }}
-          className="h-12 w-full rounded-full bg-[#e3daf5] text-[13px] font-bold text-[#51426c]"
+          className="h-12 w-full rounded-full bg-[#dceefa] text-[13px] font-bold text-[#385e7d]"
         >
           저장
         </button>
@@ -4782,7 +4782,7 @@ function Input({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-12 w-full rounded-2xl border border-[#e5deef] px-4 text-[14px] outline-none"
+        className="h-12 w-full rounded-2xl border border-[#ddeaf3] px-4 text-[14px] outline-none"
       />
     </label>
   );
@@ -4809,7 +4809,7 @@ function TextArea({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={rows}
-        className="max-h-[92px] w-full resize-none overflow-y-auto rounded-2xl border border-[#e5deef] px-4 py-3 text-[14px] outline-none"
+        className="max-h-[92px] w-full resize-none overflow-y-auto rounded-2xl border border-[#ddeaf3] px-4 py-3 text-[14px] outline-none"
       />
     </label>
   );
@@ -4863,7 +4863,7 @@ function LinkedTermEditor({
 
         <button
           onClick={addItem}
-          className="rounded-full bg-[#f3eff9] px-3 py-1.5 text-[11px] font-bold text-[#75639b]"
+          className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#587fa3]"
         >
           + 추가
         </button>
@@ -4871,7 +4871,7 @@ function LinkedTermEditor({
 
       <div className="space-y-3">
         {safeItems.map((item, index) => (
-          <div key={index} className="rounded-2xl border border-[#e5deef] p-4">
+          <div key={index} className="rounded-2xl border border-[#ddeaf3] p-4">
             <div className="flex gap-2">
               <div className="relative w-[100px] shrink-0">
                 <select
@@ -4885,7 +4885,7 @@ function LinkedTermEditor({
                       meaningLabel: option?.label || "",
                     });
                   }}
-                  className="h-11 w-full appearance-none rounded-xl border border-[#e5deef] px-3 pr-8 text-[12px] outline-none"
+                  className="h-11 w-full appearance-none rounded-xl border border-[#ddeaf3] px-3 pr-8 text-[12px] outline-none"
                 >
                   <option value="">연결 없음</option>
 
@@ -4906,7 +4906,7 @@ function LinkedTermEditor({
                   value={item.text}
                   onChange={(e) => updateItem(index, { text: e.target.value })}
                   placeholder={placeholder}
-                  className="h-11 w-full rounded-xl border border-[#e5deef] px-3 pr-12 text-[13px] outline-none"
+                  className="h-11 w-full rounded-xl border border-[#ddeaf3] px-3 pr-12 text-[13px] outline-none"
                 />
 
                 <button
@@ -4927,7 +4927,7 @@ function LinkedTermEditor({
 
 function Empty({ text }: { text: string }) {
   return (
-    <div className="mt-8 rounded-[22px] border border-dashed border-[#e5deef] p-8 text-center text-[13px] text-[#8a94a6]">
+    <div className="mt-8 rounded-[22px] border border-dashed border-[#ddeaf3] p-8 text-center text-[13px] text-[#8a94a6]">
       {text}
     </div>
   );
@@ -5005,7 +5005,7 @@ function ChipList({
   const wordChipClass =
     tone === "red"
       ? "rounded-full bg-[#fdeeee] px-3 py-1 text-[12px] leading-none text-[#b42318]"
-      : "rounded-full bg-[#f3eff9] px-3 py-1 text-[12px] leading-none text-[#75639b]";
+      : "rounded-full bg-[#eff7fc] px-3 py-1 text-[12px] leading-none text-[#587fa3]";
 
   const labelClass =
     tone === "red"
@@ -5042,7 +5042,7 @@ function ChevronRight() {
 }
 
 function ChevronDownIcon() {
-  return <span aria-hidden="true" className="folder-symbol text-[20px]">∨</span>;
+  return <span aria-hidden="true" className="folder-symbol text-[20px]">▽</span>;
 }
 
 function HomeIcon() {
@@ -5129,7 +5129,7 @@ function MoveFolderList({
       <button
         disabled={disabled}
         onClick={() => onSelect(folder.id)}
-        className={`w-full rounded-2xl border border-[#e5deef] px-4 py-4 text-left ${
+        className={`w-full rounded-2xl border border-[#ddeaf3] px-4 py-4 text-left ${
           disabled ? "opacity-35" : ""
         }`}
       >
@@ -5185,7 +5185,7 @@ function EditorBox({
         resetEditorIfEmpty(e.currentTarget);
         onBlur?.(cleanEditorHtml(e.currentTarget.innerHTML));
       }}
-      className="min-h-[96px] w-full whitespace-pre-wrap rounded-b-xl border border-t-0 border-[#e5deef] bg-white px-3 py-3 text-[13px] leading-[1.8] text-[#303236] outline-none empty:before:text-[#a3abb8] empty:before:content-[attr(data-placeholder)]"
+      className="min-h-[96px] w-full whitespace-pre-wrap rounded-b-xl border border-t-0 border-[#ddeaf3] bg-white px-3 py-3 text-[13px] leading-[1.8] text-[#303236] outline-none empty:before:text-[#a3abb8] empty:before:content-[attr(data-placeholder)]"
     />
   );
 }
@@ -5216,7 +5216,7 @@ function InlineEditorBox({
       suppressContentEditableWarning
       data-placeholder={placeholder}
       onInput={(e) => resetEditorIfEmpty(e.currentTarget)}
-      className="min-h-[44px] w-full whitespace-pre-wrap rounded-b-xl border border-t-0 border-[#e5deef] bg-white px-3 py-3 text-[13px] leading-[1.5] text-[#303236] outline-none empty:before:text-[#a3abb8] empty:before:content-[attr(data-placeholder)]"
+      className="min-h-[44px] w-full whitespace-pre-wrap rounded-b-xl border border-t-0 border-[#ddeaf3] bg-white px-3 py-3 text-[13px] leading-[1.5] text-[#303236] outline-none empty:before:text-[#a3abb8] empty:before:content-[attr(data-placeholder)]"
     />
   );
 }
@@ -5254,7 +5254,7 @@ function EditorToolbar({
   };
 
   return (
-    <div className="relative flex min-h-8 flex-wrap items-center gap-1 rounded-t-xl border border-[#e5deef] bg-[#f8fafc] px-2 py-1.5">
+    <div className="relative flex min-h-8 flex-wrap items-center gap-1 rounded-t-xl border border-[#ddeaf3] bg-[#f8fafc] px-2 py-1.5">
       <ToolIcon onClick={() => runCommand("bold")}>B</ToolIcon>
       <ToolIcon onClick={() => runCommand("underline")}>
         <span className="underline">U</span>
@@ -5331,7 +5331,7 @@ function ToolIcon({
       type="button"
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className="flex h-6 min-w-6 items-center justify-center rounded-[5px] border border-[#cfd6e3] bg-white px-1.5 text-[11px] font-bold text-[#303236] active:bg-[#f3eff9]"
+      className="flex h-6 min-w-6 items-center justify-center rounded-[5px] border border-[#cfd6e3] bg-white px-1.5 text-[11px] font-bold text-[#303236] active:bg-[#eff7fc]"
     >
       {children}
     </button>
@@ -5376,7 +5376,7 @@ function ColorPalette({
               onNone();
               onClose();
             }}
-            className="h-6 rounded-md border border-[#e5deef] px-2 text-[10px] font-bold text-[#596275]"
+            className="h-6 rounded-md border border-[#ddeaf3] px-2 text-[10px] font-bold text-[#596275]"
           >
             없음
           </button>
@@ -5421,7 +5421,7 @@ function ColorPalette({
             type="color"
             value={newColor}
             onChange={(e) => setNewColor(e.target.value)}
-            className="h-7 w-8 rounded-md border border-[#e5deef] bg-white"
+            className="h-7 w-8 rounded-md border border-[#ddeaf3] bg-white"
           />
 
           <input
@@ -5429,13 +5429,13 @@ function ColorPalette({
             onChange={(e) => setNewColor(e.target.value)}
             placeholder="#000000"
             maxLength={7}
-            className="h-7 min-w-0 flex-1 rounded-md border border-[#e5deef] px-2 text-[11px] font-bold text-[#596275] outline-none"
+            className="h-7 min-w-0 flex-1 rounded-md border border-[#ddeaf3] px-2 text-[11px] font-bold text-[#596275] outline-none"
           />
 
           <button
             type="button"
             onClick={() => onAdd(newColor)}
-            className="h-7 rounded-md bg-[#e3daf5] px-2 text-[10px] font-bold text-[#51426c]"
+            className="h-7 rounded-md bg-[#dceefa] px-2 text-[10px] font-bold text-[#385e7d]"
           >
             추가
           </button>
@@ -5536,7 +5536,7 @@ function FolderTreeRows({
                     e.stopPropagation();
                     onToggle(folder.id);
                   }}
-                  className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#e3daf5] text-[#51426c] active:scale-95"
+                  className="ml-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#dceefa] text-[#385e7d] active:scale-95"
                 >
                   <ChevronToggle open={open} />
                 </button>
@@ -5596,7 +5596,7 @@ function MenuFolderTree({
     <div>
       <div
         className={`flex w-full items-center rounded-xl px-2.5 py-2 ${
-          isSelected ? "bg-[#f8fbff] text-[#75639b]" : "text-[#111827]"
+          isSelected ? "bg-[#f8fbff] text-[#587fa3]" : "text-[#111827]"
         }`}
         style={{ paddingLeft: `${10 + depth * 14}px` }}
       >
@@ -5657,5 +5657,5 @@ function MenuFolderTree({
 }
 
 function ChevronToggle({ open }: { open: boolean }) {
-  return <span aria-hidden="true" className="folder-symbol inline-flex h-5 w-5 items-center justify-center text-[22px]">{open ? "∧" : "∨"}</span>;
+  return <span aria-hidden="true" className="folder-symbol inline-flex h-5 w-5 items-center justify-center text-[22px]">{open ? "△" : "▽"}</span>;
 }
