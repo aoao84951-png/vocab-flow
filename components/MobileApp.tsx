@@ -2032,11 +2032,7 @@ const getDayProgress = (day: Day) => {
       {step === "book" && (
         <div className="min-h-dvh bg-white px-5 pt-8 pb-6">
           <div>
-            <p className="text-[12px] font-semibold text-[#8a94a6]">
-              ᴠᴏᴄᴀ
-            </p>
-
-            <div className="mt-2 flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <h1 className="text-[28px] font-bold tracking-tight text-[#0f2a5f]">
                 단어장
               </h1>
