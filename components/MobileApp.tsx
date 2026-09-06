@@ -1,5 +1,6 @@
 "use client";
 
+import { applyFolderAction } from "@/lib/folderActions";
 import { useEffect, useRef, useState } from "react";
 import useNavigationHistory from "./useNavigationHistory";
 import { isNavigationEntry, mainScreen, type Screen } from "@/lib/navigationHistory";
@@ -1915,7 +1916,7 @@ const getDayProgress = (day: Day) => {
 
   return (
     <main className="min-h-[100svh] pb-[calc(var(--mobile-bottom-bar-height)+31px)] bg-white text-[#111827]">
-      <BottomNavigation onManageFolder={setActionFolderId} books={books} step={step} path={folderPath} dayId={step === "wordList" || step === "study" ? selectedDayId : ""} onHome={goHome}
+      <BottomNavigation onFolderAction={action => { saveBooks(prev => applyFolderAction(prev, action)); }} books={books} step={step} path={folderPath} dayId={step === "wordList" || step === "study" ? selectedDayId : ""} onHome={goHome}
         onNavigate={(path, dayId, index) => {
           setMenuOpen(false); setActionWordIndex(null); setActionDayId(null); setActionFolderId(null); setSelectedBookId(path[0] || ""); setFolderPath(path);
           setSelectedDayId(dayId || ""); setWordIndex(index ?? 0); setShowMeaning(false);

@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { Home, MoreHorizontal, Search, X } from "lucide-react";
+import FolderInlineActions from "./FolderInlineActions";
+import type { FolderAction } from "@/lib/folderActions";
 import { FolderSymbol } from "./FolderSymbols";
 import { RichText } from "./RichTextField";
 import { matchesWordSearch } from "@/lib/wordSearch";
@@ -9,10 +11,12 @@ import useModalScrollLock from "./useModalScrollLock";
 type Word = { id: string; word: string; meanings?: { items: string[] }[]; importanceStars?: number };
 type Day = { id: string; title: string; words: Word[] };
 type Folder = { id: string; title: string; icon?: string; folders: Folder[]; days: Day[] };
-type Props = { onManageFolder: (id: string) => void; books: Folder[]; step: string; path: string[]; dayId: string; onHome: () => void; onNavigate: (path: string[], dayId?: string, wordIndex?: number) => void; onAdd: (kind: "folder" | "day" | "word", dayId?: string) => void };
-export default function BottomNavigation({ books, step, path, dayId, onHome, onNavigate, onAdd, onManageFolder }: Props) {
+type Props = { onFolderAction: (action: FolderAction) => void; books: Folder[]; step: string; path: string[]; dayId: string; onHome: () => void; onNavigate: (path: string[], dayId?: string, wordIndex?: number) => void; onAdd: (kind: "folder" | "day" | "word", dayId?: string) => void };
+export default function BottomNavigation({ books, step, path, dayId, onHome, onNavigate, onAdd, onFolderAction }: Props) {
   useEffect(() => { const open = () => setPanel("contents"); window.addEventListener("voca-open-contents", open); return () => window.removeEventListener("voca-open-contents", open); }, []);
   const [panel, setPanel] = useState<"search" | "stars" | "add" | "contents" | null>(null);
+  const [managing, setManaging] = useState<string | null>(null);
+  useEffect(() => { setManaging(null); }, [panel]);
   const [query, setQuery] = useState("");
   const [stars, setStars] = useState(0);
   const [pickingDay, setPickingDay] = useState(false);
@@ -58,9 +62,9 @@ export default function BottomNavigation({ books, step, path, dayId, onHome, onN
     const toggle = () => { if (hasChildren) setExpanded(prev => prev.includes(folder.id) ? prev.filter(id => id !== folder.id) : [...prev, folder.id]); };
     return <div key={folder.id}><div className="flex min-h-11 items-center gap-2">
       <button aria-expanded={hasChildren ? isOpen : undefined} className="min-w-0 flex-1 truncate py-2 text-left text-sm text-[#4b5058]" onClick={toggle}><FolderSymbol symbol={folder.icon} />{folder.title}</button>
-      <button aria-label={`${folder.title} 관리`} title="폴더 추가·수정" aria-haspopup="dialog" onClick={() => { setPanel(null); onManageFolder(folder.id); }} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#8b9cac] transition-colors hover:bg-[#eff7fc] active:bg-[#e2eff8] focus-visible:outline-2 focus-visible:outline-[#a9cbe1]"><MoreHorizontal aria-hidden="true" size={18} strokeWidth={1.7}/></button>
+      <button aria-label={`${folder.title} 관리`} title="폴더 추가·수정" aria-expanded={managing === folder.id} onClick={() => setManaging(managing === folder.id ? null : folder.id)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#8b9cac] transition-colors hover:bg-[#eff7fc] active:bg-[#e2eff8] focus-visible:outline-2 focus-visible:outline-[#a9cbe1]"><MoreHorizontal aria-hidden="true" size={18} strokeWidth={1.7}/></button>
       {hasChildren ? <button aria-label={`${folder.title} ${isOpen ? "접기" : "펼치기"}`} aria-expanded={isOpen} onClick={toggle} className="folder-symbol h-11 w-11 shrink-0 text-sm">{isOpen ? "△" : "▽"}</button> : <span aria-hidden="true" className="w-11 shrink-0"/>}
-    </div>{isOpen && <div className="ml-3 border-l border-[#e7edf2] pl-[19px]">{tree(folder.folders, next)}{folder.days.map(day => <button key={day.id} onClick={() => navigate(next, day.id)} className={`block min-h-11 w-full rounded-lg pr-2 text-left text-sm text-[#4b5058] ${day.id === dayId ? "bg-[#eff7fc]" : ""}`}>{day.title}<span className="ml-2 text-xs text-[#939ba5]">{day.words.length}개</span></button>)}</div>}</div>;
+    </div>{managing === folder.id && <FolderInlineActions folder={folder} books={books} onAction={onFolderAction} onClose={() => setManaging(null)}/>} {isOpen && <div className="ml-3 border-l border-[#e7edf2] pl-[19px]">{tree(folder.folders, next)}{folder.days.map(day => <button key={day.id} onClick={() => navigate(next, day.id)} className={`block min-h-11 w-full rounded-lg pr-2 text-left text-sm text-[#4b5058] ${day.id === dayId ? "bg-[#eff7fc]" : ""}`}>{day.title}<span className="ml-2 text-xs text-[#939ba5]">{day.words.length}개</span></button>)}</div>}</div>;
   });
   if (!visible) return null;
   return <>
