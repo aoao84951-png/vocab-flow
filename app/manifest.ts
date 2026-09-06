@@ -11,14 +11,14 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     icons: [
       {
-        src: "/icon?v=2",
-        sizes: "1024x1024",
+        src: "/icon.png?v=3",
+        sizes: "1254x1254",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icon?v=2",
-        sizes: "1024x1024",
+        src: "/icon.png?v=3",
+        sizes: "1254x1254",
         type: "image/png",
         purpose: "maskable",
       },
