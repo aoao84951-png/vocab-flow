@@ -20,7 +20,8 @@ export default function BottomNavigation({ books, step, path, dayId, onHome, onN
   const [query, setQuery] = useState("");
   const [stars, setStars] = useState(0);
   const [pickingDay, setPickingDay] = useState(false);
-  const [expanded, setExpanded] = useState<string[]>([]);
+  const [expanded, setExpanded] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem("voca-contents-expanded-v1") || "[]"); } catch { return []; } });
+  useEffect(() => { try { localStorage.setItem("voca-contents-expanded-v1", JSON.stringify(expanded)); } catch {} }, [expanded]);
   const visible = ["book", "day", "wordList", "study"].includes(step);
   useModalScrollLock(visible && panel !== null);
   useEffect(() => { setPanel(null); setPickingDay(false); }, [step, path, dayId]);
@@ -37,7 +38,7 @@ export default function BottomNavigation({ books, step, path, dayId, onHome, onN
   let current: Folder | undefined; let folders = books;
   for (const id of path) { current = folders.find(folder => folder.id === id); folders = current?.folders ?? []; }
   const results = entries.filter(entry => matchesWordSearch(entry.word, query) && (panel !== "stars" || (entry.word.importanceStars ?? 0) > 0 && (!stars || entry.word.importanceStars === stars)));
-  const open = (value: typeof panel) => { setPanel(panel === value ? null : value); setQuery(""); setPickingDay(false); if (value === "contents") setExpanded(path); };
+  const open = (value: typeof panel) => { setPanel(panel === value ? null : value); setQuery(""); setPickingDay(false); if (value === "contents") setExpanded(prev => Array.from(new Set([...prev, ...path]))); };
   const navigate = (target: string[], day?: string, index?: number) => { setPanel(null); onNavigate(target, day, index); };
   const add = (kind: "folder" | "day" | "word", day?: string) => { setPanel(null); onAdd(kind, day); };
   const addWord = () => {

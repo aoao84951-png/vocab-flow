@@ -11,9 +11,11 @@ type Entry={word:Word;path:string[];dayId:string;index:number;location:string[]}
 type Daily={date:string;ids:string[];checked:string[]};
 const KEY='voca-daily-v1',HISTORY='voca-daily-history-v1';
 export const LAST_STUDY_KEY='voca-last-study-v1';
+export const LAST_LOCATION_KEY='voca-last-location-v1';
 function read<T>(key:string,fallback:T):T{try{return JSON.parse(localStorage.getItem(key)||'null')||fallback;}catch{return fallback;}}
 function write(key:string,value:unknown){try{localStorage.setItem(key,JSON.stringify(value));}catch{}}
 export function rememberStudy(wordId:string){write(LAST_STUDY_KEY,wordId);}
+export function rememberLocation(path:string[],dayId:string,index?:number){write(LAST_LOCATION_KEY,{path,dayId,index:index ?? -1});}
 export default function DailyHome({books,onOpen,onContents}:{books:Folder[];onOpen:(path:string[],dayId:string,index:number)=>void;onContents:()=>void}){
  const entries=useMemo(()=>{const result:Entry[]=[];const walk=(folders:Folder[],path:string[],names:string[])=>folders.forEach(folder=>{
   const next=[...path,folder.id],titles=[...names,folder.title];
@@ -21,11 +23,11 @@ export default function DailyHome({books,onOpen,onContents}:{books:Folder[];onOp
   walk(folder.folders,next,titles);
  });walk(books,[],[]);return result;},[books]);
  const [date,setDate]=useState(localDay);const [daily,setDaily]=useState<Daily|null>(null);
- const [index,setIndex]=useState(0);const [revealed,setRevealed]=useState(false);const [last,setLast]=useState('');
+ const [index,setIndex]=useState(0);const [revealed,setRevealed]=useState(false);const [last,setLast]=useState('');const [lastLocation,setLastLocation]=useState<{path:string[];dayId:string;index:number}|null>(null);
  const touch=useRef<{x:number;y:number}|null>(null);const swiped=useRef(false);
  useEffect(()=>{const id=setInterval(()=>setDate(localDay()),60000);const update=()=>setDate(localDay());window.addEventListener('focus',update);return()=>{clearInterval(id);window.removeEventListener('focus',update);};},[]);
  useEffect(()=>{
-  setLast(read(LAST_STUDY_KEY,''));
+  setLast(read(LAST_STUDY_KEY,''));setLastLocation(read(LAST_LOCATION_KEY,null));
   if(!entries.length)return;
   let saved=read<Daily|null>(KEY,null);
   if(!saved||saved.date!==date){
@@ -40,6 +42,8 @@ export default function DailyHome({books,onOpen,onContents}:{books:Folder[];onOp
  const cards=useMemo(()=>daily?.ids.flatMap(id=>{const entry=entries.find(entry=>entry.word.id===id);return entry?[entry]:[];})||[],[daily,entries]);
  const current=cards[Math.min(index,Math.max(0,cards.length-1))];
  const resume=entries.find(entry=>entry.word.id===last);
+ const locationResume=lastLocation?.dayId ? entries.find(entry=>entry.dayId===lastLocation.dayId) : undefined;
+ const resumeTarget=lastLocation?.dayId ? locationResume : resume;
  const move=(offset:number)=>{setIndex(value=>Math.max(0,Math.min(cards.length-1,value+offset)));setRevealed(false);};
  useEffect(()=>{
   const key=(event:KeyboardEvent)=>{
@@ -64,7 +68,7 @@ export default function DailyHome({books,onOpen,onContents}:{books:Folder[];onOp
    <div className="mt-4 flex items-center justify-between"><button aria-label="이전 오늘의 단어" disabled={index===0} onClick={()=>move(-1)} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#e4ebf1] text-[#7892a8] disabled:opacity-25"><ChevronLeft size={18}/></button><button onClick={()=>onOpen(current.path,current.dayId,current.index)} className="flex items-center gap-1 text-sm text-[#7892a8]">자세히 보기<ArrowUpRight size={15}/></button><button aria-label="다음 오늘의 단어" disabled={index>=cards.length-1} onClick={()=>move(1)} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#e4ebf1] text-[#7892a8] disabled:opacity-25"><ChevronRight size={18}/></button></div>
    <section className="mt-7"><div className="mb-2 flex justify-between text-sm"><span className="text-[#596275]">{checked===cards.length?'오늘의 단어를 모두 확인했어요':'오늘의 진행'}</span><span className="text-[#8a94a6]">{checked} / {cards.length}개 확인</span></div><div role="progressbar" aria-label="오늘의 단어 확인" aria-valuenow={checked} aria-valuemin={0} aria-valuemax={cards.length} className="h-1.5 overflow-hidden rounded-full bg-[#eef3f7]"><div className="h-full rounded-full bg-[#a9cbe1] transition-all" style={{width:`${checked/cards.length*100}%`}}/></div></section>
   </>}
-  {resume&&<button onClick={()=>onOpen(resume.path,resume.dayId,resume.index)} className="mt-8 flex w-full items-center justify-between gap-4 rounded-2xl border border-[#e7edf2] p-5 text-left"><span className="min-w-0"><span className="block text-xs text-[#8a94a6]">이어서 보기</span><span className="mt-1 block truncate font-semibold text-[#4b5058]"><RichText text={resume.word.word}/></span><span className="mt-1.5 block"><PathChips parts={resume.location} compact /></span></span><ArrowUpRight size={18} className="shrink-0 text-[#7892a8]"/></button>}
+  {resumeTarget&&<button onClick={()=>onOpen(lastLocation?.path||resumeTarget.path,lastLocation?.dayId||resumeTarget.dayId,lastLocation ? (lastLocation.index >= 0 ? lastLocation.index : -1) : resumeTarget.index)} className="mt-8 flex w-full items-center justify-between gap-4 rounded-2xl border border-[#e7edf2] p-5 text-left"><span className="min-w-0"><span className="block text-xs text-[#8a94a6]">이어서 보기</span><span className="mt-1 block truncate font-semibold text-[#4b5058]"><RichText text={resumeTarget.word.word}/></span><span className="mt-1.5 block"><PathChips parts={lastLocation?.path?.length ? [...(locationResume?.location||[]).slice(0,-1), locationResume?.location?.at(-1)||''] : resumeTarget.location} compact /></span></span><ArrowUpRight size={18} className="shrink-0 text-[#7892a8]"/></button>}
  </div>;
 }
 
