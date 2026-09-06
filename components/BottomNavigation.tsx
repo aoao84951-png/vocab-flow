@@ -34,6 +34,23 @@ export default function BottomNavigation({ books, step, path, dayId, onHome, onN
   const open = (value: typeof panel) => { setPanel(panel === value ? null : value); setQuery(""); setPickingDay(false); if (value === "contents") setExpanded(path); };
   const navigate = (target: string[], day?: string, index?: number) => { setPanel(null); onNavigate(target, day, index); };
   const add = (kind: "folder" | "day" | "word", day?: string) => { setPanel(null); onAdd(kind, day); };
+  const addWord = () => {
+    if (dayId) add("word", dayId);
+    else if (current?.days.length === 1) add("word", current.days[0].id);
+    else if (current?.days.length) setPickingDay(true);
+    else add("day");
+  };
+  const addOptions = [
+    ...(current ? [{ label: current.days.length || dayId ? "단어 추가" : "Day 먼저 만들기", run: addWord }] : []),
+    ...(!dayId ? [
+      ...(current && current.days.length > 0 ? [{ label: "Day 추가", run: () => add("day") }] : []),
+      { label: "폴더 추가", run: () => add("folder") },
+    ] : []),
+  ];
+  const openAdd = () => {
+    if (addOptions.length === 1) { setPickingDay(false); addOptions[0].run(); }
+    else open("add");
+  };
   const tree = (items: Folder[], parent: string[] = []) => items.map(folder => {
     const next = [...parent, folder.id], isOpen = expanded.includes(folder.id), hasChildren = folder.folders.length + folder.days.length > 0;
     return <div key={folder.id}><div className="flex min-h-11 items-center gap-2">
@@ -49,7 +66,7 @@ export default function BottomNavigation({ books, step, path, dayId, onHome, onN
         <div data-bottom-panel-scroll className="min-h-0 overflow-y-auto overscroll-contain">
           {(panel === "search" || panel === "stars") && <><input aria-label="전체 단어 검색" type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="모든 단어와 뜻 검색" className="mb-3 h-11 w-full rounded-xl bg-[#f5f8fa] px-3 text-base outline-none"/>{panel === "stars" && <div className="mb-3 flex gap-2">{[0,1,2,3].map(value => <button key={value} aria-pressed={stars === value} className={`rounded-full px-3 py-2 text-xs ${stars === value ? "bg-[#dceefa]" : "bg-[#f5f8fa]"}`} onClick={() => setStars(value)}>{value ? `${value}단계` : "전체"}</button>)}</div>}<p className="mb-2 text-xs text-[#858b94]">{results.length}개</p>{results.length ? results.map(entry => <button key={`${entry.day.id}-${entry.word.id}-${entry.index}`} onClick={() => navigate(entry.path, entry.day.id, entry.index)} className="block w-full border-b border-[#edf1f4] py-3 text-left"><span className="font-semibold"><RichText text={entry.word.word} /></span><span className="ml-2 folder-symbol text-sm">{"☆".repeat(Math.min(3, Math.max(0, entry.word.importanceStars ?? 0)))}</span><span className="mt-1 block truncate text-xs text-[#858b94]">{entry.location}</span><span className="mt-1 block line-clamp-2 text-sm text-[#666d77]"><RichText text={entry.word.meanings?.flatMap(group => group.items).join(", ") || ""} /></span></button>) : <p className="py-8 text-center text-sm text-[#858b94]">{panel === "stars" ? "조건에 맞는 중요 단어가 없어요." : "검색 결과가 없어요."}</p>}</>}
           {panel === "contents" && (books.length ? tree(books) : <p className="py-6 text-sm text-[#858b94]">아직 폴더가 없어요. ＋로 추가해 주세요.</p>)}
-          {panel === "add" && <div className="space-y-2">{pickingDay ? <><p className="mb-3 text-sm text-[#858b94]">단어를 저장할 Day를 선택하세요.</p>{current?.days.map(day => <button key={day.id} className="block w-full rounded-xl bg-[#f5f8fa] px-4 py-3 text-left" onClick={() => add("word", day.id)}>{day.title}</button>)}</> : <>{current && <button className="block w-full rounded-xl bg-[#eff7fc] px-4 py-3 text-left" onClick={() => { if (dayId) add("word", dayId); else if (current.days.length) setPickingDay(true); else add("day"); }}>{current.days.length || dayId ? "단어 추가" : "Day 먼저 만들기"}</button>}{!dayId && <>{current && current.days.length > 0 && <button className="block w-full rounded-xl bg-[#f5f8fa] px-4 py-3 text-left" onClick={() => add("day")}>Day 추가</button>}<button className="block w-full rounded-xl bg-[#f5f8fa] px-4 py-3 text-left" onClick={() => add("folder")}>폴더 추가</button></>}</>}</div>}
+          {panel === "add" && <div className="space-y-2">{pickingDay ? <><p className="mb-3 text-sm text-[#858b94]">단어를 저장할 Day를 선택하세요.</p>{current?.days.map(day => <button key={day.id} className="block w-full rounded-xl bg-[#f5f8fa] px-4 py-3 text-left" onClick={() => add("word", day.id)}>{day.title}</button>)}</> : <>{addOptions.map((option, index) => <button key={option.label} className={`block w-full rounded-xl px-4 py-3 text-left ${index === 0 ? "bg-[#eff7fc]" : "bg-[#f5f8fa]"}`} onClick={option.run}>{option.label}</button>)}</>}</div>}
         </div>
       </section>
     </div>}
@@ -57,7 +74,7 @@ export default function BottomNavigation({ books, step, path, dayId, onHome, onN
       <div className="mx-auto grid max-w-[460px] grid-cols-5 items-center">
         <button aria-label="홈" aria-current={!panel && step === "book" ? "page" : undefined} onClick={() => { setPanel(null); onHome(); }} className="flex h-12 items-center justify-center text-[#858b94]"><Home size={23} strokeWidth={1.7}/></button>
         <button aria-label="전체 검색" aria-expanded={panel === "search"} onClick={() => open("search")} className="flex h-12 items-center justify-center text-[#858b94]"><Search size={23} strokeWidth={1.7}/></button>
-        <button aria-label="추가" aria-expanded={panel === "add"} onClick={() => open("add")} className="folder-symbol mx-auto -mt-6 flex h-14 w-14 items-center justify-center rounded-[22px] bg-[#dceefa] text-[32px] text-[#587fa3] shadow-[0_5px_18px_rgba(145,186,214,0.15)]">+</button>
+        <button aria-label="추가" aria-expanded={panel === "add"} onClick={openAdd} className="folder-symbol mx-auto -mt-6 flex h-14 w-14 items-center justify-center rounded-[22px] bg-[#dceefa] text-[32px] text-[#587fa3] shadow-[0_5px_18px_rgba(145,186,214,0.15)]">+</button>
         <button aria-label="중요 단어" aria-expanded={panel === "stars"} onClick={() => open("stars")} className="folder-symbol flex h-12 items-center justify-center text-[27px] text-[#858b94]">☆</button>
         <button aria-label="목차" aria-expanded={panel === "contents"} onClick={() => open("contents")} className="flex h-12 items-center justify-center text-[#858b94]"><span className="folder-symbol text-[27px]">≡</span></button>
       </div>
