@@ -1291,8 +1291,7 @@ export default function DesktopApp() {
                 </h1>
 
                 <div className="flex items-center gap-2">
-                
-                
+                  <AppearanceSettings />
                 </div>
               </div>
             </div>
@@ -1434,10 +1433,8 @@ export default function DesktopApp() {
               <h1 className="mr-3 min-w-0 flex-1 truncate text-[28px] font-bold tracking-tight text-[#303236]">{activeFolder.title}</h1>
 
               <div className="flex gap-2">
-                
-
-                
-              </div>
+                  <AppearanceSettings />
+                </div>
             </div>
 
             <div className="mt-5 w-full space-y-1 px-8 sm:px-10 md:px-11 lg:px-[52px]">
@@ -1548,6 +1545,7 @@ export default function DesktopApp() {
                   onToggleSort={() => setWordSortOrder(value => value === "latest" ? "oldest" : "latest")}
                   view={wordViewMode} onToggleView={() => setWordViewMode(value => value === "all" ? "unmemorized" : "all")}
                   meanings={showListMeanings} onToggleMeanings={() => setShowListMeanings(value => !value)} />
+                <AppearanceSettings />
 
                 
               </div>
@@ -1670,7 +1668,7 @@ export default function DesktopApp() {
             <EnglishAccentSelector className="fixed left-4 top-[88px] z-40" />
             <header
               onClick={(e) => e.stopPropagation()}
-              className="sticky top-0 z-20 flex h-[76px] shrink-0 items-center justify-between border-b border-[#d7ddea] bg-[#f8fafc]/95 px-5 shadow-[0_1px_0_rgba(88,127,163,0.03)] backdrop-blur"
+              className="sticky top-0 z-50 flex h-[76px] shrink-0 items-center justify-between border-b border-[#d7ddea] bg-[#f8fafc]/95 px-5 shadow-[0_1px_0_rgba(88,127,163,0.03)] backdrop-blur"
             >
               <div className="flex items-center gap-1">
                 <button
@@ -1686,11 +1684,14 @@ export default function DesktopApp() {
                 {`${visibleSortedWords.length ? visibleSortedWords.findIndex((item) => item.originalIndex === wordIndex) + 1 : 0}/${visibleSortedWords.length}`}
               </p>
 
+              <div className="flex items-center gap-2">
               <WordOptionsMenu mode="study" view={wordViewMode}
                 onToggleView={() => setWordViewMode(value => value === "all" ? "unmemorized" : "all")}
                 disabled={!currentWord}
                 onEdit={() => { editWordReturnStep.current = "study"; setStep("editWord"); }}
                 onDelete={() => deleteWord(wordIndex)} />
+                <AppearanceSettings />
+              </div>
             </header>
 
             {!currentWord ? (

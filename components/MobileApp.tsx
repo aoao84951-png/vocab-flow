@@ -1958,8 +1958,7 @@ const getDayProgress = (day: Day) => {
               </h1>
 
               <div className="flex items-center gap-2">
-                
-                
+                  <AppearanceSettings />
                 </div>
             </div>
           </div>
@@ -2101,10 +2100,8 @@ const getDayProgress = (day: Day) => {
               <h1 className="mr-3 min-w-0 flex-1 truncate text-[28px] font-bold tracking-tight text-[#303236]">{activeFolder.title}</h1>
 
               <div className="flex gap-2">
-                
-
-                
-              </div>
+                  <AppearanceSettings />
+                </div>
             </div>
 
             <div className="mt-7 space-y-2">
@@ -2216,6 +2213,7 @@ const getDayProgress = (day: Day) => {
                   onToggleSort={() => setWordSortOrder(value => value === "latest" ? "oldest" : "latest")}
                   view={wordViewMode} onToggleView={() => setWordViewMode(value => value === "all" ? "unmemorized" : "all")}
                   meanings={showListMeanings} onToggleMeanings={() => setShowListMeanings(value => !value)} />
+                <AppearanceSettings />
 
                 
               </div>
@@ -2332,7 +2330,7 @@ const getDayProgress = (day: Day) => {
             <EnglishAccentSelector className="fixed left-3 top-[62px] z-40" />
             <header
               onClick={(e) => e.stopPropagation()}
-              className="relative flex h-10 shrink-0 items-center justify-between"
+              className="relative z-50 flex h-10 shrink-0 items-center justify-between"
             >
               <div className="flex items-center gap-1">
                 
@@ -2344,11 +2342,14 @@ const getDayProgress = (day: Day) => {
                 {`${visibleSortedWords.length ? visibleSortedWords.findIndex((item) => item.originalIndex === wordIndex) + 1 : 0}/${visibleSortedWords.length}`}
               </p>
 
+              <div className="flex items-center gap-2">
               <WordOptionsMenu mode="study" view={wordViewMode}
                 onToggleView={() => setWordViewMode(value => value === "all" ? "unmemorized" : "all")}
                 disabled={!currentWord}
                 onEdit={() => { editWordReturnStep.current = "study"; setStep("editWord"); }}
                 onDelete={() => deleteWord(wordIndex)} />
+                <AppearanceSettings />
+              </div>
             </header>
 
             {!currentWord ? (
