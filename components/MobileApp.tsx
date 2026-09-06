@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import AppearanceSettings from "./AppearanceSettings";
+import LocationMenu from "./LocationMenu";
 import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
 import type { Dispatch, MutableRefObject, PointerEvent, ReactNode, SetStateAction } from "react";
 import { supabase } from "@/app/lib/supabase";
@@ -623,6 +624,7 @@ export default function MobileApp() {
       selectedDayId,
       wordIndex,
       navigationKey,
+      vocaIndex: window.history.state?.vocaIndex ?? 0,
     };
   
     if (isHistoryMoving.current) {
@@ -631,7 +633,7 @@ export default function MobileApp() {
     }
   
     if (isFirstHistoryState.current) {
-      window.history.replaceState(state, "", window.location.href);
+      window.history.replaceState({ ...state, vocaIndex: 0 }, "", window.location.href);
       isFirstHistoryState.current = false;
       return;
     }
@@ -641,14 +643,14 @@ export default function MobileApp() {
       return;
     }
 
-    window.history.pushState(state, "", window.location.href);
+    window.history.pushState({ ...state, vocaIndex: state.vocaIndex + 1 }, "", window.location.href);
   }, [step, selectedBookId, folderPath, selectedDayId, wordIndex]);
   
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       const state = event.state;
   
-      if (!state) return;
+      if (!state || typeof state.step !== "string") return;
   
       isHistoryMoving.current = true;
   
@@ -662,6 +664,7 @@ export default function MobileApp() {
       setBookDropdownOpen(false);
       setActionWordIndex(null);
       setActionDayId(null);
+      setActionFolderId(null);
     };
   
     window.addEventListener("popstate", handlePopState);
@@ -717,6 +720,7 @@ export default function MobileApp() {
     const prevBodyOverscrollY = body.style.overscrollBehaviorY;
 
     let startY = 0;
+    let startX = 0;
 
     const getScrollableParent = (target: EventTarget | null) => {
       let element = target instanceof Element ? target : null;
@@ -744,6 +748,7 @@ export default function MobileApp() {
     const handleTouchStart = (event: TouchEvent) => {
       if (event.touches.length !== 1) return;
       startY = event.touches[0].clientY;
+      startX = event.touches[0].clientX;
     };
 
     const handleTouchMove = (event: TouchEvent) => {
@@ -751,6 +756,8 @@ export default function MobileApp() {
 
       const currentY = event.touches[0].clientY;
       const deltaY = currentY - startY;
+      const deltaX = event.touches[0].clientX - startX;
+      if (startX < 24 || startX > window.innerWidth - 24 || Math.abs(deltaX) > Math.abs(deltaY)) return;
       const scrollable = getScrollableParent(event.target);
 
       if (!scrollable) {
@@ -766,9 +773,7 @@ export default function MobileApp() {
       }
     };
 
-    html.style.overscrollBehavior = "none";
     html.style.overscrollBehaviorY = "none";
-    body.style.overscrollBehavior = "none";
     body.style.overscrollBehaviorY = "none";
 
     document.addEventListener("touchstart", handleTouchStart, { passive: true });
@@ -882,6 +887,35 @@ export default function MobileApp() {
     setStep("wordList");
   };
 
+
+  const navigateToFolder = (path: string[]) => {
+    setSelectedBookId(path[0] || "");
+    setFolderPath(path);
+    setSelectedDayId("");
+    setWordIndex(0);
+    setShowMeaning(false);
+    setMenuOpen(false);
+    setBookDropdownOpen(false);
+    setActionFolderId(null);
+    setStep("day");
+  };
+
+  const renderLocationMenu = (title: string, includeCurrentFolder = false) => (
+    <LocationMenu
+      title={title}
+      ancestors={folderPath.slice(0, includeCurrentFolder ? undefined : -1).map((id, index) => ({
+        label: findFolderById(books, id)?.title || "폴더",
+        path: folderPath.slice(0, index + 1),
+      }))}
+      onHome={goHome}
+      onNavigate={navigateToFolder}
+      onBack={() => {
+        if (window.history.state?.vocaIndex > 0) window.history.back();
+        else if (includeCurrentFolder) navigateToFolder(folderPath);
+        else goBackFromDay();
+      }}
+    />
+  );
 
   const goBackFromDay = () => {
     setSelectedDayId("");
@@ -2185,21 +2219,9 @@ const getDayProgress = (day: Day) => {
 
         {step === "day" && activeFolder && (
           <div className="min-h-dvh px-5 pt-7 pb-6">
+
             <div className="flex items-center justify-between">
-            <BackButton
-              onClick={goBackFromDay}
-              label="뒤로"
-            />
-
-              <button onClick={goHome} className="mr-1.5 text-[#8a94a6]" aria-label="홈">
-                <HomeIcon />
-              </button>
-            </div>
-
-            <div className="mt-5 flex items-center justify-between">
-              <h1 className="text-[28px] font-bold tracking-tight text-[#303236]">
-                {activeFolder.title}
-              </h1>
+              {renderLocationMenu(activeFolder.title)}
 
               <div className="flex gap-2">
                 <button
@@ -2318,20 +2340,9 @@ const getDayProgress = (day: Day) => {
 
         {step === "wordList" && selectedBook && selectedDay && (
           <div className="min-h-dvh px-5 pt-7 pb-6">
+
             <div className="flex items-center justify-between">
-              <BackButton onClick={() => setStep("day")} label="Day 목록" />
-
-              <button onClick={goHome} className="mr-1.5 text-[#8a94a6]" aria-label="홈">
-                <HomeIcon />
-              </button>
-            </div>
-
-            <div className="mt-5 flex items-center justify-between">
-              <div>
-                <h1 className="text-[28px] font-bold tracking-tight text-[#303236]">
-                  {selectedDay.title}
-                </h1>
-              </div>
+              {renderLocationMenu(selectedDay.title, true)}
 
               <div className="flex items-center gap-2">
                 <div className="relative h-8 w-8 shrink-0">
@@ -2625,7 +2636,6 @@ const getDayProgress = (day: Day) => {
                   </svg>
                 )}
               </button>
-            
 
               <button
                 onClick={() => setStep("editWord")}
@@ -4715,7 +4725,6 @@ function AddWord({
                     point.exampleKo ||
                     (point.variants?.length ?? 0) > 0
                 );
-            
             onSave(dayId, {
               id: initialWord?.id || crypto.randomUUID(),
               word: word.trim(),

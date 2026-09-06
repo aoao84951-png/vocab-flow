@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import AppearanceSettings from "./AppearanceSettings";
+import LocationMenu from "./LocationMenu";
 import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
 import type {
   Dispatch,
@@ -374,22 +375,6 @@ export default function DesktopApp() {
   const activeFolder = getCurrentFolder(books, folderPath);
   const selectedBook = books.find((book) => book.id === selectedBookId);
   const currentFolderTitle = activeFolder?.title || selectedBook?.title || "";
-  const folderBreadcrumbTitles = folderPath.reduce<string[]>(
-    (titles, id, index) => {
-      const parent =
-        index === 0
-          ? undefined
-          : getCurrentFolder(books, folderPath.slice(0, index));
-      const list = parent ? parent.folders : books;
-      const folder = list.find((item) => item.id === id);
-
-      if (folder) titles.push(folder.title);
-
-      return titles;
-    },
-    [],
-  );
-  const folderBreadcrumb = folderBreadcrumbTitles.join(" > ");
   const selectedDay = activeFolder?.days.find(
     (day) => day.id === selectedDayId,
   );
@@ -437,6 +422,7 @@ export default function DesktopApp() {
       selectedDayId,
       wordIndex,
       navigationKey,
+      vocaIndex: window.history.state?.vocaIndex ?? 0,
     };
 
     if (isHistoryMoving.current) {
@@ -445,7 +431,7 @@ export default function DesktopApp() {
     }
 
     if (isFirstHistoryState.current) {
-      window.history.replaceState(state, "", window.location.href);
+      window.history.replaceState({ ...state, vocaIndex: 0 }, "", window.location.href);
       isFirstHistoryState.current = false;
       return;
     }
@@ -455,14 +441,14 @@ export default function DesktopApp() {
       return;
     }
 
-    window.history.pushState(state, "", window.location.href);
+    window.history.pushState({ ...state, vocaIndex: state.vocaIndex + 1 }, "", window.location.href);
   }, [step, selectedBookId, folderPath, selectedDayId, wordIndex]);
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       const state = event.state;
 
-      if (!state) return;
+      if (!state || typeof state.step !== "string") return;
 
       isHistoryMoving.current = true;
 
@@ -476,6 +462,7 @@ export default function DesktopApp() {
       setBookDropdownOpen(false);
       setActionWordIndex(null);
       setActionDayId(null);
+      setActionFolderId(null);
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -618,6 +605,35 @@ export default function DesktopApp() {
     setStep("wordList");
   };
 
+  const navigateToFolder = (path: string[]) => {
+    setSelectedBookId(path[0] || "");
+    setFolderPath(path);
+    setSelectedDayId("");
+    setWordIndex(0);
+    setShowMeaning(false);
+    setMenuOpen(false);
+    setBookDropdownOpen(false);
+    setActionFolderId(null);
+    setStep("day");
+  };
+
+  const renderLocationMenu = (title: string, includeCurrentFolder = false) => (
+    <LocationMenu
+      title={title}
+      ancestors={folderPath.slice(0, includeCurrentFolder ? undefined : -1).map((id, index) => ({
+        label: findFolderById(books, id)?.title || "폴더",
+        path: folderPath.slice(0, index + 1),
+      }))}
+      onHome={goHome}
+      onNavigate={navigateToFolder}
+      onBack={() => {
+        if (window.history.state?.vocaIndex > 0) window.history.back();
+        else if (includeCurrentFolder) navigateToFolder(folderPath);
+        else goBackFromDay();
+      }}
+    />
+  );
+
   const goBackFromDay = () => {
     setSelectedDayId("");
     setWordIndex(0);
@@ -641,48 +657,6 @@ export default function DesktopApp() {
     setActionWordIndex(null);
     setStep("study");
   };
-
-  const renderTopBar = (
-    title: ReactNode,
-    onBack: () => void,
-    rightContent?: ReactNode,
-  ) => (
-    <header
-      onClick={(e) => e.stopPropagation()}
-      className="sticky top-0 z-20 flex h-[76px] shrink-0 items-center justify-between bg-white px-5"
-    >
-      <div className="flex w-[82px] items-center justify-start">
-        <button
-          onClick={onBack}
-          className="flex h-9 w-9 items-center justify-center pt-[2px] text-[#303236]"
-          aria-label="뒤로가기"
-        >
-          <ChevronLeft />
-        </button>
-      </div>
-
-      <p className="min-w-0 flex-1 truncate px-3 text-center text-[12px] font-semibold tracking-[-0.01em] text-[#596275]">
-        {title}
-      </p>
-
-      <div className="flex w-[82px] items-center justify-end gap-1">
-        {rightContent}
-      </div>
-    </header>
-  );
-
-  const renderHomeTopBar = (title: ReactNode, onBack: () => void) =>
-    renderTopBar(
-      title,
-      onBack,
-      <button
-        onClick={goHome}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f5f6fa] text-[#596275] active:scale-95"
-        aria-label="홈"
-      >
-        <HomeIcon />
-      </button>,
-    );
 
   const nextWord = () => {
     const currentPos = visibleSortedWords.findIndex(
@@ -1593,12 +1567,9 @@ export default function DesktopApp() {
 
         {step === "day" && activeFolder && (
           <div className="-mx-3 min-h-dvh bg-white px-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8">
-            {renderHomeTopBar(folderBreadcrumb, goBackFromDay)}
 
-            <div className="mt-6 flex w-full items-center justify-between px-8 sm:px-10 md:px-11 lg:px-[52px]">
-              <h1 className="text-[28px] font-bold tracking-tight text-[#303236]">
-                {activeFolder.title}
-              </h1>
+            <div className="pt-8 flex w-full items-center justify-between px-8 sm:px-10 md:px-11 lg:px-[52px]">
+              {renderLocationMenu(activeFolder.title)}
 
               <div className="flex gap-2">
                 <button
@@ -1716,19 +1687,9 @@ export default function DesktopApp() {
 
         {step === "wordList" && selectedBook && selectedDay && (
           <div className="-mx-3 min-h-dvh bg-white px-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8">
-            {renderHomeTopBar(
-              <>
-                {folderBreadcrumb} &gt; {selectedDay.title}
-              </>,
-              () => setStep("day"),
-            )}
 
-            <div className="mt-6 flex w-full items-center justify-between px-8 sm:px-10 md:px-11 lg:px-[52px]">
-              <div>
-                <h1 className="text-[28px] font-bold tracking-tight text-[#303236]">
-                  {selectedDay.title}
-                </h1>
-              </div>
+            <div className="pt-8 flex w-full items-center justify-between px-8 sm:px-10 md:px-11 lg:px-[52px]">
+              {renderLocationMenu(selectedDay.title, true)}
 
               <div className="flex items-center gap-2">
                 <div className="relative h-8 w-8 shrink-0">
