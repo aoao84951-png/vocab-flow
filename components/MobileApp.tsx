@@ -1937,7 +1937,7 @@ const getDayProgress = (day: Day) => {
       
 
       {step === "book" && <DailyHome books={books} onContents={() => window.dispatchEvent(new Event("voca-open-contents"))} onOpen={(path, dayId, index) => {
-          setSelectedBookId(path[0]); setFolderPath(path); setSelectedDayId(dayId); setWordIndex(index); setShowMeaning(false); setWordViewMode("all"); setStep("study");
+          rememberLocation(path, dayId, index); setSelectedBookId(path[0]); setFolderPath(path); setSelectedDayId(dayId); setWordIndex(index >= 0 ? index : 0); setShowMeaning(false); setWordViewMode("all"); setStep(index >= 0 ? "study" : "wordList");
         }} /> }
 
         {step === "day" && activeFolder && (
