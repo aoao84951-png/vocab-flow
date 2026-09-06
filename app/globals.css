@@ -8,7 +8,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Summer Symbols", var(--font-geist-sans);
+  --font-sans: "Summer Symbols", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
@@ -18,7 +18,7 @@ body {
   min-height: 100%;
   background: #ffffff;
   color: var(--foreground);
-  font-family: "Summer Symbols", Arial, Helvetica, sans-serif;
+  font-family: "Summer Symbols", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Arial, sans-serif;
 }
 
 @font-face {
@@ -64,10 +64,10 @@ html[data-app-font="summer"] body {
   font-display: swap;
 }
 
-/* Keep the original colored symbols independent of the selected text font. */
+/* This file contains symbols only, so Safari cannot select it for Korean text. */
 @font-face {
   font-family: "Summer Symbols";
-  src: url("/fonts/aa-summer-melody.ttf") format("truetype");
+  src: url("/fonts/aa-summer-symbols-v2.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
