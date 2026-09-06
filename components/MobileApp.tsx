@@ -1922,7 +1922,7 @@ const getDayProgress = (day: Day) => {
         onNavigate={(path, dayId, index) => {
           if (dayId) rememberLocation(path, dayId, index);
           setMenuOpen(false); setActionWordIndex(null); setActionDayId(null); setActionFolderId(null); setSelectedBookId(path[0] || ""); setFolderPath(path);
-          setSelectedDayId(dayId || ""); setWordIndex(index ?? 0); setShowMeaning(false);
+          setSelectedDayId(dayId || ""); setWordIndex(index != null && index >= 0 ? index : 0); setShowMeaning(false);
           if (index !== undefined) setWordViewMode("all");
           setStep(index !== undefined && index >= 0 ? "study" : dayId ? "wordList" : "day");
         }}
