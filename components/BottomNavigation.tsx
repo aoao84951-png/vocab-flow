@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { Home, Search, X } from "lucide-react";
+import { FolderSymbol } from "./FolderSymbols";
 import { RichText } from "./RichTextField";
 import { matchesWordSearch } from "@/lib/wordSearch";
 import useModalScrollLock from "./useModalScrollLock";
@@ -54,9 +55,9 @@ export default function BottomNavigation({ books, step, path, dayId, onHome, onN
   const tree = (items: Folder[], parent: string[] = []) => items.map(folder => {
     const next = [...parent, folder.id], isOpen = expanded.includes(folder.id), hasChildren = folder.folders.length + folder.days.length > 0;
     return <div key={folder.id}><div className="flex min-h-11 items-center gap-2">
-      <button className="min-w-0 flex-1 truncate py-2 text-left text-sm text-[#4b5058]" onClick={() => navigate(next)}>{folder.icon && <span className="folder-symbol mr-2 text-lg">{folder.icon}</span>}{folder.title}</button>
+      <button className="min-w-0 flex-1 truncate py-2 text-left text-sm text-[#4b5058]" onClick={() => navigate(next)}><FolderSymbol symbol={folder.icon} />{folder.title}</button>
       {hasChildren && <button aria-label={`${folder.title} ${isOpen ? "접기" : "펼치기"}`} aria-expanded={isOpen} onClick={() => setExpanded(prev => isOpen ? prev.filter(id => id !== folder.id) : [...prev, folder.id])} className="folder-symbol h-10 w-10 text-sm">{isOpen ? "△" : "▽"}</button>}
-    </div>{isOpen && <div className="ml-3 border-l border-[#e7edf2] pl-4">{tree(folder.folders, next)}{folder.days.map(day => <button key={day.id} onClick={() => navigate(next, day.id)} className={`block min-h-10 w-full rounded-lg px-2 text-left text-sm ${day.id === dayId ? "bg-[#eff7fc]" : ""}`}>{day.title}<span className="ml-2 text-xs text-[#939ba5]">{day.words.length}개</span></button>)}</div>}</div>;
+    </div>{isOpen && <div className="ml-3 border-l border-[#e7edf2] pl-[19px]">{tree(folder.folders, next)}{folder.days.map(day => <button key={day.id} onClick={() => navigate(next, day.id)} className={`block min-h-11 w-full rounded-lg pr-2 text-left text-sm text-[#4b5058] ${day.id === dayId ? "bg-[#eff7fc]" : ""}`}>{day.title}<span className="ml-2 text-xs text-[#939ba5]">{day.words.length}개</span></button>)}</div>}</div>;
   });
   if (!visible) return null;
   return <>

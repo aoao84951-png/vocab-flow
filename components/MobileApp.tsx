@@ -5090,10 +5090,7 @@ function FolderTreeRows({
             className={depth === 0 ? "overflow-hidden rounded-[16px] bg-white" : ""}
           >
             <div
-              className={`flex h-[46px] items-center bg-white active:bg-[#f7f8fb] ${
-                depth > 0 ? "border-t border-[#e5e7eb]" : ""
-              }`}
-              style={{ paddingLeft: 4 + depth * 18, paddingRight: 4 }}
+              className="flex h-[46px] items-center bg-white px-1 active:bg-[#f7f8fb]"
             >
               <button
                 onClick={() => {
@@ -5157,6 +5154,7 @@ function FolderTreeRows({
             </div>
 
             {hasChildren && open && (
+              <div className="ml-3 border-l border-[#e7edf2] pl-[19px]">
               <FolderTreeRows
                 folders={folder.folders}
                 depth={depth + 1}
@@ -5168,6 +5166,7 @@ function FolderTreeRows({
                 longPressTimer={longPressTimer}
                 didLongPress={didLongPress}
               />
+              </div>
             )}
           </div>
         );
