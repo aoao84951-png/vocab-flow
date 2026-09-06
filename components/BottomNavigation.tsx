@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Home, Search, X } from "lucide-react";
 import { FolderSymbol } from "./FolderSymbols";
 import { RichText } from "./RichTextField";
@@ -9,8 +9,13 @@ import useModalScrollLock from "./useModalScrollLock";
 type Word = { id: string; word: string; meanings?: { items: string[] }[]; importanceStars?: number };
 type Day = { id: string; title: string; words: Word[] };
 type Folder = { id: string; title: string; icon?: string; folders: Folder[]; days: Day[] };
-type Props = { books: Folder[]; step: string; path: string[]; dayId: string; onHome: () => void; onNavigate: (path: string[], dayId?: string, wordIndex?: number) => void; onAdd: (kind: "folder" | "day" | "word", dayId?: string) => void };
-export default function BottomNavigation({ books, step, path, dayId, onHome, onNavigate, onAdd }: Props) {
+type Props = { onManageFolder: (id: string) => void; books: Folder[]; step: string; path: string[]; dayId: string; onHome: () => void; onNavigate: (path: string[], dayId?: string, wordIndex?: number) => void; onAdd: (kind: "folder" | "day" | "word", dayId?: string) => void };
+export default function BottomNavigation({ books, step, path, dayId, onHome, onNavigate, onAdd, onManageFolder }: Props) {
+  const hold = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const held = useRef(false);
+  const cancelHold = () => { if (hold.current) clearTimeout(hold.current); hold.current = null; };
+  useEffect(() => cancelHold, []);
+  useEffect(() => { const open = () => setPanel("contents"); window.addEventListener("voca-open-contents", open); return () => window.removeEventListener("voca-open-contents", open); }, []);
   const [panel, setPanel] = useState<"search" | "stars" | "add" | "contents" | null>(null);
   const [query, setQuery] = useState("");
   const [stars, setStars] = useState(0);
@@ -55,7 +60,7 @@ export default function BottomNavigation({ books, step, path, dayId, onHome, onN
   const tree = (items: Folder[], parent: string[] = []) => items.map(folder => {
     const next = [...parent, folder.id], isOpen = expanded.includes(folder.id), hasChildren = folder.folders.length + folder.days.length > 0;
     return <div key={folder.id}><div className="flex min-h-11 items-center gap-2">
-      <button className="min-w-0 flex-1 truncate py-2 text-left text-sm text-[#4b5058]" onClick={() => navigate(next)}><FolderSymbol symbol={folder.icon} />{folder.title}</button>
+      <button className="min-w-0 flex-1 truncate py-2 text-left text-sm text-[#4b5058]" onClick={() => { if (held.current) { held.current = false; return; } navigate(next); }} onContextMenu={event => { event.preventDefault(); cancelHold(); setPanel(null); onManageFolder(folder.id); }} onPointerDown={() => { cancelHold(); held.current = false; hold.current = setTimeout(() => { held.current = true; setPanel(null); onManageFolder(folder.id); }, 450); }} onPointerUp={cancelHold} onPointerCancel={cancelHold} onPointerLeave={cancelHold}><FolderSymbol symbol={folder.icon} />{folder.title}</button>
       {hasChildren && <button aria-label={`${folder.title} ${isOpen ? "접기" : "펼치기"}`} aria-expanded={isOpen} onClick={() => setExpanded(prev => isOpen ? prev.filter(id => id !== folder.id) : [...prev, folder.id])} className="folder-symbol h-10 w-10 text-sm">{isOpen ? "△" : "▽"}</button>}
     </div>{isOpen && <div className="ml-3 border-l border-[#e7edf2] pl-[19px]">{tree(folder.folders, next)}{folder.days.map(day => <button key={day.id} onClick={() => navigate(next, day.id)} className={`block min-h-11 w-full rounded-lg pr-2 text-left text-sm text-[#4b5058] ${day.id === dayId ? "bg-[#eff7fc]" : ""}`}>{day.title}<span className="ml-2 text-xs text-[#939ba5]">{day.words.length}개</span></button>)}</div>}</div>;
   });
