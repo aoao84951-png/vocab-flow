@@ -1209,8 +1209,11 @@ export default function DesktopApp() {
   };
 
   useEffect(() => {
-    if (step === "study" && currentWord?.id) rememberStudy(currentWord.id);
-  }, [step, currentWord?.id]);
+    if (step === "study" && currentWord?.id) {
+      rememberStudy(currentWord.id);
+      rememberLocation(folderPath, selectedDayId, wordIndex);
+    }
+  }, [step, currentWord?.id, folderPath, selectedDayId, wordIndex]);
 
   return (
     <main className="min-h-[100svh] pb-[calc(100px+env(safe-area-inset-bottom))] overscroll-none bg-white text-[#111827]">

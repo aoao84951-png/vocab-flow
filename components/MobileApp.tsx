@@ -1913,8 +1913,11 @@ const getDayProgress = (day: Day) => {
 
 
   useEffect(() => {
-    if (step === "study" && currentWord?.id) rememberStudy(currentWord.id);
-  }, [step, currentWord?.id]);
+    if (step === "study" && currentWord?.id) {
+      rememberStudy(currentWord.id);
+      rememberLocation(folderPath, selectedDayId, wordIndex);
+    }
+  }, [step, currentWord?.id, folderPath, selectedDayId, wordIndex]);
 
   return (
     <main className="min-h-[100svh] pb-[calc(var(--mobile-bottom-bar-height)+31px)] bg-white text-[#111827]">
