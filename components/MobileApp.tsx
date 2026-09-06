@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import useNavigationHistory from "./useNavigationHistory";
 import { isNavigationEntry, mainScreen, type Screen } from "@/lib/navigationHistory";
+import PointCategoryInput from "./PointCategoryInput";
 import WordSearch from "./WordSearch";
 import { matchesWordSearch } from "@/lib/wordSearch";
 import WordOptionsMenu from "./WordOptionsMenu";
@@ -4084,52 +4085,16 @@ function AddWord({
           <div className="space-y-3">
             {studyPoints.map((point, index) => (
               <div key={index} className="study-note py-3 [&+&]:mt-6">
-                <div className="flex gap-2">
-                <div className="relative w-40 max-w-[75%]">
-                  <select
-                    value={STUDY_CATEGORIES.includes(point.category) ? point.category : "직접입력"}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      updateStudyPoint(index, "category", value === "직접입력" ? "" : value);
-                    }}
-                    className="h-10 w-full appearance-none rounded-xl border border-[#ddeaf3] px-3 pr-9 text-[13px] outline-none"
-                  >
-                    {STUDY_CATEGORIES.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                    <option value="직접입력">직접입력</option>
-                  </select>
-
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#8a94a6]">
-                    <ChevronDownIcon />
-                  </span>
-                </div>
-
-                  <button
-                    onClick={() => removeStudyPoint(index)}
-                    aria-label="학습 포인트 삭제" className="ml-auto h-10 w-10 text-[18px] text-[#8a94a6]"
-                  >
-                    ×
-                  </button>
-                </div>
-
-                {!STUDY_CATEGORIES.includes(point.category) && (
-                  <input
-                    value={point.category}
-                    onChange={(e) => updateStudyPoint(index, "category", e.target.value)}
-                    placeholder="유형 직접입력"
-                    className="mt-3 h-10 w-full rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
-                  />
-                )}
-
+                <div className="flex items-center gap-2">
+                  <PointCategoryInput value={point.category} options={STUDY_CATEGORIES} onChange={value => updateStudyPoint(index, "category", value)} />
                 <input
                   value={point.expression}
                   onChange={(e) => updateStudyPoint(index, "expression", e.target.value)}
                   aria-label="포인트 제목" placeholder="포인트 제목"
-                  className="mt-3 h-11 w-full rounded-xl border border-[#ddeaf3] bg-white px-3 text-[15px] font-semibold outline-none focus:border-[#91bad6]"
+                  className="h-11 min-w-0 flex-1 rounded-xl border border-[#ddeaf3] bg-white px-3 text-[15px] font-semibold outline-none focus:border-[#91bad6]"
                 />
+                  <button type="button" onClick={() => removeStudyPoint(index)} aria-label="학습 포인트 삭제" className="h-10 w-8 shrink-0 text-[#8a94a6]">×</button>
+                </div>
 
                 <div className="mt-2">
                   <EditorToolbar
@@ -4183,9 +4148,19 @@ function AddWord({
                           </button>
                         </div>
 
+                        <div className="mt-3 flex items-center justify-between">
+                          <span className="text-[12px] font-bold text-[#596275]">뜻</span>
+                          <button
+                            type="button"
+                            onClick={() => addStudyPointVariantMeaning(index, variantIndex)}
+                            className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#303236]"
+                          >
+                            + 품사 추가
+                          </button>
+                        </div>
                         <div className="mt-3 space-y-3">
                           {variant.meanings.map((meaning, meaningIndex) => (
-                            <div key={meaningIndex} className="space-y-2">
+                            <div key={meaningIndex} className="rounded-2xl border border-[#ddeaf3] p-3">
                               <div className="flex gap-2">
                                 <div className="relative w-[66px] shrink-0">
                                   <select
@@ -4222,7 +4197,7 @@ function AddWord({
                                       numbered: !meaning.numbered,
                                     })
                                   }
-                                  className={`h-10 shrink-0 rounded-xl border px-3 text-[12px] font-medium ${
+                                  className={`h-10 min-w-0 flex-1 rounded-xl border text-[12px] font-bold ${
                                     meaning.numbered
                                       ? "border-[#587fa3] bg-[#eff7fc] text-[#303236]"
                                       : "border-[#ddeaf3] text-[#8a94a6]"
@@ -4237,7 +4212,7 @@ function AddWord({
                                   onClick={() =>
                                     removeStudyPointVariantMeaning(index, variantIndex, meaningIndex)
                                   }
-                                  aria-label="품사 삭제" className="ml-auto h-10 w-10 text-[18px] text-[#8a94a6]"
+                                  aria-label="품사 삭제" className="h-10 w-10 shrink-0 rounded-xl border border-[#ddeaf3] text-[13px] text-[#8a94a6]"
                                 >
                                   ×
                                 </button>
@@ -4245,7 +4220,7 @@ function AddWord({
 
                               <div className="mt-2 space-y-2">
                                 {meaning.items.map((item, itemIndex) => (
-                                  <div key={itemIndex} className="flex gap-2">
+                                  <div key={itemIndex} className="relative">
                                     <input
                                       value={item}
                                       onChange={(e) =>
@@ -4257,8 +4232,8 @@ function AddWord({
                                           e.target.value
                                         )
                                       }
-                                      placeholder="뜻"
-                                      className="h-10 min-w-0 flex-1 rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
+                                      placeholder="뜻 입력"
+                                      className="h-11 w-full rounded-xl border border-[#ddeaf3] pl-3 pr-10 text-[13px] outline-none"
                                     />
 
                                     <button
@@ -4271,9 +4246,9 @@ function AddWord({
                                           itemIndex
                                         )
                                       }
-                                      aria-label="뜻 삭제" className="ml-auto h-10 w-10 text-[18px] text-[#8a94a6]"
+                                      aria-label="뜻 삭제" className="absolute right-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-[#f5f6fa] text-[15px] text-[#8a94a6]"
                                     >
-                                      −
+                                      ×
                                     </button>
                                   </div>
                                 ))}
@@ -4285,7 +4260,7 @@ function AddWord({
                                   onClick={() =>
                                     addStudyPointVariantMeaningItem(index, variantIndex, meaningIndex)
                                   }
-                                  className="rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#303236]"
+                                  className="h-9 w-full rounded-full bg-[#f5f6fa] text-[12px] font-bold text-[#596275]"
                                 >
                                   + 뜻 추가
                                 </button>
@@ -4301,15 +4276,7 @@ function AddWord({
                           className="mt-3 h-10 w-full rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
                         />
 
-                        <div className="mt-2 flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => addStudyPointVariantMeaning(index, variantIndex)}
-                            className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#303236]"
-                          >
-                            + 품사 추가
-                          </button>
-                        </div>
+
                       </div>
                     ))}
                   </div>
