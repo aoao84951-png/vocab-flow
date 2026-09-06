@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import useNavigationHistory from "./useNavigationHistory";
+import { isNavigationEntry, mainScreen, type Screen } from "@/lib/navigationHistory";
 import AppearanceSettings from "./AppearanceSettings";
 import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
 import type {
@@ -352,8 +354,8 @@ export default function DesktopApp() {
     return swipedIndex === index ? SWIPE_WIDTH : 0;
   };
 
-  const isHistoryMoving = useRef(false);
-  const isFirstHistoryState = useRef(true);
+  const [navigationReady, setNavigationReady] = useState(false);
+  const editWordReturnStep = useRef<"wordList" | "study">("wordList");
 
   const getCurrentFolder = (
     folders: Folder[],
@@ -405,100 +407,41 @@ export default function DesktopApp() {
     .map((word, originalIndex) => ({ word, originalIndex }))
     .filter(({ word }) => (wordViewMode === "all" ? true : !word.memorized));
 
-  useEffect(() => {
-    // A browser history entry represents a screen in the app hierarchy, not
-    // every word viewed while staying on the study screen.
-    const navigationKey = JSON.stringify({
-      step,
-      selectedBookId,
-      folderPath,
-      selectedDayId,
-    });
-    const state = {
-      step,
-      selectedBookId,
-      folderPath,
-      selectedDayId,
-      wordIndex,
-      navigationKey,
-      vocaIndex: window.history.state?.vocaIndex ?? 0,
-    };
+  const restoreNavigation = (state: Screen) => {
+    setStep(state.step);
+    setSelectedBookId(state.selectedBookId);
+    setFolderPath(state.folderPath);
+    setSelectedDayId(state.selectedDayId);
+    setWordIndex(state.wordIndex);
+    setShowMeaning(false);
+    setMenuOpen(false);
+    setBookDropdownOpen(false);
+    setActionWordIndex(null);
+    setActionDayId(null);
+    setActionFolderId(null);
+  };
 
-    if (isHistoryMoving.current) {
-      isHistoryMoving.current = false;
-      return;
-    }
-
-    if (isFirstHistoryState.current) {
-      window.history.replaceState({ ...state, vocaIndex: 0 }, "", window.location.href);
-      isFirstHistoryState.current = false;
-      return;
-    }
-
-    if (window.history.state?.navigationKey === navigationKey) {
-      window.history.replaceState(state, "", window.location.href);
-      return;
-    }
-
-    window.history.pushState({ ...state, vocaIndex: state.vocaIndex + 1 }, "", window.location.href);
-  }, [step, selectedBookId, folderPath, selectedDayId, wordIndex]);
+  useNavigationHistory(navigationReady, { step, selectedBookId, folderPath, selectedDayId, wordIndex }, restoreNavigation);
 
   useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      const state = event.state;
-
-      if (!state || typeof state.step !== "string") return;
-
-      isHistoryMoving.current = true;
-
-      setStep(state.step);
-      setSelectedBookId(state.selectedBookId || "");
-      setFolderPath(state.folderPath || []);
-      setSelectedDayId(state.selectedDayId || "");
-      setWordIndex(state.wordIndex || 0);
-      setShowMeaning(false);
-      setMenuOpen(false);
-      setBookDropdownOpen(false);
-      setActionWordIndex(null);
-      setActionDayId(null);
-      setActionFolderId(null);
-    };
-
-    window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, []);
-
-  useEffect(() => {
-    const savedState = sessionStorage.getItem("vocab-flow-state");
-
-    if (savedState) {
-      const parsed = JSON.parse(savedState);
-
-      setStep(parsed.step || "book");
-      setSelectedBookId(parsed.selectedBookId || "");
-      setFolderPath(parsed.folderPath || []);
-      setSelectedDayId(parsed.selectedDayId || "");
-      setWordIndex(parsed.wordIndex || 0);
+    if (isNavigationEntry(window.history.state)) {
+      restoreNavigation(window.history.state.screen);
+    } else {
+      try {
+        const saved = sessionStorage.getItem("vocab-flow-state");
+        if (saved) restoreNavigation(mainScreen(JSON.parse(saved) || {}));
+      } catch { /* A stale session must not prevent opening the app. */ }
     }
-
+    setNavigationReady(true);
     fetchBooks();
   }, []);
 
   useEffect(() => {
-    sessionStorage.setItem(
-      "vocab-flow-state",
-      JSON.stringify({
-        step,
-        selectedBookId,
-        folderPath,
-        selectedDayId,
-        wordIndex,
-      }),
-    );
-  }, [step, selectedBookId, folderPath, selectedDayId, wordIndex]);
+    if (!navigationReady || !["book", "day", "wordList", "study"].includes(step)) return;
+    sessionStorage.setItem("vocab-flow-state", JSON.stringify(
+      mainScreen({ step, selectedBookId, folderPath, selectedDayId, wordIndex }),
+    ));
+  }, [navigationReady, step, selectedBookId, folderPath, selectedDayId, wordIndex]);
 
   useEffect(() => {
     const standalone =
@@ -2534,7 +2477,7 @@ export default function DesktopApp() {
             book={activeFolder}
             defaultDayId={selectedDayId}
             initialWord={currentWord}
-            onBack={() => setStep("study")}
+            onBack={() => setStep(editWordReturnStep.current)}
             onSave={(dayId, editedWord) => {
               const movedToOtherDay = dayId !== selectedDayId;
 
@@ -2552,7 +2495,7 @@ export default function DesktopApp() {
               setSelectedDayId(dayId);
               setWordIndex(wordIndex);
               setShowMeaning(false);
-              setStep(movedToOtherDay ? "wordList" : "study");
+              setStep(movedToOtherDay ? "wordList" : editWordReturnStep.current);
             }}
           />
         )}
@@ -2879,6 +2822,7 @@ export default function DesktopApp() {
                   onClick={() => {
                     setWordIndex(actionWordIndex);
                     setActionWordIndex(null);
+                    editWordReturnStep.current = step === "study" ? "study" : "wordList";
                     setStep("editWord");
                   }}
                   className="h-[54px] w-full border-b border-[#e5e8ef] text-center text-[18px] font-normal text-[#007aff] active:bg-[#eff7fc]"
