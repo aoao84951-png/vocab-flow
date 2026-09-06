@@ -37,6 +37,7 @@ type StudyPointVariant = {
 };
 
 type StudyPoint = {
+  editorId?: string;
   category: string;
   expression: string;
   description: string;
@@ -3322,6 +3323,8 @@ function AddWord({
   onBack: () => void;
   onSave: (dayId: string, word: Word) => void;
 }) {
+  const [activePoint, setActivePoint] = useState(0);
+  const [activeVariants, setActiveVariants] = useState<Record<number, number>>({});
   const [formPage, setFormPage] = useState<"basic" | "notes">("basic");
   const formHeading = useRef<HTMLHeadingElement>(null);
   const changeFormPage = (page: "basic" | "notes") => {
@@ -3382,6 +3385,7 @@ function AddWord({
   const [studyPoints, setStudyPoints] = useState<StudyPoint[]>(
     initialWord?.studyPoints?.length
       ? initialWord.studyPoints.map((point) => ({
+          editorId: crypto.randomUUID(),
           category: point.category ?? "기타",
           expression: point.expression ?? "",
           description: point.description ?? "",
@@ -3536,9 +3540,11 @@ function AddWord({
   };
 
   const addStudyPoint = () => {
+    setActivePoint(studyPoints.length);
     setStudyPoints((prev) => [
       ...prev,
       {
+        editorId: crypto.randomUUID(),
         category: "기타",
         expression: "",
         description: "",
@@ -3854,6 +3860,7 @@ function AddWord({
   };
 
   const removeStudyPoint = (index: number) => {
+    setActivePoint(current => current > index ? current - 1 : current === index ? Math.max(0, index - 1) : current);
     setStudyPoints((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -4082,18 +4089,26 @@ function AddWord({
             </button>
           </div>
 
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {studyPoints.map((point, index) => (
-              <div key={index} className="study-note py-3 [&+&]:mt-6">
+              <div key={point.editorId ?? index} className="study-note py-2" style={{ order: activePoint === index ? 1 : 0 }}>
+                {activePoint !== index && <button type="button" onClick={() => setActivePoint(index)} aria-label={`포인트 ${index + 1} 수정`} className="w-full rounded-xl border border-[#e0e8ef] bg-[#fafcfd] px-4 py-3 text-left">
+                  <span className="text-xs text-[#858b94]">포인트 {index + 1} · {point.category || "기타"}</span>
+                  <span className="mt-1 block truncate text-sm font-semibold text-[#303236]">{point.expression || "제목 없는 포인트"}</span>
+                  <span className="mt-1 block line-clamp-2 text-xs text-[#858b94]">{point.description.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").trim() || `파생어 ${point.variants?.length ?? 0}개 · 예시 ${point.examples?.length ?? 0}개`}</span>
+                </button>}
+                <div hidden={activePoint !== index}>
                 <div className="flex items-center gap-2">
                   <PointCategoryInput value={point.category} options={STUDY_CATEGORIES} onChange={value => updateStudyPoint(index, "category", value)} />
+                  <div className="relative min-w-0 flex-1">
                 <input
                   value={point.expression}
                   onChange={(e) => updateStudyPoint(index, "expression", e.target.value)}
                   aria-label="포인트 제목" placeholder="포인트 제목"
-                  className="h-11 min-w-0 flex-1 rounded-xl border border-[#ddeaf3] bg-white px-3 text-[15px] font-semibold outline-none focus:border-[#91bad6]"
+                  className="h-11 w-full rounded-xl border border-[#ddeaf3] bg-white pl-3 pr-10 text-[15px] font-semibold outline-none focus:border-[#91bad6]"
                 />
-                  <button type="button" onClick={() => removeStudyPoint(index)} aria-label="학습 포인트 삭제" className="h-10 w-8 shrink-0 text-[#8a94a6]">×</button>
+                  <button type="button" onClick={() => removeStudyPoint(index)} aria-label="학습 포인트 삭제" className="absolute right-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-[#f5f6fa] text-[#8a94a6]">×</button>
+                  </div>
                 </div>
 
                 <div className="mt-2">
@@ -4117,6 +4132,8 @@ function AddWord({
                   <div className="mb-2 flex items-center justify-between">
                     <p className="pl-1 text-[11px] font-bold text-[#596275]">변형/파생어</p>
 
+                    <div className="flex items-center gap-2">
+                      {!!point.variants?.length && <button type="button" onClick={() => addStudyPointVariantMeaning(index, Math.min(activeVariants[index] ?? point.variants!.length - 1, point.variants!.length - 1))} className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#303236]">+ 품사 추가</button>}
                     <button
                       type="button"
                       onClick={() => addStudyPointVariant(index)}
@@ -4124,43 +4141,35 @@ function AddWord({
                     >
                       + 단어 추가
                     </button>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     {(point.variants ?? []).map((variant, variantIndex) => (
-                      <div key={variantIndex} className="py-2">
-                        <div className="flex gap-2">
+                      <div key={variantIndex} onFocusCapture={() => setActiveVariants(prev => ({ ...prev, [index]: variantIndex }))} className="rounded-2xl border border-[#ddeaf3] p-3">
+                        <div className="relative">
                           <input
                             value={variant.word}
                             onChange={(e) =>
                               updateStudyPointVariantWord(index, variantIndex, e.target.value)
                             }
                             placeholder="변형 단어 예: advanced, advance"
-                            className="h-10 min-w-0 flex-1 rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
+                            className="h-11 w-full rounded-xl border border-[#ddeaf3] pl-3 pr-10 text-[13px] outline-none"
                           />
 
                           <button
                             type="button"
                             onClick={() => removeStudyPointVariant(index, variantIndex)}
-                            aria-label="파생어 삭제" className="ml-auto h-10 w-10 text-[18px] text-[#8a94a6]"
+                            aria-label="파생어 삭제" className="absolute right-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-[#f5f6fa] text-[15px] text-[#8a94a6]"
                           >
                             ×
                           </button>
                         </div>
 
-                        <div className="mt-3 flex items-center justify-between">
-                          <span className="text-[12px] font-bold text-[#596275]">뜻</span>
-                          <button
-                            type="button"
-                            onClick={() => addStudyPointVariantMeaning(index, variantIndex)}
-                            className="rounded-full bg-[#eff7fc] px-3 py-1.5 text-[11px] font-bold text-[#303236]"
-                          >
-                            + 품사 추가
-                          </button>
-                        </div>
+
                         <div className="mt-3 space-y-3">
                           {variant.meanings.map((meaning, meaningIndex) => (
-                            <div key={meaningIndex} className="rounded-2xl border border-[#ddeaf3] p-3">
+                            <div key={meaningIndex} className="space-y-2">
                               <div className="flex gap-2">
                                 <div className="relative w-[66px] shrink-0">
                                   <select
@@ -4346,6 +4355,7 @@ function AddWord({
                       </div>
                     ))}
                   </div>
+                </div>
                 </div>
               </div>
             ))}
