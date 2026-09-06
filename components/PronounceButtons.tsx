@@ -1,5 +1,6 @@
 "use client";
 
+import { plainText } from "@/lib/richText";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { getSelectedEnglishVoice } from "./EnglishAccentSelector";
@@ -13,8 +14,7 @@ interface PronounceButtonsProps {
 const CACHE_NAME = "vocab-flow-tts-cache-v2";
 
 const normalizeText = (value: string) =>
-  value
-    .replace(/<[^>]*>/g, " ")
+  plainText(value)
     .replace(/\[\[(.*?)\]\]/g, "$1")
     .replace(/\s+/g, " ")
     .trim();

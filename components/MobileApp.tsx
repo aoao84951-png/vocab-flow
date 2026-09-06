@@ -8,6 +8,9 @@ import PointCategoryInput from "./PointCategoryInput";
 import WordSearch from "./WordSearch";
 import { matchesWordSearch } from "@/lib/wordSearch";
 import WordOptionsMenu from "./WordOptionsMenu";
+import RichTextField, { RichText } from "./RichTextField";
+import SelectionToolbar from "./SelectionToolbar";
+import { hasRichText, plainText, sanitizeRichText } from "@/lib/richText";
 import AppearanceSettings from "./AppearanceSettings";
 import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
 import type { Dispatch, MutableRefObject, PointerEvent, ReactNode, SetStateAction } from "react";
@@ -126,7 +129,7 @@ type Book = Folder;
 const applyBracketHighlightToHtml = (html: string) => {
   if (!html) return "";
 
-  return html
+  return sanitizeRichText(html)
     .split(/(<[^>]+>)/g)
     .map((part) => {
       if (part.startsWith("<") && part.endsWith(">")) return part;
@@ -136,31 +139,7 @@ const applyBracketHighlightToHtml = (html: string) => {
     .join("");
 };
 
-const cleanEditorHtml = (html: string) => {
-  const cleaned = html
-    .replace(/\u200B/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/<br\s*\/?>(\s*)/gi, "");
-
-  const div = document.createElement("div");
-  div.innerHTML = cleaned;
-
-  if (!div.textContent?.trim()) return "";
-
-  div.querySelectorAll<HTMLElement>("*").forEach((el) => {
-    el.removeAttribute("class");
-
-    const color = el.style.color;
-    const backgroundColor = el.style.backgroundColor;
-
-    el.removeAttribute("style");
-
-    if (color) el.style.color = color;
-    if (backgroundColor) el.style.backgroundColor = backgroundColor;
-  });
-
-  return div.innerHTML.trim();
-};
+const cleanEditorHtml = (html: string) => plainText(html).trim() ? sanitizeRichText(html) : "";
 
 const resetEditorIfEmpty = (el: HTMLDivElement) => {
   const normalizedText = (el.textContent ?? "").replace(/\u200B/g, "").trim();
@@ -175,8 +154,7 @@ type MobileAccent = "EN" | "KO";
 const MOBILE_TTS_CACHE_NAME = "vocab-flow-tts-cache-v2";
 
 const normalizeMobileTtsText = (value: string) =>
-  value
-    .replace(/<[^>]*>/g, " ")
+  plainText(value)
     .replace(/\[\[(.*?)\]\]/g, "$1")
     .replace(/\s+/g, " ")
     .trim();
@@ -1101,11 +1079,11 @@ export default function MobileApp() {
                 <MobilePronounceButton
                   text={displayWord.word}
                   className={`w-full min-w-0 px-6 text-center font-bold leading-tight tracking-tight ${
-                    displayWord.word.includes(" ")
+                    plainText(displayWord.word).includes(" ")
                       ? "break-words text-[34px]"
-                      : displayWord.word.length >= 18
+                      : plainText(displayWord.word).length >= 18
                       ? "whitespace-nowrap text-[clamp(26px,8.2vw,34px)]"
-                      : displayWord.word.length >= 13
+                      : plainText(displayWord.word).length >= 13
                       ? "whitespace-nowrap text-[clamp(32px,9.6vw,40px)]"
                       : "whitespace-nowrap text-[44px]"
                   } ${
@@ -1114,7 +1092,7 @@ export default function MobileApp() {
                       : "text-[#303236]"
                   }`}
                 >
-                  {displayWord.word}
+                  <RichText text={displayWord.word} />
                 </MobilePronounceButton>
                 </section>
 
@@ -1160,7 +1138,7 @@ export default function MobileApp() {
                                           {index + 1}
                                         </span>
                                         <MobilePronounceButton text={item} className="min-w-0 break-keep">
-                                          {item}
+                                          <RichText text={item} />
                                         </MobilePronounceButton>
                                       </span>
                                     ))}
@@ -1188,14 +1166,14 @@ export default function MobileApp() {
                                         {index + 1}
                                       </span>
                                       <MobilePronounceButton text={item} className="min-w-0 break-keep">
-                                        {item}
+                                        <RichText text={item} />
                                       </MobilePronounceButton>
                                     </span>
                                   ))}
                                 </span>
                               ) : (
                                 <MobilePronounceButton text={group.items.join(", ")} className="relative -top-[2px] inline break-keep text-center">
-                                  {group.items.join(", ")}
+                                  <RichText text={group.items.join(", ")} />
                                 </MobilePronounceButton>
                               )}
                             </div>
@@ -1225,7 +1203,7 @@ export default function MobileApp() {
                               )}
                               {ex.ko && (
                                 <MobilePronounceButton text={ex.ko} className="mt-0.5 block text-[12px] leading-relaxed text-[#8a94a6]">
-                                  {ex.ko}
+                                  <RichText text={ex.ko} />
                                 </MobilePronounceButton>
                               )}
                             </div>
@@ -1252,7 +1230,7 @@ export default function MobileApp() {
                             <div key={index} className="rounded-2xl bg-[#f5f6fa] px-3 py-3">
                               <div className="flex items-center gap-2">
                                 <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#303236]">
-                                  {point.category}
+                                  <RichText text={point.category} />
                                 </span>
 
                                 {point.expression && (
@@ -2258,7 +2236,7 @@ const getDayProgress = (day: Day) => {
                               : "text-[#303236]"
                           }`}
                         >
-                          {item.word}
+                          <RichText text={item.word} />
                         </p>
 
                         {showListMeanings && (
@@ -2288,7 +2266,7 @@ const getDayProgress = (day: Day) => {
                                             {index + 1}
                                           </span>
                                         )}
-                                        <span>{meaning}</span>
+                                        <RichText text={meaning} />
                                       </span>
                                     ))}
                                   </div>
@@ -3784,14 +3762,15 @@ function AddWord({
       .filter((item) => item.text);
 
   return (
-    <div className={`min-h-dvh px-5 pt-7 pb-6 ${formPage === "notes" ? "mx-auto w-full max-w-[760px]" : ""}`}>
+    <div data-word-editor className={`min-h-dvh px-5 pt-7 pb-6 ${formPage === "notes" ? "mx-auto w-full max-w-[760px]" : ""}`}>
+      <SelectionToolbar />
       <BackButton onClick={() => formPage === "notes" ? changeFormPage("basic") : onBack()} label={formPage === "notes" ? "기본 정보로" : "뒤로"} />
 
       <h1 className="mt-5 text-[28px] font-bold text-[#303236]">
         {formPage === "notes" ? "학습 포인트" : initialWord ? "단어 수정" : "단어 추가"}
       </h1>
 
-      {formPage === "notes" && <div className="mt-3 flex items-baseline gap-3"><span className="text-xs text-[#858b94]">작성 중인 단어</span><span className="text-lg font-semibold text-[#303236]">{word || "새 단어"}</span></div>}
+      {formPage === "notes" && <div className="mt-3 flex items-baseline gap-3"><span className="text-xs text-[#858b94]">작성 중인 단어</span><span className="text-lg font-semibold text-[#303236]"><RichText text={word || "새 단어"} /></span></div>}
       <div className="mt-7 space-y-5">
         <div hidden={formPage !== "basic"} className="space-y-5">
         <label className="block">
@@ -3886,7 +3865,7 @@ function AddWord({
                 <div className="mt-3 space-y-2">
                   {group.items.map((item, itemIndex) => (
                     <div key={itemIndex} className="relative">
-                      <input
+                      <RichTextField
                         value={item}
                         onChange={(e) => updateMeaningItem(groupIndex, itemIndex, e.target.value)}
                         placeholder={group.numbered ? `${itemIndex + 1}번째 뜻` : "뜻 입력"}
@@ -3941,14 +3920,14 @@ function AddWord({
                   </button>
                 </div>
 
-                <input
+                <RichTextField
                   value={example.en}
                   onChange={(e) => updateExample(index, "en", e.target.value)}
                   placeholder="영어 예문"
                   className="h-11 w-full rounded-xl border border-[#ddeaf3] px-3 text-[13px] outline-none"
                 />
 
-                <input
+                <RichTextField
                   value={example.ko}
                   onChange={(e) => updateExample(index, "ko", e.target.value)}
                   placeholder="한국어 해석"
@@ -3994,14 +3973,14 @@ function AddWord({
               <div key={point.editorId ?? index} className="study-note py-2" style={{ order: activePoint === index ? 1 : 0 }}>
                 {activePoint !== index && <button type="button" onClick={() => setActivePoint(index)} aria-label={`포인트 ${index + 1} 수정`} className="w-full rounded-xl border border-[#e0e8ef] bg-[#fafcfd] px-4 py-3 text-left">
                   <span className="text-xs text-[#858b94]">포인트 {index + 1} · {point.category || "기타"}</span>
-                  <span className="mt-1 block truncate text-sm font-semibold text-[#303236]">{point.expression || "제목 없는 포인트"}</span>
+                  <span className="mt-1 block truncate text-sm font-semibold text-[#303236]"><RichText text={point.expression || "제목 없는 포인트"} /></span>
                   <span className="mt-1 block line-clamp-2 text-xs text-[#858b94]">{point.description.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").trim() || `파생어 ${point.variants?.length ?? 0}개 · 예시 ${point.examples?.length ?? 0}개`}</span>
                 </button>}
                 <div hidden={activePoint !== index}>
                 <div className="flex items-center gap-2">
                   <PointCategoryInput value={point.category} options={STUDY_CATEGORIES} onChange={value => updateStudyPoint(index, "category", value)} />
                   <div className="relative min-w-0 flex-1">
-                <input
+                <RichTextField
                   value={point.expression}
                   onChange={(e) => updateStudyPoint(index, "expression", e.target.value)}
                   aria-label="포인트 제목" placeholder="포인트 제목"
@@ -4012,12 +3991,6 @@ function AddWord({
                 </div>
 
                 <div className="mt-2">
-                  <EditorToolbar
-                    runCommand={runCommand}
-                    customColors={customColors}
-                    saveCustomColors={saveCustomColors}
-                    saveSelection={saveSelection}
-                  />
                   <EditorBox
                     setRef={(el) => {
                       studyDescriptionRefs.current[index] = el;
@@ -4048,7 +4021,7 @@ function AddWord({
                     {(point.variants ?? []).map((variant, variantIndex) => (
                       <div key={variantIndex} onFocusCapture={() => setActiveVariants(prev => ({ ...prev, [index]: variantIndex }))} className="rounded-2xl border border-[#ddeaf3] p-3">
                         <div className="relative">
-                          <input
+                          <RichTextField
                             value={variant.word}
                             onChange={(e) =>
                               updateStudyPointVariantWord(index, variantIndex, e.target.value)
@@ -4130,7 +4103,7 @@ function AddWord({
                               <div className="mt-2 space-y-2">
                                 {meaning.items.map((item, itemIndex) => (
                                   <div key={itemIndex} className="relative">
-                                    <input
+                                    <RichTextField
                                       value={item}
                                       onChange={(e) =>
                                         updateStudyPointVariantMeaningItem(
@@ -4178,7 +4151,7 @@ function AddWord({
                           ))}
                         </div>
 
-                        <input
+                        <RichTextField
                           value={variant.related ?? ""}
                           onChange={(e) => updateStudyPointVariantRelated(index, variantIndex, e.target.value)}
                           placeholder="유의어/동의어 예: on request, reply to, react to"
@@ -4229,12 +4202,6 @@ function AddWord({
                         </div>
 
                         <div>
-                          <EditorToolbar
-                            runCommand={runCommand}
-                            customColors={customColors}
-                            saveCustomColors={saveCustomColors}
-                            saveSelection={saveSelection}
-                          />
                           <InlineEditorBox
                             setRef={(el) => {
                               studyExampleEnRefs.current[`${index}-${exampleIndex}`] = el;
@@ -4244,7 +4211,7 @@ function AddWord({
                           />
                         </div>
 
-                        <input
+                        <RichTextField
                           value={example.ko}
                           onChange={(e) =>
                             updateStudyPointExample(index, exampleIndex, "ko", e.target.value)
@@ -4267,7 +4234,7 @@ function AddWord({
           <button type="button" onClick={() => formPage === "notes" ? changeFormPage("basic") : onBack()} className="h-12 shrink-0 px-3 text-[13px] text-[#737b89]">{formPage === "notes" ? "기본 정보로" : "취소"}</button>
         <button
           onClick={() => {
-            if (!word.trim()) return alert("영어 단어를 입력해줘.");
+            if (!plainText(word).trim()) return alert("영어 단어를 입력해줘.");
             if (!dayId) return alert("Day를 선택해줘.");
 
             const cleanedMeanings = meanings
@@ -4368,7 +4335,7 @@ function AddWord({
           저장
         </button>
           {formPage === "basic" && <button type="button" onClick={() => {
-            if (!word.trim()) return alert("영어 단어를 입력해줘.");
+            if (!plainText(word).trim()) return alert("영어 단어를 입력해줘.");
             if (!dayId) return alert("Day를 선택해줘.");
             if (!studyPoints.length) addStudyPoint();
             changeFormPage("notes");
@@ -4400,24 +4367,27 @@ function BackButton({ onClick, label }: { onClick: () => void; label: string }) 
 }
 
 function Input({
+  rich = false,
   label,
   value,
   onChange,
   placeholder,
   type = "text",
 }: {
+  rich?: boolean;
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   type?: string;
 }) {
+  const Field = rich ? RichTextField : "input";
   return (
     <label className="block">
       <p className="mb-2 pl-1.5 text-[12px] font-bold text-[#596275]">
         {label}
       </p>
-      <input
+      <Field
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -4542,7 +4512,7 @@ function LinkedTermEditor({
               </div>
 
               <div className="relative min-w-0 flex-1">
-                <input
+                <RichTextField
                   value={item.text}
                   onChange={(e) => updateItem(index, { text: e.target.value })}
                   placeholder={placeholder}
@@ -4631,8 +4601,7 @@ function ChipList({
         ? ""
         : formatLabel(item.meaningLabel, item.meaningRef);
 
-    const words = text
-      .split(",")
+    const words = (hasRichText(text) ? [text] : text.split(","))
       .map((word) => word.trim())
       .filter(Boolean);
 
@@ -4664,7 +4633,7 @@ function ChipList({
               text={word}
               className={wordChipClass}
             >
-              {word}
+              <RichText text={word} />
             </MobilePronounceButton>
           ))}
         </div>
@@ -4708,6 +4677,8 @@ function HomeIcon() {
 
 function HighlightedText({ text, keyword }: { text: string; keyword: string }) {
   if (!text) return null;
+  if (hasRichText(text)) return <RichText text={text} />;
+  keyword = plainText(keyword);
 
   const chunks = text.split(/(\[\[.*?\]\])/g);
   const escapedKeyword = keyword.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -4808,7 +4779,7 @@ function EditorBox({
 
   useEffect(() => {
     if (!innerRef.current) return;
-    innerRef.current.innerHTML = defaultHtml;
+    innerRef.current.innerHTML = sanitizeRichText(defaultHtml);
   }, [defaultHtml]);
 
   return (
@@ -4817,6 +4788,7 @@ function EditorBox({
         innerRef.current = el;
         setRef(el);
       }}
+      data-rich-field
       contentEditable
       suppressContentEditableWarning
       data-placeholder={placeholder}
@@ -4825,7 +4797,7 @@ function EditorBox({
         resetEditorIfEmpty(e.currentTarget);
         onBlur?.(cleanEditorHtml(e.currentTarget.innerHTML));
       }}
-      className="min-h-[96px] w-full whitespace-pre-wrap rounded-b-xl border border-t-0 border-[#ddeaf3] bg-white px-3 py-3 text-[13px] leading-[1.8] text-[#303236] outline-none empty:before:text-[#a3abb8] empty:before:content-[attr(data-placeholder)]"
+      className="min-h-[96px] w-full whitespace-pre-wrap rounded-xl border border-[#ddeaf3] bg-white px-3 py-3 text-[13px] leading-[1.8] text-[#303236] outline-none empty:before:text-[#a3abb8] empty:before:content-[attr(data-placeholder)]"
     />
   );
 }
@@ -4843,7 +4815,7 @@ function InlineEditorBox({
 
   useEffect(() => {
     if (!innerRef.current) return;
-    innerRef.current.innerHTML = defaultHtml;
+    innerRef.current.innerHTML = sanitizeRichText(defaultHtml);
   }, [defaultHtml]);
 
   return (
@@ -4852,11 +4824,12 @@ function InlineEditorBox({
         innerRef.current = el;
         setRef(el);
       }}
+      data-rich-field
       contentEditable
       suppressContentEditableWarning
       data-placeholder={placeholder}
       onInput={(e) => resetEditorIfEmpty(e.currentTarget)}
-      className="min-h-[44px] w-full whitespace-pre-wrap rounded-b-xl border border-t-0 border-[#ddeaf3] bg-white px-3 py-3 text-[13px] leading-[1.5] text-[#303236] outline-none empty:before:text-[#a3abb8] empty:before:content-[attr(data-placeholder)]"
+      className="min-h-[44px] w-full whitespace-pre-wrap rounded-xl border border-[#ddeaf3] bg-white px-3 py-3 text-[13px] leading-[1.5] text-[#303236] outline-none empty:before:text-[#a3abb8] empty:before:content-[attr(data-placeholder)]"
     />
   );
 }
