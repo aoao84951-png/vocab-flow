@@ -2298,7 +2298,7 @@ const getDayProgress = (day: Day) => {
 
           {step === "study" && selectedBook && selectedDay && (
             <div
-              className="fixed inset-x-0 top-0 bottom-[calc(76px+env(safe-area-inset-bottom))] flex flex-col overflow-hidden bg-white px-4 pt-4 pb-6 [overscroll-behavior:none] [touch-action:pan-y]"
+              className="fixed inset-x-0 top-0 bottom-[var(--mobile-bottom-bar-height)] flex flex-col overflow-hidden bg-white px-4 pt-4 [overscroll-behavior:none] [touch-action:pan-y]"
               onPointerDown={handleStudyPointerDown}
               onPointerMove={handleStudyPointerMove}
               onPointerUp={handleStudyPointerUp}

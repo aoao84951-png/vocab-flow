@@ -53,7 +53,7 @@ export default function BottomNavigation({ books, step, path, dayId, onHome, onN
         </div>
       </section>
     </div>}
-    <nav aria-label="주요 메뉴" className="fixed inset-x-0 bottom-0 z-[80] border-t border-[#edf1f4] bg-white/95 px-4 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur-xl sm:inset-x-auto sm:left-1/2 sm:bottom-5 sm:w-[460px] sm:-translate-x-1/2 sm:rounded-full sm:border sm:pb-3 sm:shadow-[0_6px_30px_rgba(40,60,80,0.10)]">
+    <nav aria-label="주요 메뉴" className="fixed inset-x-0 bottom-0 z-[80] h-[var(--mobile-bottom-bar-height)] sm:h-auto border-t border-[#edf1f4] bg-white/95 px-4 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur-xl sm:inset-x-auto sm:left-1/2 sm:bottom-5 sm:w-[460px] sm:-translate-x-1/2 sm:rounded-full sm:border sm:pb-3 sm:shadow-[0_6px_30px_rgba(40,60,80,0.10)]">
       <div className="mx-auto grid max-w-[460px] grid-cols-5 items-center">
         <button aria-label="홈" aria-current={!panel && step === "book" ? "page" : undefined} onClick={() => { setPanel(null); onHome(); }} className="flex h-12 items-center justify-center text-[#858b94]"><Home size={23} strokeWidth={1.7}/></button>
         <button aria-label="전체 검색" aria-expanded={panel === "search"} onClick={() => open("search")} className="flex h-12 items-center justify-center text-[#858b94]"><Search size={23} strokeWidth={1.7}/></button>

@@ -89,3 +89,6 @@ nav[aria-label="주요 메뉴"] button[aria-current="page"] { color: #587fa3; }
 .rich-text-field:empty::before { content: attr(data-placeholder); color: #9ca3af; pointer-events: none; }
 [data-rich-field] b, [data-rich-field] strong { font-weight: 700; }
 [data-rich-field] { -webkit-user-select: text; user-select: text; }
+
+/* Shared boundary: mobile study content meets the bottom navigation without a blank strip. */
+:root { --mobile-bottom-bar-height: calc(69px + env(safe-area-inset-bottom, 0px)); }
