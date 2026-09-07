@@ -1274,7 +1274,13 @@ export default function DesktopApp() {
             }
           }
         `}</style>
-      <section className="min-h-[100svh] w-full bg-white px-3 sm:px-5 md:px-6 lg:px-8">
+      <section
+        className={
+          step === "study"
+            ? "h-full min-h-0 w-full overflow-hidden bg-white px-3 sm:px-5 md:px-6 lg:px-8"
+            : "min-h-[100svh] w-full bg-white px-3 sm:px-5 md:px-6 lg:px-8"
+        }
+      >
         
 
         
