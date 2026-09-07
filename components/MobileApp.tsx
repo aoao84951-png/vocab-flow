@@ -4220,7 +4220,7 @@ function splitComma(value: string): RelatedWord[] {
 function BackButton({ onClick, label }: { onClick: () => void; label: string }) {
   return (
     <button onClick={onClick} className="flex items-center gap-1 text-[13px] text-[#8a94a6]">
-      <ChevronLeft />
+      <span className="flex -translate-y-[2px] items-center"><ChevronLeft /></span>
       <span>{label}</span>
     </button>
   );
