@@ -1526,7 +1526,7 @@ export default function DesktopApp() {
 
         {step === "study" && selectedBook && selectedDay && (
           <div
-            className="relative -mx-3 flex h-full min-h-0 flex-col overflow-hidden bg-white px-0 pt-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8"
+            className="study-view-layout relative -mx-3 flex h-full min-h-0 flex-col overflow-hidden bg-white px-0 pt-0 sm:-mx-5 md:-mx-6 lg:-mx-8"
             onPointerDown={handleStudyPointerDown}
             onPointerUp={handleStudyPointerUp}
           >
