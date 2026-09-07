@@ -106,18 +106,43 @@ nav[aria-label="주요 메뉴"] button[aria-current="page"] { color: #587fa3; }
   padding-bottom: 16px;
 }
 
-/* Hide scrollbar indicators while preserving scrolling in details and navigation panels. */
-.study-detail-scroll,
-[data-bottom-panel-scroll] {
+/* Hide the detail scrollbar without disabling scrolling. */
+.study-detail-scroll {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-.study-detail-scroll::-webkit-scrollbar,
-[data-bottom-panel-scroll]::-webkit-scrollbar {
+.study-detail-scroll::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
+}
+
+/* Keep a thin, transparent track so showing the thumb never shifts panel content. */
+[data-bottom-panel-scroll] {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+[data-bottom-panel-scroll][data-scrolling] {
+  scrollbar-color: #a5b3bf transparent;
+}
+
+[data-bottom-panel-scroll]::-webkit-scrollbar {
+  width: 6px;
+}
+
+[data-bottom-panel-scroll]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-bottom-panel-scroll]::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+
+[data-bottom-panel-scroll][data-scrolling]::-webkit-scrollbar-thumb {
+  background: #a5b3bf;
 }
 
 /* Shared boundary: mobile study content meets the bottom navigation without a blank strip. */
