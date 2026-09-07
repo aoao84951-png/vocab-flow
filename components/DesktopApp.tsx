@@ -4015,40 +4015,42 @@ function AddWord({
                   <span className="mt-1 block line-clamp-2 text-xs text-[#858b94]">{point.description.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").trim() || `파생어 ${point.variants?.length ?? 0}개 · 예시 ${point.examples?.length ?? 0}개`}</span>
                 </button>}
                 <div hidden={activePoint !== index}>
-                <div className="flex items-center gap-2">
-                  <PointCategoryInput value={point.category} options={STUDY_CATEGORIES} onChange={value => updateStudyPoint(index, "category", value)} />
-                  <div className="relative min-w-0 flex-1">
-                <RichTextField
-                  value={point.expression}
-                  onChange={(e) =>
-                    updateStudyPoint(
-                      index,
-                      "expression",
-                      getIPadSafeInputValue(
-                        `study-${index}-expression`,
-                        e.currentTarget,
-                        point.expression,
-                      ),
-                    )
-                  }
-                  aria-label="포인트 제목" placeholder="포인트 제목"
-                  className="h-11 w-full rounded-xl border border-[#ddeaf3] bg-white pl-3 pr-10 text-[15px] font-semibold outline-none focus:border-[#91bad6]"
-                />
-                  <button type="button" onClick={() => removeStudyPoint(index)} aria-label="학습 포인트 삭제" className="absolute right-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-[#f5f6fa] text-[#8a94a6]">×</button>
-                  </div>
-                </div>
-
-                <div className="mt-2">
-                  <EditorBox
-                    setRef={(el) => {
-                      studyDescriptionRefs.current[index] = el;
-                    }}
-                    defaultHtml={point.description}
-                    placeholder="설명이나 기억할 내용을 적어주세요"
-                    onBlur={(html) =>
-                      updateStudyPoint(index, "description", html)
+                <div className="rounded-2xl border border-[#ddeaf3] p-3">
+                  <div className="flex items-center gap-2">
+                    <PointCategoryInput value={point.category} options={STUDY_CATEGORIES} onChange={value => updateStudyPoint(index, "category", value)} />
+                    <div className="relative min-w-0 flex-1">
+                  <RichTextField
+                    value={point.expression}
+                    onChange={(e) =>
+                      updateStudyPoint(
+                        index,
+                        "expression",
+                        getIPadSafeInputValue(
+                          `study-${index}-expression`,
+                          e.currentTarget,
+                          point.expression,
+                        ),
+                      )
                     }
+                    aria-label="포인트 제목" placeholder="포인트 제목"
+                    className="h-11 w-full rounded-xl border border-[#ddeaf3] bg-white pl-3 pr-10 text-[15px] font-semibold outline-none focus:border-[#91bad6]"
                   />
+                    <button type="button" onClick={() => removeStudyPoint(index)} aria-label="학습 포인트 삭제" className="absolute right-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-[#f5f6fa] text-[#8a94a6]">×</button>
+                    </div>
+                  </div>
+
+                  <div className="mt-2">
+                    <EditorBox
+                      setRef={(el) => {
+                        studyDescriptionRefs.current[index] = el;
+                      }}
+                      defaultHtml={point.description}
+                      placeholder="설명이나 기억할 내용을 적어주세요"
+                      onBlur={(html) =>
+                        updateStudyPoint(index, "description", html)
+                      }
+                    />
+                  </div>
                 </div>
 
                 <div className="mt-6">
@@ -4289,7 +4291,7 @@ function AddWord({
                     ).map((example, exampleIndex) => (
                       <div
                         key={exampleIndex}
-                        className="py-2"
+                        className="rounded-2xl border border-[#ddeaf3] p-3"
                       >
                         <div className="mb-2 flex items-center justify-between">
                           <p className="pl-1 text-[11px] font-bold text-[#8a94a6]">
