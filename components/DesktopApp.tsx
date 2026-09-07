@@ -3713,7 +3713,7 @@ function AddWord({
       .filter((item) => item.text);
 
   return (
-    <div data-word-editor className={`flex h-[100dvh] min-h-0 flex-col px-5 pt-7 ${formPage === "notes" ? "mx-auto w-full max-w-[760px]" : ""}`}>
+    <div data-word-editor className={`min-h-dvh px-5 pt-7 pb-[calc(110px+env(safe-area-inset-bottom))] ${formPage === "notes" ? "mx-auto w-full max-w-[760px]" : ""}`}>
       {/* 아이패드에서 Tab으로 다음 칸으로 넘어갈 때, 그 사이에 잠깐
           포커스를 얹어두기 위한 화면에 보이지 않는 입력칸.
 
@@ -3747,7 +3747,7 @@ function AddWord({
       />
 
       <SelectionToolbar />
-      <div className="min-h-0 flex-1 overflow-y-auto pb-6">
+      <div className="pb-6">
       <BackButton onClick={() => formPage === "notes" ? changeFormPage("basic") : onBack()} label={formPage === "notes" ? "기본 정보로" : "뒤로"} />
 
       <h1 ref={formHeading} tabIndex={-1} className="mt-4 scroll-mt-6 text-[28px] font-bold text-[#303236]">
@@ -4347,7 +4347,7 @@ function AddWord({
 
         </div>
       </div>
-        <div className="z-30 flex shrink-0 items-center gap-2 border-t border-[#edf0f3] bg-white/95 py-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur">
+        <div className={`fixed inset-x-0 bottom-0 z-30 flex items-center gap-2 border-t border-[#edf0f3] bg-white/95 px-5 py-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur ${formPage === "notes" ? "mx-auto max-w-[760px]" : ""}`}>
           <button type="button" onClick={() => formPage === "notes" ? changeFormPage("basic") : onBack()} className="h-12 shrink-0 px-3 text-[13px] text-[#737b89]">{formPage === "notes" ? "기본 정보로" : "취소"}</button>
         <button
           onClick={() => {
