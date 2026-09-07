@@ -2843,11 +2843,11 @@ function AddWord({
   );
 
   const [examples, setExamples] = useState<{ en: string; ko: string }[]>(
-    initialWord?.examples?.length ? initialWord.examples : [{ en: "", ko: "" }],
+    initialWord?.examples?.length ? initialWord.examples : [],
   );
 
   const toLinkedTerms = (items?: (string | LinkedTerm)[]): LinkedTerm[] => {
-    if (!items?.length) return [{ text: "", meaningRef: "", meaningLabel: "" }];
+    if (!items?.length) return [];
 
     const grouped = new Map<string, LinkedTerm>();
 
@@ -2902,7 +2902,7 @@ function AddWord({
               }))
             : point.exampleEn || point.exampleKo
               ? [{ en: point.exampleEn ?? "", ko: point.exampleKo ?? "" }]
-              : [{ en: "", ko: "" }],
+              : [],
           variants: point.variants?.length
             ? point.variants.map((variant, variantIndex) => ({
                 word: variant.word ?? "",
@@ -3418,10 +3418,7 @@ function AddWord({
 
         return {
           ...point,
-          examples:
-            examples.length > 1
-              ? examples.filter((_, j) => j !== exampleIndex)
-              : [{ en: "", ko: "" }],
+              examples: examples.filter((_, j) => j !== exampleIndex),
         };
       }),
     );
@@ -4584,10 +4581,6 @@ function LinkedTermEditor({
   placeholder: string;
   onChangeAll: Dispatch<SetStateAction<LinkedTerm[]>>;
 }) {
-  const safeItems = items.length
-    ? items
-    : [{ text: "", meaningRef: "", meaningLabel: "" }];
-
   const updateItem = (index: number, next: Partial<LinkedTerm>) => {
     onChangeAll((prev) => {
       const list = prev.length
@@ -4607,8 +4600,6 @@ function LinkedTermEditor({
 
   const removeItem = (index: number) => {
     onChangeAll((prev) => {
-      if (prev.length <= 1)
-        return [{ text: "", meaningRef: "", meaningLabel: "" }];
       return prev.filter((_, i) => i !== index);
     });
   };
@@ -4627,7 +4618,7 @@ function LinkedTermEditor({
       </div>
 
       <div className="space-y-3">
-        {safeItems.map((item, index) => (
+        {items.map((item, index) => (
           <div key={index} className="rounded-2xl border border-[#ddeaf3] p-4">
             <div className="flex gap-2">
               <div className="relative w-[100px] shrink-0">
