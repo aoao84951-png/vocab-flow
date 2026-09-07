@@ -3126,9 +3126,7 @@ function AddWord({
                   : [{ pos: "명", items: [""], numbered: false }],
                 related: variant.related ?? (variantIndex === 0 ? point.related ?? "" : ""),
               }))
-            : point.related
-            ? [{ word: "", meanings: [{ pos: "명", items: [""], numbered: false }], related: point.related }]
-            : [],
+            : [{ word: "", meanings: [{ pos: "명", items: [""], numbered: false }], related: point.related ?? "" }],
         }))
       : []
   );
@@ -3265,8 +3263,12 @@ function AddWord({
         related: "",
         exampleEn: "",
         exampleKo: "",
-        examples: [],
-        variants: [],
+        examples: [{ en: "", ko: "" }],
+        variants: [{
+          word: "",
+          meanings: [{ pos: "명", items: [""], numbered: false }],
+          related: "",
+        }],
       },
     ]);
   };

@@ -1220,7 +1220,9 @@ export default function DesktopApp() {
       className={
         step === "study"
           ? "h-[100dvh] overflow-hidden overscroll-none bg-white text-[#111827]"
-          : "min-h-[100svh] pb-[calc(100px+env(safe-area-inset-bottom))] overscroll-none bg-white text-[#111827]"
+          : step === "addWord" || step === "editWord"
+            ? "min-h-[100svh] overscroll-none bg-white text-[#111827]"
+            : "min-h-[100svh] pb-[calc(100px+env(safe-area-inset-bottom))] overscroll-none bg-white text-[#111827]"
       }
     >
       <BottomNavigation onFolderAction={action => { saveBooks(prev => applyFolderAction(prev, action)); }} books={books} step={step} path={folderPath} dayId={step === "wordList" || step === "study" ? selectedDayId : ""} onHome={goHome}
@@ -2917,15 +2919,11 @@ function AddWord({
                   variant.related ??
                   (variantIndex === 0 ? (point.related ?? "") : ""),
               }))
-            : point.related
-              ? [
-                  {
-                    word: "",
-                    meanings: [{ pos: "명", items: [""], numbered: false }],
-                    related: point.related,
-                  },
-                ]
-              : [],
+            : [{
+                word: "",
+                meanings: [{ pos: "명", items: [""], numbered: false }],
+                related: point.related ?? "",
+              }],
         }))
       : [],
   );
@@ -3344,8 +3342,12 @@ function AddWord({
         related: "",
         exampleEn: "",
         exampleKo: "",
-        examples: [],
-        variants: [],
+        examples: [{ en: "", ko: "" }],
+        variants: [{
+          word: "",
+          meanings: [{ pos: "명", items: [""], numbered: false }],
+          related: "",
+        }],
       },
     ]);
   };
@@ -3713,7 +3715,7 @@ function AddWord({
       .filter((item) => item.text);
 
   return (
-    <div data-word-editor className="min-h-dvh px-5 pt-7 pb-[calc(110px+env(safe-area-inset-bottom))]">
+    <div data-word-editor className="min-h-dvh px-5 pt-7 pb-[calc(88px+env(safe-area-inset-bottom))]">
       {/* 아이패드에서 Tab으로 다음 칸으로 넘어갈 때, 그 사이에 잠깐
           포커스를 얹어두기 위한 화면에 보이지 않는 입력칸.
 
@@ -3747,7 +3749,7 @@ function AddWord({
       />
 
       <SelectionToolbar />
-      <div className="pb-6">
+      <div>
       <BackButton onClick={() => formPage === "notes" ? changeFormPage("basic") : onBack()} label={formPage === "notes" ? "기본 정보로" : "뒤로"} />
 
       <h1 ref={formHeading} tabIndex={-1} className="mt-4 scroll-mt-6 text-[28px] font-bold text-[#303236]">
