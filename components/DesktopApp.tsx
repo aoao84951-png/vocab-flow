@@ -3993,7 +3993,7 @@ function AddWord({
         <div hidden={formPage !== "notes"} className="study-note-page">
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <p className="pl-1.5 text-[12px] font-bold text-[#596275]">포인트 {studyPoints.length}개</p>
+            <p className="pl-1 text-[12px] font-bold text-[#596275]">포인트 {studyPoints.length}개</p>
 
             <button
               onClick={addStudyPoint}
@@ -4003,7 +4003,7 @@ function AddWord({
             </button>
           </div>
 
-          {studyPoints.length > 1 && <div className="mb-5 space-y-2" aria-label="학습 포인트 목록">
+          {studyPoints.length > 0 && <div className="mb-5 space-y-2" aria-label="학습 포인트 목록">
             {studyPoints.map((point, index) => (
               <button
                 key={point.editorId ?? index}
@@ -4030,7 +4030,7 @@ function AddWord({
                 className="study-note py-2" hidden={activePoint !== index}
               >
                 <div hidden={activePoint !== index}>
-                <h2 className="mb-4 flex items-center gap-2 text-[14px] font-bold text-[#303236]">
+                <h2 className="mb-4 flex items-center gap-2 pl-1 text-[14px] font-bold text-[#303236]">
                   포인트 {index + 1}
                   <span className="rounded-full bg-[#eff7fc] px-2 py-1 text-[11px] text-[#587fa3]">편집 중</span>
                 </h2>
