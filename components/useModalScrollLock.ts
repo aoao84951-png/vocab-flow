@@ -6,7 +6,13 @@ export default function useModalScrollLock(locked: boolean) {
     if (!locked) return;
     const body = document.body, html = document.documentElement;
     const x = window.scrollX, y = window.scrollY;
-    const saved = { position: body.style.position, top: body.style.top, left: body.style.left, width: body.style.width, overflow: body.style.overflow, htmlOverflow: html.style.overflow };
+    const saved = { position: body.style.position, top: body.style.top, left: body.style.left, width: body.style.width, overflow: body.style.overflow, htmlOverflow: html.style.overflow, htmlScrollbarGutter: html.style.scrollbarGutter };
+    // Keep the existing scrollbar space when locking the page so fixed navigation
+    // and centered content retain the same viewport width. Overlay scrollbars
+    // take no layout space and need no reserved gutter.
+    if (window.innerWidth > html.clientWidth) {
+      html.style.scrollbarGutter = "stable";
+    }
     body.style.position = "fixed";
     body.style.top = `${-y}px`;
     body.style.left = `${-x}px`;
@@ -31,6 +37,7 @@ export default function useModalScrollLock(locked: boolean) {
       document.removeEventListener("touchmove", move, true);
       Object.assign(body.style, { position: saved.position, top: saved.top, left: saved.left, width: saved.width, overflow: saved.overflow });
       html.style.overflow = saved.htmlOverflow;
+      html.style.scrollbarGutter = saved.htmlScrollbarGutter;
       const behavior = html.style.scrollBehavior;
       html.style.scrollBehavior = "auto";
       window.scrollTo(x, y);
