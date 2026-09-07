@@ -104,11 +104,17 @@ nav[aria-label="주요 메뉴"] button[aria-current="page"] { color: #587fa3; }
 /* Scroll only when the content exceeds the space above the navigation. */
 .study-detail-scroll {
   padding-bottom: 16px;
+}
+
+/* Hide scrollbar indicators while preserving scrolling in details and navigation panels. */
+.study-detail-scroll,
+[data-bottom-panel-scroll] {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-.study-detail-scroll::-webkit-scrollbar {
+.study-detail-scroll::-webkit-scrollbar,
+[data-bottom-panel-scroll]::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
