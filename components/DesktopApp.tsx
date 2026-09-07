@@ -4003,18 +4003,38 @@ function AddWord({
             </button>
           </div>
 
+          {studyPoints.length > 1 && <div className="mb-5 space-y-2" aria-label="학습 포인트 목록">
+            {studyPoints.map((point, index) => (
+              <button
+                key={point.editorId ?? index}
+                type="button"
+                onClick={() => setActivePoint(index)}
+                aria-label={`포인트 ${index + 1} 수정`}
+                aria-pressed={activePoint === index}
+                className={`w-full rounded-xl border px-4 py-3 text-left ${activePoint === index ? "border-[#91bad6] bg-[#eff7fc]" : "border-[#e0e8ef] bg-[#fafcfd]"}`}
+              >
+                <span className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-[#596275]">포인트 {index + 1} · {point.category || "기타"}</span>
+                  {activePoint === index && <span className="rounded-full bg-[#dceefa] px-2 py-1 text-[11px] font-bold text-[#587fa3]">편집 중</span>}
+                </span>
+                <span className="mt-1 block truncate text-sm font-semibold text-[#303236]"><RichText text={point.expression || "제목 없는 포인트"} /></span>
+                <span className="mt-1 block line-clamp-2 text-xs text-[#858b94]">{plainText(point.description).trim() || "설명 없음"}</span>
+              </button>
+            ))}
+          </div>}
+
           <div className="flex flex-col gap-3">
             {studyPoints.map((point, index) => (
               <div
                 key={point.editorId ?? index}
-                className="study-note py-2" style={{ order: activePoint === index ? 1 : 0 }}
+                className="study-note py-2" hidden={activePoint !== index}
               >
-                {activePoint !== index && <button type="button" onClick={() => setActivePoint(index)} aria-label={`포인트 ${index + 1} 수정`} className="w-full rounded-xl border border-[#e0e8ef] bg-[#fafcfd] px-4 py-3 text-left">
-                  <span className="text-xs text-[#858b94]">포인트 {index + 1} · {point.category || "기타"}</span>
-                  <span className="mt-1 block truncate text-sm font-semibold text-[#303236]"><RichText text={point.expression || "제목 없는 포인트"} /></span>
-                  <span className="mt-1 block line-clamp-2 text-xs text-[#858b94]">{point.description.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").trim() || `파생어 ${point.variants?.length ?? 0}개 · 예시 ${point.examples?.length ?? 0}개`}</span>
-                </button>}
                 <div hidden={activePoint !== index}>
+                <h2 className="mb-4 flex items-center gap-2 text-[14px] font-bold text-[#303236]">
+                  포인트 {index + 1}
+                  <span className="rounded-full bg-[#eff7fc] px-2 py-1 text-[11px] text-[#587fa3]">편집 중</span>
+                </h2>
+                <h3 className="mb-2 pl-1 text-[11px] font-bold text-[#596275]">제목·설명</h3>
                 <div className="rounded-2xl border border-[#ddeaf3] p-3">
                   <div className="flex items-center gap-2">
                     <PointCategoryInput value={point.category} options={STUDY_CATEGORIES} onChange={value => updateStudyPoint(index, "category", value)} />
