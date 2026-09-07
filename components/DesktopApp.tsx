@@ -1216,7 +1216,13 @@ export default function DesktopApp() {
   }, [step, currentWord?.id, folderPath, selectedDayId, wordIndex]);
 
   return (
-    <main className="min-h-[100svh] pb-[calc(100px+env(safe-area-inset-bottom))] overscroll-none bg-white text-[#111827]">
+    <main
+      className={
+        step === "study"
+          ? "h-[100dvh] overflow-hidden overscroll-none bg-white text-[#111827]"
+          : "min-h-[100svh] pb-[calc(100px+env(safe-area-inset-bottom))] overscroll-none bg-white text-[#111827]"
+      }
+    >
       <BottomNavigation onFolderAction={action => { saveBooks(prev => applyFolderAction(prev, action)); }} books={books} step={step} path={folderPath} dayId={step === "wordList" || step === "study" ? selectedDayId : ""} onHome={goHome}
         onNavigate={(path, dayId, index) => {
           if (dayId) rememberLocation(path, dayId, index);
@@ -1512,7 +1518,7 @@ export default function DesktopApp() {
 
         {step === "study" && selectedBook && selectedDay && (
           <div
-            className="relative -mx-3 flex min-h-[100svh] flex-col bg-white px-0 pt-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8"
+            className="relative -mx-3 flex h-full min-h-0 flex-col overflow-hidden bg-white px-0 pt-0 pb-6 sm:-mx-5 md:-mx-6 lg:-mx-8"
             onPointerDown={handleStudyPointerDown}
             onPointerUp={handleStudyPointerUp}
           >
@@ -1626,7 +1632,7 @@ export default function DesktopApp() {
                       : "pointer-events-none opacity-0"
                   }`}
                 >
-                  <div className="mx-auto h-full w-full max-w-[760px] overflow-y-auto px-8 py-8 sm:px-10 md:px-11 lg:px-[52px]">
+                  <div className="mx-auto h-full min-h-0 w-full max-w-[760px] overflow-y-auto overscroll-contain px-8 py-8 sm:px-10 md:px-11 lg:px-[52px]">
                     <div
                       className={
                         currentWordHasExtraContent
