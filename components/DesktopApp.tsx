@@ -1638,7 +1638,7 @@ export default function DesktopApp() {
                       : "pointer-events-none opacity-0"
                   }`}
                 >
-                  <div className="mx-auto h-full min-h-0 w-full max-w-[760px] overflow-y-auto overscroll-contain px-8 py-8 sm:px-10 md:px-11 lg:px-[52px]">
+                  <div className="study-detail-scroll mx-auto h-full min-h-0 w-full max-w-[760px] overflow-y-auto overscroll-contain px-8 pt-8 sm:px-10 md:px-11 lg:px-[52px]">
                     <div
                       className={
                         currentWordHasExtraContent

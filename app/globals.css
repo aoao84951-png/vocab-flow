@@ -90,6 +90,19 @@ nav[aria-label="주요 메뉴"] button[aria-current="page"] { color: #587fa3; }
 [data-rich-field] b, [data-rich-field] strong { font-weight: 700; }
 [data-rich-field] { -webkit-user-select: text; user-select: text; }
 
+/* The study view keeps scrolling available without showing a floating bar over the content. */
+.study-detail-scroll {
+  padding-bottom: calc(180px + env(safe-area-inset-bottom));
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.study-detail-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* Shared boundary: mobile study content meets the bottom navigation without a blank strip. */
 :root {
   --mobile-bottom-inset: env(safe-area-inset-bottom, 0px);
