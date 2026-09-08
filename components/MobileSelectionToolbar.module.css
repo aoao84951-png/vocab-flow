@@ -19,9 +19,11 @@
   overflow: hidden;
 }
 .strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); min-width: 0; align-items: center; }
-.toolbar button { display: flex; align-items: center; justify-content: center; width: 100%; min-width: 0; height: 38px; border-radius: 12px; cursor: pointer; transition: background-color .15s, color .15s; }
+.toolbar button { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; width: 100%; min-width: 0; height: 38px; border-radius: 12px; cursor: pointer; transition: background-color .15s, color .15s; }
 .toolbar svg { width: 21px; height: 21px; stroke-width: 1.65; }
-.toolbar button[aria-pressed='true'], .toolbar .selected { background: #f0f6fa; color: #7592aa; }
+.strip button::before { content: ''; position: absolute; z-index: -1; inset: 3px 6px; border-radius: 999px; background: #f0f6fa; opacity: 0; transition: opacity .15s; }
+.toolbar button[aria-pressed='true'], .toolbar .selected { color: #7592aa; }
+.strip button[aria-pressed='true']::before, .strip .selected::before { opacity: 1; }
 .toolbar .dismiss { height: 32px; border-left: 1px solid #edf0f4; border-radius: 0; color: #979da5; }
 .toolbar .dismiss svg { width: 20px; height: 20px; }
 .expanded { padding-bottom: 0; background: linear-gradient(transparent, white 48px); }

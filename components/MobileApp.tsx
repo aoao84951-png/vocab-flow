@@ -3633,7 +3633,7 @@ function AddWord({
           </div>
         </label>
 
-        <Input label="영어 단어" value={word} onChange={setWord} placeholder="prioritize" />
+        <Input rich label="영어 단어" value={word} onChange={setWord} placeholder="prioritize" />
 
         <div>
           <div className="mb-2 flex items-center justify-between">
@@ -4248,6 +4248,7 @@ function Input({
         {label}
       </p>
       <Field
+        aria-label={label}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
