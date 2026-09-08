@@ -12,7 +12,7 @@ import WordSearch from "./WordSearch";
 import { matchesWordSearch } from "@/lib/wordSearch";
 import WordOptionsMenu from "./WordOptionsMenu";
 import RichTextField, { RichText } from "./RichTextField";
-import SelectionToolbar from "./SelectionToolbar";
+import MobileSelectionToolbar from "./MobileSelectionToolbar";
 import { hasRichText, plainText, sanitizeRichText } from "@/lib/richText";
 import AppearanceSettings from "./AppearanceSettings";
 import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
@@ -3601,7 +3601,7 @@ function AddWord({
 
   return (
     <div data-word-editor className={`min-h-dvh px-5 pt-7 pb-6 ${formPage === "notes" ? "mx-auto w-full max-w-[760px]" : ""}`}>
-      <SelectionToolbar />
+      <MobileSelectionToolbar />
       <BackButton onClick={() => formPage === "notes" ? changeFormPage("basic") : onBack()} label={formPage === "notes" ? "기본 정보로" : "뒤로"} />
 
       <h1 className="mt-5 text-[28px] font-bold text-[#303236]">
