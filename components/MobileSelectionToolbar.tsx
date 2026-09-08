@@ -2,18 +2,17 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Bold, Italic, Underline, Strikethrough, RemoveFormatting, ChevronsLeft, Keyboard, CircleX } from 'lucide-react';
+import { Bold, Italic, Underline, Strikethrough, RemoveFormatting, Palette, X } from 'lucide-react';
 import styles from './MobileSelectionToolbar.module.css';
 import { readEditorSelection, restoreEditorSelection, selectedEditorColors, paletteColorMatches, type EditorSelection } from '@/lib/editorSelection';
 
 const names = ['기본', '회색', '갈색', '주황색', '노란색', '초록색', '파란색', '보라색', '분홍색', '빨간색'];
 const colors = ['#303236', '#858585', '#a77c65', '#d57a36', '#c79832', '#4e9473', '#397dcc', '#9268bb', '#c54b88', '#d9514d'];
 const backgrounds = ['transparent', '#efefed', '#f4eae5', '#fdebdc', '#faf3dd', '#e7eee9', '#e6f1fc', '#f1eaf8', '#f9e9f1', '#fce8e7'];
-const actions = [[Bold, '굵게', 'bold'], [Italic, '기울임', 'italic'], [Underline, '밑줄', 'underline'], [Strikethrough, '취소선', 'strikeThrough'], [RemoveFormatting, '서식 지우기', 'removeFormat']] as const;
+const actions = [[Bold, '굵게', 'bold'], [Underline, '밑줄', 'underline'], [Italic, '기울임', 'italic'], [Strikethrough, '취소선', 'strikeThrough'], [RemoveFormatting, '서식 지우기', 'removeFormat']] as const;
 
 export default function MobileSelectionToolbar() {
   const root = useRef<HTMLDivElement>(null);
-  const strip = useRef<HTMLDivElement>(null);
   const range = useRef<Range | null>(null);
   const editor = useRef<HTMLElement | null>(null);
   const paletteOpen = useRef(false);
@@ -155,15 +154,14 @@ export default function MobileSelectionToolbar() {
   return createPortal(
     <div ref={root} className={`${styles.root} ${palette ? styles.expanded : ''}`} onPointerDown={event => { if ((event.target as Element).closest('button')) event.preventDefault(); }} onMouseDown={event => event.preventDefault()}>
       <div className={styles.toolbar} role="toolbar" aria-label="텍스트 서식">
-        <div ref={strip} className={styles.strip}>
-          <button type="button" aria-label="서식 도구 처음으로" onClick={() => strip.current?.scrollTo({ left: 0, behavior: 'smooth' })}><ChevronsLeft /></button>
-          <button type="button" aria-label="글자색 및 배경색" aria-expanded={palette} aria-controls="mobile-format-colors" className={palette ? styles.selected : ''} onClick={togglePalette}><span className={styles.colorIcon}>가</span></button>
+        <div className={styles.strip}>
           {actions.map(([Icon, label, action]) => <button type="button" key={action} aria-label={label} aria-pressed={active.includes(action)} onClick={() => command(action)}><Icon /></button>)}
+          <button type="button" aria-label="글자색 및 배경색" aria-expanded={palette} aria-controls="mobile-format-colors" className={palette ? styles.selected : ''} onClick={togglePalette}><Palette /></button>
         </div>
-        <button type="button" className={styles.dismiss} aria-label={palette ? '색상 패널 닫고 키보드 열기' : '키보드 닫기'} onClick={() => {
+        <button type="button" className={styles.dismiss} aria-label={palette ? '색상 패널 닫고 키보드 열기' : '서식창 닫기'} onClick={() => {
           if (palette) togglePalette();
           else { editor.current?.blur(); setVisible(false); }
-        }}>{palette ? <CircleX /> : <><Keyboard /><span className={styles.chevron} /></>}</button>
+        }}><X /></button>
       </div>
       {palette && <div id="mobile-format-colors" className={styles.panel}>
         {(['text', 'background'] as const).map(kind => <section key={kind} aria-label={kind === 'text' ? '텍스트 색상' : '배경 색상'}>
