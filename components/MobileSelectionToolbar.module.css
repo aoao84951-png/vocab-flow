@@ -33,3 +33,9 @@
 .defaultSwatch { border: 1.5px solid #91918f; }
 .root button:focus-visible { outline: 2px solid #929292; outline-offset: -2px; }
 @media (max-width: 350px) { .grid { column-gap: 8px; } .grid button { gap: 8px; font-size: 13px; } }
+.grid button[aria-pressed='true'] {
+  border-color: #8a9db0;
+  background: #edf2f7;
+  box-shadow: inset 0 0 0 1px #8a9db0;
+}
+.root { -webkit-user-select: none; user-select: none; }

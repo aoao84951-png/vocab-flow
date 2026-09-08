@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Bold, Italic, Underline, Strikethrough, RemoveFormatting, ChevronsLeft, Keyboard, CircleX } from 'lucide-react';
 import styles from './MobileSelectionToolbar.module.css';
+import { readEditorSelection, restoreEditorSelection, selectedEditorColors, paletteColorMatches, type EditorSelection } from '@/lib/editorSelection';
 
 const names = ['기본', '회색', '갈색', '주황색', '노란색', '초록색', '파란색', '보라색', '분홍색', '빨간색'];
 const colors = ['#303236', '#858585', '#a77c65', '#d57a36', '#c79832', '#4e9473', '#397dcc', '#9268bb', '#c54b88', '#d9514d'];
@@ -17,12 +18,26 @@ export default function MobileSelectionToolbar() {
   const editor = useRef<HTMLElement | null>(null);
   const paletteOpen = useRef(false);
   const panelHeight = useRef(300);
+  const inputMode = useRef<{ field: HTMLElement; value: string | null } | null>(null);
+  const pendingSelection = useRef<EditorSelection | null>(null);
+  const [revision, setRevision] = useState(0);
+  const [selectedColors, setSelectedColors] = useState<{ text: string | null; background: string | null }>({ text: null, background: null });
+
+  const releaseKeyboard = () => {
+    const previous = inputMode.current;
+    if (!previous) return;
+    if (previous.value === null) previous.field.removeAttribute('inputmode');
+    else previous.field.setAttribute('inputmode', previous.value);
+    inputMode.current = null;
+  };
   const [visible, setVisible] = useState(false);
   const [palette, setPalette] = useState(false);
   const [active, setActive] = useState<string[]>([]);
 
   useEffect(() => {
     const hide = () => {
+      releaseKeyboard();
+      pendingSelection.current = null;
       paletteOpen.current = false;
       setPalette(false);
       setVisible(false);
@@ -37,6 +52,7 @@ export default function MobileSelectionToolbar() {
       if (!field?.closest('[data-word-editor]') || document.activeElement !== field) { hide(); return; }
       range.current = next.cloneRange();
       editor.current = field;
+      setSelectedColors(selectedEditorColors(field, next));
       setActive(actions.filter(([, , action]) => action !== 'removeFormat' && document.queryCommandState(action)).map(([, , action]) => action));
       setVisible(true);
     };
@@ -49,6 +65,7 @@ export default function MobileSelectionToolbar() {
     document.addEventListener('pointerdown', outside);
     document.addEventListener('keydown', key);
     return () => {
+      releaseKeyboard();
       document.removeEventListener('selectionchange', update);
       document.removeEventListener('pointerup', update);
       document.removeEventListener('pointerdown', outside);
@@ -88,14 +105,26 @@ export default function MobileSelectionToolbar() {
     selection?.addRange(range.current);
     return true;
   };
+  // Restore after React has committed the input update as well as immediately.
+  useLayoutEffect(() => {
+    const bookmark = pendingSelection.current;
+    const field = editor.current;
+    if (!bookmark || !field?.isConnected) return;
+    range.current = restoreEditorSelection(field, bookmark);
+    if (range.current) setSelectedColors(selectedEditorColors(field, range.current));
+    pendingSelection.current = null;
+  }, [revision]);
+
   const command = (name: string, value?: string) => {
-    if (!restore(!paletteOpen.current)) return;
+    if (!restore(true) || !editor.current || !range.current) return;
+    const bookmark = readEditorSelection(editor.current, range.current);
+    pendingSelection.current = bookmark;
     document.execCommand('styleWithCSS', false, 'true');
     document.execCommand(name, false, value);
     editor.current?.dispatchEvent(new Event('input', { bubbles: true }));
-    const selection = window.getSelection();
-    if (selection?.rangeCount) range.current = selection.getRangeAt(0).cloneRange();
-    if (paletteOpen.current) editor.current?.blur();
+    range.current = restoreEditorSelection(editor.current, bookmark);
+    if (range.current) setSelectedColors(selectedEditorColors(editor.current, range.current));
+    setRevision(value => value + 1);
     setActive(actions.filter(([, , action]) => action !== 'removeFormat' && document.queryCommandState(action)).map(([, , action]) => action));
   };
   const togglePalette = () => {
@@ -107,8 +136,20 @@ export default function MobileSelectionToolbar() {
     }
     paletteOpen.current = next;
     setPalette(next);
-    if (next) editor.current?.blur();
-    else restore(true);
+    const field = editor.current;
+    if (next && field && range.current) {
+      const bookmark = readEditorSelection(field, range.current);
+      inputMode.current = { field, value: field.getAttribute('inputmode') };
+      // Keep the editable focused while the palette replaces the software keyboard.
+      field.setAttribute('inputmode', 'none');
+      field.blur();
+      field.focus({ preventScroll: true });
+      range.current = restoreEditorSelection(field, bookmark);
+    } else {
+      releaseKeyboard();
+      field?.blur();
+      restore(true);
+    }
   };
   if (!visible) return null;
   return createPortal(
@@ -127,7 +168,7 @@ export default function MobileSelectionToolbar() {
       {palette && <div id="mobile-format-colors" className={styles.panel}>
         {(['text', 'background'] as const).map(kind => <section key={kind} aria-label={kind === 'text' ? '텍스트 색상' : '배경 색상'}>
           <h3>{kind === 'text' ? '텍스트 색상' : '배경 색상'}</h3>
-          <div className={styles.grid}>{(kind === 'text' ? colors : backgrounds).map((color, index) => <button type="button" key={color} onClick={() => command(kind === 'text' ? 'foreColor' : 'hiliteColor', color)}>
+          <div className={styles.grid}>{(kind === 'text' ? colors : backgrounds).map((color, index) => <button type="button" key={color} aria-pressed={paletteColorMatches(selectedColors[kind], color)} onClick={() => command(kind === 'text' ? 'foreColor' : 'hiliteColor', color)}>
             {kind === 'text' ? <span className={styles.swatchText} style={{ color }}>가</span> : <span className={`${styles.swatch} ${index === 0 ? styles.defaultSwatch : ''}`} style={{ backgroundColor: color }} />}
             <span>{names[index]} {kind === 'text' ? '텍스트' : '배경'}</span>
           </button>)}</div>
