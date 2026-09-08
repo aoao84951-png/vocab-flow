@@ -13,6 +13,7 @@ import { matchesWordSearch } from "@/lib/wordSearch";
 import WordOptionsMenu from "./WordOptionsMenu";
 import RichTextField, { RichText } from "./RichTextField";
 import MobileSelectionToolbar from "./MobileSelectionToolbar";
+import MobileEditorActions from "./MobileEditorActions";
 import { hasRichText, plainText, sanitizeRichText } from "@/lib/richText";
 import AppearanceSettings from "./AppearanceSettings";
 import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
@@ -1920,7 +1921,7 @@ const getDayProgress = (day: Day) => {
   }, [step, currentWord?.id, folderPath, selectedDayId, wordIndex]);
 
   return (
-    <main className="min-h-[100svh] pb-[calc(var(--mobile-bottom-bar-height)+31px)] bg-white text-[#111827]">
+    <main className={`min-h-[100svh] bg-white text-[#111827] ${step === "addWord" || step === "editWord" ? "" : "pb-[calc(var(--mobile-bottom-bar-height)+31px)]"}`}>
       <BottomNavigation onFolderAction={action => { saveBooks(prev => applyFolderAction(prev, action)); }} books={books} step={step} path={folderPath} dayId={step === "wordList" || step === "study" ? selectedDayId : ""} onHome={goHome}
         onNavigate={(path, dayId, index) => {
           if (dayId) rememberLocation(path, dayId, index);
@@ -3600,7 +3601,7 @@ function AddWord({
       .filter((item) => item.text);
 
   return (
-    <div data-word-editor className={`min-h-dvh px-5 pt-7 pb-6 ${formPage === "notes" ? "mx-auto w-full max-w-[760px]" : ""}`}>
+    <div data-word-editor className={`min-h-dvh px-5 pt-7 ${formPage === "notes" ? "mx-auto w-full max-w-[760px]" : ""}`}>
       <MobileSelectionToolbar />
       <BackButton onClick={() => formPage === "notes" ? changeFormPage("basic") : onBack()} label={formPage === "notes" ? "기본 정보로" : "뒤로"} />
 
@@ -4090,7 +4091,7 @@ function AddWord({
         </div>
 
         </div>
-        <div className="sticky bottom-0 z-30 flex items-center gap-2 border-t border-[#edf0f3] bg-white/95 py-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur">
+        <MobileEditorActions>
           <button type="button" onClick={() => formPage === "notes" ? changeFormPage("basic") : onBack()} className="h-12 shrink-0 px-3 text-[13px] text-[#737b89]">{formPage === "notes" ? "기본 정보로" : "취소"}</button>
         <button
           onClick={() => {
@@ -4200,7 +4201,7 @@ function AddWord({
             if (!studyPoints.length) addStudyPoint();
             changeFormPage("notes");
           }} className="h-12 min-w-0 flex-1 rounded-full bg-[#eff7fc] px-3 text-[13px] font-semibold text-[#4b5058]">학습 포인트 추가</button>}
-        </div>
+        </MobileEditorActions>
       </div>
     </div>
   );
