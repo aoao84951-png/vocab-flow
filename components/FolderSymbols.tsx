@@ -12,21 +12,25 @@ export function FolderSymbolGlyph({ symbol }: { symbol: string }) {
   if (!coloredSymbols.some((item) => item.value === symbol)) return <>{symbol}</>;
 
   return (
-    <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 24 24" fill="#ecf5ff" stroke="#849db0" strokeWidth="1.8" className="inline-block shrink-0 align-middle">
-      {symbol === "blue-circle" ? (
-        <circle cx="12" cy="12" r="9" />
-      ) : symbol === "sky-double-circle" ? (
-        <>
+    <span className="relative inline-block">
+      {/* Preserve the existing symbol font’s width and text baseline. */}
+      <span className="invisible">○</span>
+      <svg aria-hidden="true" width="0.9em" height="0.9em" viewBox="0 0 24 24" fill="#ecf5ff" stroke="#849db0" strokeWidth="1.8" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        {symbol === "blue-circle" ? (
           <circle cx="12" cy="12" r="9" />
-          <circle cx="12" cy="12" r="4.5" />
-        </>
-      ) : (
-        <>
-          <rect x="3" y="3" width="18" height="18" rx="1.5" />
-          <rect x="7.5" y="7.5" width="9" height="9" rx="0.7" />
-        </>
-      )}
-    </svg>
+        ) : symbol === "sky-double-circle" ? (
+          <>
+            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="12" r="4.5" />
+          </>
+        ) : (
+          <>
+            <rect x="3" y="3" width="18" height="18" rx="1.5" />
+            <rect x="7.5" y="7.5" width="9" height="9" rx="0.7" />
+          </>
+        )}
+      </svg>
+    </span>
   );
 }
 
@@ -40,6 +44,7 @@ export function FolderSymbol({ symbol = "#" }: { symbol?: string }) {
 
 export function FolderSymbolPicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const selectedColoredSymbol = coloredSymbols.find((item) => item.value === value);
   return (
     <fieldset className="min-w-0">
       <legend className="mb-3 text-[12px] font-medium text-[#737b88]">폴더 기호</legend>
@@ -54,7 +59,18 @@ export function FolderSymbolPicker({ value, onChange }: { value: string; onChang
       <button type="button" onClick={() => setExpanded(!expanded)} className="mt-3 text-[12px] text-[#737b88]">{expanded ? "접기" : "기호 더 보기"}</button>
       <label className="mt-3 flex items-center gap-3 text-[12px] text-[#737b88]">
         직접 입력
-        <input aria-label="폴더 기호 직접 입력" value={coloredSymbols.some((item) => item.value === value) ? "" : value} onChange={(event) => onChange(Array.from(event.target.value).slice(0, 1).join(""))} className="folder-symbol h-10 w-14 rounded-xl border border-[#e4e8f0] text-center text-[23px] text-[#303236]" />
+        <span className="relative inline-flex">
+          <input aria-label="폴더 기호 직접 입력" aria-description={selectedColoredSymbol?.label} value={selectedColoredSymbol ? "" : value}
+            onChange={(event) => onChange(Array.from(event.target.value).slice(0, 1).join(""))}
+            onKeyDown={(event) => {
+              if (selectedColoredSymbol && (event.key === "Backspace" || event.key === "Delete")) {
+                event.preventDefault();
+                onChange("");
+              }
+            }}
+            className="folder-symbol h-10 w-14 rounded-xl border border-[#e4e8f0] text-center text-[23px] text-[#303236]" />
+          {selectedColoredSymbol && <span aria-hidden="true" className="folder-symbol pointer-events-none absolute inset-0 flex items-center justify-center text-[23px]"><FolderSymbolGlyph symbol={value} /></span>}
+        </span>
       </label>
     </fieldset>
   );
