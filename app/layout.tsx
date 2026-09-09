@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { FontPreference } from "@/components/AppearanceSettings";
+import PwaServiceWorker from "@/components/PwaServiceWorker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,7 +14,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, maximumScale: 1, userScalable: false };
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#ffffff",
+};
 
 export const metadata: Metadata = {
   title: "ᴠᴏᴄᴀ",
@@ -36,7 +43,7 @@ export default function RootLayout({
       lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col"><FontPreference />{children}</body>
+      <body className="min-h-full flex flex-col"><FontPreference /><PwaServiceWorker />{children}</body>
     </html>
   );
 }
