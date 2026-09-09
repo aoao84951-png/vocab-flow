@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Bold, Italic, Underline, Strikethrough, RemoveFormatting, Palette, X } from 'lucide-react';
+import { Bold, Italic, Underline, Strikethrough, RemoveFormatting, Palette, X, Plus } from 'lucide-react';
 import styles from './MobileSelectionToolbar.module.css';
 import { readEditorSelection, restoreEditorSelection, selectedEditorColors, paletteColorMatches, type EditorSelection } from '@/lib/editorSelection';
 
@@ -21,6 +21,10 @@ export default function MobileSelectionToolbar() {
   const pendingSelection = useRef<EditorSelection | null>(null);
   const [revision, setRevision] = useState(0);
   const [selectedColors, setSelectedColors] = useState<{ text: string | null; background: string | null }>({ text: null, background: null });
+  const [fontFamily, setFontFamily] = useState('inherit');
+  const [customColors, setCustomColors] = useState<string[]>([]);
+  const [customHex, setCustomHex] = useState('#c79832');
+  const [paletteTab, setPaletteTab] = useState<'text'|'background'>('text');
 
   const releaseKeyboard = () => {
     const previous = inputMode.current;
@@ -34,6 +38,7 @@ export default function MobileSelectionToolbar() {
   const [active, setActive] = useState<string[]>([]);
 
   useEffect(() => {
+    try { setCustomColors(JSON.parse(localStorage.getItem('vocab-custom-colors') || '[]')); } catch {}
     const hide = () => {
       releaseKeyboard();
       pendingSelection.current = null;
@@ -51,6 +56,8 @@ export default function MobileSelectionToolbar() {
       if (!field?.closest('[data-word-editor]') || document.activeElement !== field) { hide(); return; }
       range.current = next.cloneRange();
       editor.current = field;
+      const styledNode = next.startContainer instanceof Element ? next.startContainer : next.startContainer.parentElement;
+      setFontFamily(getComputedStyle(styledNode || field).fontFamily || getComputedStyle(field).fontFamily || 'inherit');
       setSelectedColors(selectedEditorColors(field, next));
       setActive(actions.filter(([, , action]) => action !== 'removeFormat' && document.queryCommandState(action)).map(([, , action]) => action));
       setVisible(true);
@@ -152,7 +159,7 @@ export default function MobileSelectionToolbar() {
   };
   if (!visible) return null;
   return createPortal(
-    <div ref={root} className={`${styles.root} ${palette ? styles.expanded : ''}`} onPointerDown={event => { if ((event.target as Element).closest('button')) event.preventDefault(); }} onMouseDown={event => event.preventDefault()}>
+    <div ref={root} style={{fontFamily}} className={`${styles.root} ${palette ? styles.expanded : ''}`} onPointerDown={event => { if ((event.target as Element).closest('button')) event.preventDefault(); }} onMouseDown={event => event.preventDefault()}>
       <div className={styles.toolbar} role="toolbar" aria-label="텍스트 서식">
         <div className={styles.strip}>
           {actions.map(([Icon, label, action]) => <button type="button" key={action} aria-label={label} aria-pressed={active.includes(action)} onClick={() => command(action)}><Icon /></button>)}
@@ -166,11 +173,12 @@ export default function MobileSelectionToolbar() {
       {palette && <div id="mobile-format-colors" className={styles.panel}>
         {(['text', 'background'] as const).map(kind => <section key={kind} aria-label={kind === 'text' ? '텍스트 색상' : '배경 색상'}>
           <h3>{kind === 'text' ? '텍스트 색상' : '배경 색상'}</h3>
-          <div className={styles.grid}>{(kind === 'text' ? colors : backgrounds).map((color, index) => <button type="button" key={color} aria-pressed={paletteColorMatches(selectedColors[kind], color)} onClick={() => command(kind === 'text' ? 'foreColor' : 'hiliteColor', color)}>
+          <div className={styles.grid}>{(kind === 'text' ? [...colors, ...customColors] : [...backgrounds, ...customColors]).map((color, index) => <button type="button" key={`${kind}-${color}`} aria-pressed={paletteColorMatches(selectedColors[kind], color)} onClick={() => command(kind === 'text' ? 'foreColor' : 'hiliteColor', color)}>
             {kind === 'text' ? <span className={styles.swatchText} style={{ color }}>가</span> : <span className={`${styles.swatch} ${index === 0 ? styles.defaultSwatch : ''}`} style={{ backgroundColor: color }} />}
             <span>{names[index]} {kind === 'text' ? '텍스트' : '배경'}</span>
           </button>)}</div>
         </section>)}
+        <section className={styles.customSection} aria-label="내 색상"><h3>내 색상</h3><div className={styles.customTabs}><button className={paletteTab === 'text' ? styles.customActive : ''} onClick={() => setPaletteTab('text')}>글자색</button><button className={paletteTab === 'background' ? styles.customActive : ''} onClick={() => setPaletteTab('background')}>배경색</button></div><div className={styles.customRow}><input aria-label="내 색상 코드" value={customHex} onChange={event => setCustomHex(event.target.value)} placeholder="#c79832"/><button aria-label="내 색상 추가" onClick={() => { if (!/^#[\da-f]{6}$/i.test(customHex)) return; const next = Array.from(new Set([...customColors, customHex.toLowerCase()])); setCustomColors(next); localStorage.setItem('vocab-custom-colors', JSON.stringify(next)); command(paletteTab === 'text' ? 'foreColor' : 'hiliteColor', customHex); }}><Plus size={17}/> 추가</button></div></section>
       </div>}
     </div>, document.body,
   );
