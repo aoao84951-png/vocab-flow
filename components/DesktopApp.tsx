@@ -5398,9 +5398,9 @@ function MenuContentFolder({
         <button
           type="button"
           onClick={() => onSelectFolder(path)}
-          className={`min-w-0 flex-1 truncate text-left text-[13px] tracking-[-0.04em] ${isSelected ? "font-extrabold text-[#303236]" : "font-semibold text-[#47505f]"}`}
+          className={`flex min-w-0 flex-1 items-center text-left text-[13px] tracking-[-0.04em] ${isSelected ? "font-extrabold text-[#303236]" : "font-semibold text-[#47505f]"}`}
         >
-          <FolderSymbol symbol={folder.icon} />{folder.title}
+          <FolderSymbol symbol={folder.icon} /><span className="min-w-0 truncate">{folder.title}</span>
         </button>
         {hasChildren && (
           <button type="button" onClick={() => onToggle(folder.id)}
