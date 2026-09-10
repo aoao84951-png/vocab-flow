@@ -1653,7 +1653,7 @@ export default function DesktopApp() {
                           const shouldCenterStackedNumberedMeanings =
                             group.numbered &&
                             group.items.length > 1 &&
-                            group.items.join("").length >= 42;
+                            group.items.map((item) => plainText(item).replace(/\[\[(.*?)\]\]/g, "$1")).join("").length >= 42;
 
                           return shouldCenterStackedNumberedMeanings ? (
                             <div
