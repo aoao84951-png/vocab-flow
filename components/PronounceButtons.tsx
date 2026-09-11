@@ -151,6 +151,9 @@ export default function PronounceButtons({
       aria-label={`${cleanedText} 듣기`}
       aria-busy={isLoading}
       onClick={(event) => {
+        // Pointer clicks must not leave study shortcuts trapped on the TTS control.
+        // Keep focus for keyboard / assistive-technology activation (detail === 0).
+        if (event.detail > 0) event.currentTarget.blur();
         if (!isTtsTextHit(event.currentTarget, event.clientX, event.clientY)) return;
         event.stopPropagation();
         void speak();
