@@ -1,7 +1,7 @@
 "use client";
 
 import WordActionPopover from "./WordActionPopover";
-import { applyFolderAction } from "@/lib/folderActions";
+import { applyFolderAction, findFolderPath } from "@/lib/folderActions";
 import { useEffect, useRef, useState } from "react";
 import useNavigationHistory from "./useNavigationHistory";
 import { isNavigationEntry, mainScreen, type Screen } from "@/lib/navigationHistory";
@@ -1922,7 +1922,15 @@ const getDayProgress = (day: Day) => {
 
   return (
     <main className={`min-h-[100svh] bg-white text-[#111827] ${step === "addWord" || step === "editWord" ? "" : "pb-[calc(var(--mobile-bottom-bar-height)+31px)]"}`}>
-      <BottomNavigation onFolderAction={action => { saveBooks(prev => applyFolderAction(prev, action)); }} books={books} step={step} path={folderPath} dayId={step === "wordList" || step === "study" ? selectedDayId : ""} onHome={goHome}
+      <BottomNavigation onFolderAction={action => {
+        saveBooks(prev => applyFolderAction(prev, action));
+        if (action.kind === "move" && folderPath.length) {
+          const nextPath = findFolderPath(applyFolderAction(books, action), folderPath[folderPath.length - 1]);
+          if (nextPath && nextPath.join("/") !== folderPath.join("/")) {
+            setFolderPath(nextPath); setSelectedBookId(nextPath[0]);
+          }
+        }
+      }} books={books} step={step} path={folderPath} dayId={step === "wordList" || step === "study" ? selectedDayId : ""} onHome={goHome}
         onNavigate={(path, dayId, index) => {
           if (dayId) rememberLocation(path, dayId, index);
           setMenuOpen(false); setActionWordIndex(null); setActionDayId(null); setActionFolderId(null); setSelectedBookId(path[0] || ""); setFolderPath(path);
