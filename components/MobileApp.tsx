@@ -1256,7 +1256,12 @@ export default function MobileApp() {
                               )}
 
                               {(point.variants ?? []).length > 0 && (
-                                <StudyPointVariants>
+                                <StudyPointVariants decorated={Boolean(
+                                    plainText(point.description ?? "").trim() ||
+                                    (point.examples?.length
+                                      ? point.examples.some((example) => plainText(example.en || example.ko).trim())
+                                      : plainText(point.exampleEn || point.exampleKo || "").trim())
+                                  )}>
                                   {(point.variants ?? []).map((variant, variantIndex) => (
                                     <div
                                       key={`${variant.word}-${variantIndex}`}

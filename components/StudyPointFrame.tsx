@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 
-export function StudyPointVariants({ children }: { children: ReactNode }) {
+export function StudyPointVariants({ children, decorated }: { children: ReactNode; decorated: boolean }) {
+  if (!decorated) return <div className="space-y-5">{children}</div>;
+
   return (
     <div className="study-point-variants">
       <span aria-hidden="true" className="folder-symbol study-point-variant-star study-point-variant-star-start">☆</span>
