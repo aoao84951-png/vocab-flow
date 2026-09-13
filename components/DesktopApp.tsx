@@ -1,6 +1,7 @@
 "use client";
 
 import BookCoverInput from "./BookCoverInput";
+import StudyPointFrame from "./StudyPointFrame";
 
 import WordActionPopover from "./WordActionPopover";
 import { applyFolderAction, findFolderPath } from "@/lib/folderActions";
@@ -1783,41 +1784,32 @@ export default function DesktopApp() {
                     )}
                     {(currentWord.studyPoints ?? []).length > 0 && (
                       <Block title="학습포인트">
-                        <div className="divide-y divide-[#d7ddea]">
+                        <div className="space-y-4">
                           {(currentWord.studyPoints ?? []).map(
                             (point, index) => (
-                              <div
-                                key={index}
-                                className="px-0 py-4 first:pt-0 last:pb-0"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <span className="rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#303236]">
-                                    <RichText text={point.category} />
-                                  </span>
-
-                                  {point.expression && (
-                                    <PronounceButtons text={point.expression} className="ipad-study-main text-[14px] font-bold text-[#111827]">
-                                      <HighlightedText
-                                        text={point.expression}
-                                        keyword=""
-                                      />
-                                    </PronounceButtons>
-                                  )}
-                                </div>
-
-                                {point.description && (
-                                  <PronounceButtons text={point.description} className="ipad-study-main mt-2 block pl-[7px] whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
-                                    <span dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }} />
-                                  </PronounceButtons>
+                              <StudyPointFrame key={index} category={<RichText text={point.category} />}>
+                                {(point.expression || point.description) && (
+                                  <div className="space-y-2">
+                                    {point.expression && (
+                                      <PronounceButtons text={point.expression} className="ipad-study-main block text-[14px] font-bold text-[#111827]">
+                                        <HighlightedText text={point.expression} keyword="" />
+                                      </PronounceButtons>
+                                    )}
+                                    {point.description && (
+                                      <PronounceButtons text={point.description} className="ipad-study-main block whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
+                                        <span dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }} />
+                                      </PronounceButtons>
+                                    )}
+                                  </div>
                                 )}
 
                                 {(point.variants ?? []).length > 0 && (
-                                  <div className="mt-3 ml-[0px] space-y-2">
+                                  <div className="divide-y divide-[#e4e8f0]">
                                     {(point.variants ?? []).map(
                                       (variant, variantIndex) => (
                                         <div
                                           key={`${variant.word}-${variantIndex}`}
-                                          className="rounded-xl border border-[#e4e8f0] bg-white px-3 py-2"
+                                          className="min-w-0 py-3 first:pt-0 last:pb-0"
                                         >
                                           {variant.word && (
                                             <div className="mb-1.5 flex items-start gap-2">
@@ -1904,12 +1896,12 @@ export default function DesktopApp() {
                                   if (pointExamples.length === 0) return null;
 
                                   return (
-                                    <div className="mt-3 ml-[6px] space-y-3">
+                                    <div className="divide-y divide-[#e4e8f0]">
                                       {pointExamples.map(
                                         (example, exampleIndex) => (
                                           <div
                                             key={`${example.en}-${exampleIndex}`}
-                                            className="border-l-2 border-[#d7ddea] pl-3"
+                                            className="min-w-0 py-3 first:pt-0 last:pb-0"
                                           >
                                             {example.en && (
                                               <div className="flex items-start gap-2">
@@ -1944,7 +1936,7 @@ export default function DesktopApp() {
                                     </div>
                                   );
                                 })()}
-                              </div>
+                              </StudyPointFrame>
                             ),
                           )}
                         </div>
