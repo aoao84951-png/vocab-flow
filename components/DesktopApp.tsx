@@ -1783,7 +1783,7 @@ export default function DesktopApp() {
                       </Block>
                     )}
                     {(currentWord.studyPoints ?? []).length > 0 && (
-                      <Block title="학습포인트">
+                      <section aria-label="학습포인트" className="study-points-section py-5">
                         <div className="space-y-4">
                           {(currentWord.studyPoints ?? []).map(
                             (point, index) => (
@@ -1896,12 +1896,12 @@ export default function DesktopApp() {
                                   if (pointExamples.length === 0) return null;
 
                                   return (
-                                    <div className="divide-y divide-[#e4e8f0]">
+                                    <div className="space-y-5">
                                       {pointExamples.map(
                                         (example, exampleIndex) => (
                                           <div
                                             key={`${example.en}-${exampleIndex}`}
-                                            className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2.5 py-3 first:pt-0 last:pb-0"
+                                            className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2.5"
                                           >
                                             <span className="select-none pt-0.5 text-[11px] leading-relaxed font-medium tabular-nums text-[#9aa3b2]" aria-hidden="true">
                                               {String(exampleIndex + 1).padStart(2, "0")}
@@ -1945,7 +1945,7 @@ export default function DesktopApp() {
                             ),
                           )}
                         </div>
-                      </Block>
+                      </section>
                     )}
                   </div>
                 </section>
