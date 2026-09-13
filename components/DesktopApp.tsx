@@ -1901,35 +1901,40 @@ export default function DesktopApp() {
                                         (example, exampleIndex) => (
                                           <div
                                             key={`${example.en}-${exampleIndex}`}
-                                            className="min-w-0 py-3 first:pt-0 last:pb-0"
+                                            className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2.5 py-3 first:pt-0 last:pb-0"
                                           >
-                                            {example.en && (
-                                              <div className="flex items-start gap-2">
-                                                <PronounceButtons text={example.en} className="ipad-study-main min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
-                                                <span
-                                                  className="ipad-study-main min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
-                                                  dangerouslySetInnerHTML={{
-                                                    __html:
-                                                      applyBracketHighlightToHtml(
-                                                        example.en,
-                                                      ),
-                                                  }}
-                                                />
-                                                </PronounceButtons>
-                                              </div>
-                                            )}
+                                            <span className="select-none pt-0.5 text-[11px] leading-relaxed font-medium tabular-nums text-[#9aa3b2]" aria-hidden="true">
+                                              {String(exampleIndex + 1).padStart(2, "0")}
+                                            </span>
+                                            <div className="min-w-0">
+                                              {example.en && (
+                                                <div className="flex items-start gap-2">
+                                                  <PronounceButtons text={example.en} className="ipad-study-main min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
+                                                  <span
+                                                    className="ipad-study-main min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
+                                                    dangerouslySetInnerHTML={{
+                                                      __html:
+                                                        applyBracketHighlightToHtml(
+                                                          example.en,
+                                                        ),
+                                                    }}
+                                                  />
+                                                  </PronounceButtons>
+                                                </div>
+                                              )}
 
-                                            {example.ko && (
-                                              <PronounceButtons
-                                                text={example.ko}
-                                                className={`${example.en ? "mt-1" : ""} block text-[12px] leading-relaxed text-[#8a94a6] ipad-study-sub`}
-                                              >
-                                                <HighlightedText
+                                              {example.ko && (
+                                                <PronounceButtons
                                                   text={example.ko}
-                                                  keyword=""
-                                                />
-                                              </PronounceButtons>
-                                            )}
+                                                  className={`${example.en ? "mt-1" : ""} block text-[12px] leading-relaxed text-[#8a94a6] ipad-study-sub`}
+                                                >
+                                                  <HighlightedText
+                                                    text={example.ko}
+                                                    keyword=""
+                                                  />
+                                                </PronounceButtons>
+                                              )}
+                                            </div>
                                           </div>
                                         ),
                                       )}

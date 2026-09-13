@@ -1331,27 +1331,32 @@ export default function MobileApp() {
                                     {pointExamples.map((example, exampleIndex) => (
                                       <div
                                         key={`${example.en}-${exampleIndex}`}
-                                        className="min-w-0 py-3 first:pt-0 last:pb-0"
+                                        className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2.5 py-3 first:pt-0 last:pb-0"
                                       >
-                                        {example.en && (
-                                          <div className="flex items-start gap-2">
-                                            <MobilePronounceButton text={example.en} className="min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
-                                            <span
-                                              className="min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
-                                              dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(example.en) }}
-                                            />
-                                            </MobilePronounceButton>
-                                          </div>
-                                        )}
+                                        <span className="select-none pt-0.5 text-[11px] leading-relaxed font-medium tabular-nums text-[#9aa3b2]" aria-hidden="true">
+                                          {String(exampleIndex + 1).padStart(2, "0")}
+                                        </span>
+                                        <div className="min-w-0">
+                                          {example.en && (
+                                            <div className="flex items-start gap-2">
+                                              <MobilePronounceButton text={example.en} className="min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
+                                              <span
+                                                className="min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]"
+                                                dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(example.en) }}
+                                              />
+                                              </MobilePronounceButton>
+                                            </div>
+                                          )}
 
-                                        {example.ko && (
-                                          <MobilePronounceButton
-                                            text={example.ko}
-                                            className={`${example.en ? "mt-1" : ""} block text-[12px] leading-relaxed text-[#8a94a6]`}
-                                          >
-                                            <HighlightedText text={example.ko} keyword="" />
-                                          </MobilePronounceButton>
-                                        )}
+                                          {example.ko && (
+                                            <MobilePronounceButton
+                                              text={example.ko}
+                                              className={`${example.en ? "mt-1" : ""} block text-[12px] leading-relaxed text-[#8a94a6]`}
+                                            >
+                                              <HighlightedText text={example.ko} keyword="" />
+                                            </MobilePronounceButton>
+                                          )}
+                                        </div>
                                       </div>
                                     ))}
                                   </div>
