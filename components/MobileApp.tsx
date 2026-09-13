@@ -1248,8 +1248,13 @@ export default function MobileApp() {
                               ) : undefined}
                             >
                               {point.description && (
-                                <div>
-                                  <MobilePronounceButton text={point.description} className="block whitespace-pre-wrap text-[13px] leading-relaxed text-[#4b6cb7]">
+                                <div className="flex items-start gap-1.5">
+                                  {((point.variants?.length ?? 0) > 0 ||
+                                    (point.examples?.length ?? 0) > 0 ||
+                                    point.exampleEn || point.exampleKo) && (
+                                    <span aria-hidden="true" className="shrink-0 select-none text-[13px] leading-relaxed text-[#596275]">※</span>
+                                  )}
+                                  <MobilePronounceButton text={point.description} className="block min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
                                     <span dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }} />
                                   </MobilePronounceButton>
                                 </div>

@@ -1797,8 +1797,13 @@ export default function DesktopApp() {
                                 ) : undefined}
                               >
                                 {point.description && (
-                                  <div>
-                                    <PronounceButtons text={point.description} className="ipad-study-main block whitespace-pre-wrap text-[13px] leading-relaxed text-[#4b6cb7]">
+                                  <div className="flex items-start gap-1.5">
+                                    {((point.variants?.length ?? 0) > 0 ||
+                                      (point.examples?.length ?? 0) > 0 ||
+                                      point.exampleEn || point.exampleKo) && (
+                                      <span aria-hidden="true" className="ipad-study-main shrink-0 select-none text-[13px] leading-relaxed text-[#596275]">※</span>
+                                    )}
+                                    <PronounceButtons text={point.description} className="ipad-study-main block min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
                                       <span dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }} />
                                     </PronounceButtons>
                                   </div>
