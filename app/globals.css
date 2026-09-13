@@ -111,6 +111,13 @@ nav[aria-label="주요 메뉴"] button[aria-current="page"] { color: #587fa3; }
   border-bottom: 0;
 }
 
+/* Keep the heading's original tablet size without inheriting body line spacing. */
+@media (pointer: coarse) and (min-width: 768px) {
+  .study-point-title {
+    font-size: 16px;
+  }
+}
+
 /* Hide the detail scrollbar without disabling scrolling. */
 .study-detail-scroll {
   scrollbar-width: none;

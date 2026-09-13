@@ -16,7 +16,7 @@ export default function StudyPointFrame({
           <span className="shrink-0 rounded-full bg-[#e7ecf5] px-2 py-1 text-[#303236]">
             {category}
           </span>
-          {title && <span className="min-w-0">{title}</span>}
+          {title && <span className="study-point-title min-w-0 -translate-y-px text-[14px] leading-[1.5]">{title}</span>}
         </span>
       </legend>
       <div className="space-y-3 pt-3 [&>div+div]:border-t [&>div+div]:border-[#e4e8f0] [&>div+div]:pt-3">
