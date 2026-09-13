@@ -1,10 +1,27 @@
-export type FolderAction = { kind: "edit" | "add"; id: string; title: string; icon: string; desc: string; coverImage?: string; isBook?: boolean } | { kind: "add-day"; id: string; title: string } | { kind: "delete"; id: string } | { kind: "move"; id: string; destination: string; relativeTo?: string; placement?: "before" | "after" };
-type Node = { id: string; title: string; icon?: string; desc?: string; coverImage?: string; isBook?: boolean; folders: Node[]; days: unknown[] };
+export type FolderAction = { kind: "edit" | "add"; id: string; title: string; icon: string; desc: string; coverImage?: string; isBook?: boolean } | { kind: "add-day"; id: string; title: string } | { kind: "edit-day"; id: string; dayId: string; title: string } | { kind: "move-day"; id: string; dayId: string; relativeTo: string; placement: "before" | "after" } | { kind: "delete"; id: string } | { kind: "move"; id: string; destination: string; relativeTo?: string; placement?: "before" | "after" };
+type Node = { id: string; title: string; icon?: string; desc?: string; coverImage?: string; isBook?: boolean; folders: Node[]; days: { id: string; title?: string; words?: unknown[] }[] };
 export function applyFolderAction<T extends Node>(items: T[], action: FolderAction): T[] {
   const find = (nodes: Node[], id: string): Node | undefined => { for (const node of nodes) { if (node.id === id) return node; const child = find(node.folders, id); if (child) return child; } };
   if (action.kind === "add" && !action.id) return [...items, { id: crypto.randomUUID(), title: action.title, icon: action.icon, desc: action.desc, coverImage: action.coverImage ?? "", isBook: action.isBook ?? false, folders: [], days: [] }] as T[];
   const source = find(items, action.id);
   if (!source) return items;
+  if (action.kind === "edit-day" || action.kind === "move-day") {
+    const day = source.days.find(item => item.id === action.dayId);
+    if (!day) return items;
+    let days = source.days;
+    if (action.kind === "edit-day") {
+      if (!action.title.trim()) return items;
+      days = days.map(item => item.id === day.id ? { ...item, title: action.title.trim() } : item);
+    } else {
+      if (action.relativeTo === day.id || !days.some(item => item.id === action.relativeTo)) return items;
+      days = days.filter(item => item.id !== day.id);
+      const index = days.findIndex(item => item.id === action.relativeTo);
+      days.splice(index + (action.placement === "after" ? 1 : 0), 0, day);
+    }
+    const update = (nodes: Node[]): Node[] => nodes.map(node => node.id === source.id ? { ...node, days } : { ...node, folders: update(node.folders) });
+    return update(items) as T[];
+  }
+
   if (action.kind === "move" && (action.destination && !find(items, action.destination) || find([source], action.destination))) return items;
   if (action.kind === "move" && action.relativeTo) {
     const siblings = action.destination ? find(items, action.destination)?.folders : items;

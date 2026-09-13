@@ -69,3 +69,17 @@ test('create a root book and add a Day at the specified nested folder', () => {
   assert.equal(source[0].folders[0].folders[0].days.length, 1);
   assert.equal(apply(root, { kind: 'add-day', id: 'missing', title: 'Day' }), root);
 });
+test('Day rename and reorder preserve words and unrelated folders', () => {
+  const one = { id: 'd1', title: 'Day 1', words: [{ id: 'word', word: 'hello' }] };
+  const two = { id: 'd2', title: 'Day 2', words: [] };
+  const items = [{ ...folder('parent', [folder('child')]), days: [one, two] }];
+  const renamed = apply(items, { kind: 'edit-day', id: 'parent', dayId: 'd1', title: 'Renamed' });
+  assert.equal(renamed[0].days[0].title, 'Renamed');
+  assert.deepEqual(renamed[0].days[0].words, one.words);
+  const moved = apply(renamed, { kind: 'move-day', id: 'parent', dayId: 'd1', relativeTo: 'd2', placement: 'after' });
+  assert.deepEqual(moved[0].days.map(d => d.id), ['d2', 'd1']);
+  assert.deepEqual(moved[0].days[1].words, one.words);
+  assert.deepEqual(moved[0].folders, items[0].folders);
+  assert.equal(items[0].days[0].title, 'Day 1');
+  assert.equal(apply(items, { kind: 'move-day', id: 'parent', dayId: 'd1', relativeTo: 'missing', placement: 'after' }), items);
+});

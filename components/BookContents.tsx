@@ -1,5 +1,6 @@
 "use client";
 
+import DayInlineActions from "./DayInlineActions";
 import ContentsAddForm from "./ContentsAddForm";
 import NoCover from "./NoCover";
 import Image from "next/image";
@@ -51,9 +52,15 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
     ? drag.drop.position === "inside" ? "rounded-lg bg-[#eff7fc] ring-2 ring-[#a5c7df]" : drag.drop.position === "before" ? "border-t-2 border-t-[#87b5d4]" : "border-b-2 border-b-[#87b5d4]"
     : "";
   const grabStyle = { WebkitTouchCallout: "none" as const, userSelect: "none" as const, cursor: drag ? "grabbing" : "grab" };
-  const days = (folder: ContentsFolder, location: string[]) => folder.days.map(day => <button type="button" key={day.id} onClick={() => onNavigate(location, day.id)} aria-current={day.id === selectedDayId ? "page" : undefined} className={`flex min-h-10 w-full items-baseline gap-2 rounded-lg px-1 py-2 text-left hover:bg-[#f5f9fc] ${day.id === selectedDayId ? "bg-[#eff7fc]" : ""}`}>
-    <span className="min-w-0 break-words text-[13px] text-[#505660]">{day.title}</span><span aria-hidden="true" className="min-w-3 flex-1 border-b border-dotted border-[#dfe8ef]" /><span className="shrink-0 text-xs text-[#8b9aa7]">{day.words.length}개</span>
-  </button>);
+  const days = (folder: ContentsFolder, location: string[], inset = 24) => folder.days.map((day, index) => <div key={day.id}>
+    <div data-folder-row={day.id} data-folder-kind="day" data-folder-title={day.title} data-folder-path={JSON.stringify(location)} className={`flex items-center ${dropClass(day.id)} ${drag?.id === day.id ? "opacity-40" : ""}`}>
+      <button type="button" data-folder-grab style={{ ...grabStyle, paddingLeft: inset }} onClick={() => onNavigate(location, day.id)} aria-current={day.id === selectedDayId ? "page" : undefined} className={`flex min-h-10 min-w-0 flex-1 items-center gap-2 py-2 text-left hover:bg-[#f5f9fc] ${day.id === selectedDayId ? "bg-[#eff7fc]" : ""}`}>
+        <span className="min-w-0 break-words text-[13px] leading-snug text-[#505660]">{day.title}</span><span className="shrink-0 text-[10px] text-[#8b9aa7]">{day.words.length}개</span>
+      </button>
+      <button type="button" aria-label={`${day.title} 관리`} aria-expanded={managing === day.id} onClick={() => setManaging(managing === day.id ? null : day.id)} className="flex h-10 w-8 shrink-0 items-center justify-center rounded-full text-[#8b9cac] hover:bg-[#eff7fc]"><MoreHorizontal size={16} strokeWidth={1.7} /></button>
+    </div>
+    {managing === day.id && <DayInlineActions key={day.id} title={day.title} onClose={() => setManaging(null)} onSave={title => { onFolderAction({ kind: "edit-day", id: folder.id, dayId: day.id, title }); setManaging(null); }} onMove={direction => { const target = folder.days[index + (direction === "up" ? -1 : 1)]; if (target) onFolderAction({ kind: "move-day", id: folder.id, dayId: day.id, relativeTo: target.id, placement: direction === "up" ? "before" : "after" }); }} first={index === 0} last={index === folder.days.length - 1} />}
+  </div>);
 
   const chapters = (folders: ContentsFolder[], base: string[], depth = 0) => folders.map((folder, index) => {
     const location = [...base, folder.id];
@@ -81,7 +88,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
       {expanded && !pageLink && <div className={depth < 2 ? "ml-1.5 border-l border-[#edf2f6] pl-2" : "border-l border-[#edf2f6] pl-0"}>
         {folder.desc && <p className="mb-2 whitespace-pre-wrap break-words text-sm text-[#8995a0]">{folder.desc}</p>}
         {chapters(folder.folders, location, depth + 1)}
-        {days(folder, location)}
+        {days(folder, location, depth < 2 ? 9 : 23)}
         {!folder.folders.length && !folder.days.length && <p className="py-3 text-sm text-[#8b9aa7]">아직 목차나 Day가 없어요.</p>}
       </div>}
     </section>;
