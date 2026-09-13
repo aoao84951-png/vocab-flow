@@ -1787,19 +1787,20 @@ export default function DesktopApp() {
                         <div className="space-y-4">
                           {(currentWord.studyPoints ?? []).map(
                             (point, index) => (
-                              <StudyPointFrame key={index} category={<RichText text={point.category} />}>
-                                {(point.expression || point.description) && (
-                                  <div className="space-y-2">
-                                    {point.expression && (
-                                      <PronounceButtons text={point.expression} className="ipad-study-main block text-[14px] font-bold text-[#111827]">
-                                        <HighlightedText text={point.expression} keyword="" />
-                                      </PronounceButtons>
-                                    )}
-                                    {point.description && (
-                                      <PronounceButtons text={point.description} className="ipad-study-main block whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
-                                        <span dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }} />
-                                      </PronounceButtons>
-                                    )}
+                              <StudyPointFrame
+                                key={index}
+                                category={<RichText text={point.category} />}
+                                title={point.expression ? (
+                                  <PronounceButtons text={point.expression} className="ipad-study-main block text-[14px] font-bold text-[#111827]">
+                                    <HighlightedText text={point.expression} keyword="" />
+                                  </PronounceButtons>
+                                ) : undefined}
+                              >
+                                {point.description && (
+                                  <div>
+                                    <PronounceButtons text={point.description} className="ipad-study-main block whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
+                                      <span dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }} />
+                                    </PronounceButtons>
                                   </div>
                                 )}
 

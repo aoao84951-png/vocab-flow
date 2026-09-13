@@ -1238,19 +1238,20 @@ export default function MobileApp() {
                       <section aria-label="학습포인트" className="study-points-section py-5">
                         <div className="space-y-4">
                           {(displayWord.studyPoints ?? []).map((point, index) => (
-                            <StudyPointFrame key={index} category={<RichText text={point.category} />}>
-                              {(point.expression || point.description) && (
-                                <div className="space-y-2">
-                                  {point.expression && (
-                                    <MobilePronounceButton text={point.expression} className="block text-[14px] font-bold text-[#111827]">
-                                      <HighlightedText text={point.expression} keyword="" />
-                                    </MobilePronounceButton>
-                                  )}
-                                  {point.description && (
-                                    <MobilePronounceButton text={point.description} className="block whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
-                                      <span dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }} />
-                                    </MobilePronounceButton>
-                                  )}
+                            <StudyPointFrame
+                              key={index}
+                              category={<RichText text={point.category} />}
+                              title={point.expression ? (
+                                <MobilePronounceButton text={point.expression} className="block text-[14px] font-bold text-[#111827]">
+                                  <HighlightedText text={point.expression} keyword="" />
+                                </MobilePronounceButton>
+                              ) : undefined}
+                            >
+                              {point.description && (
+                                <div>
+                                  <MobilePronounceButton text={point.description} className="block whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
+                                    <span dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }} />
+                                  </MobilePronounceButton>
                                 </div>
                               )}
 
