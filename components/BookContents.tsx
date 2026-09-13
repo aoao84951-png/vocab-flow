@@ -92,7 +92,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
       <div {...rowProps(folder, [folder.id])} className={`flex items-center ${dropClass(folder.id)}`}>
         <button type="button" data-folder-grab style={grabStyle} onClick={() => enter([folder.id])} className="flex min-h-12 min-w-0 flex-1 items-center gap-3 py-2 text-left">
           {!folder.coverImage && isBookFolder(folder) && <NoCover />}
-          {folder.coverImage && <Image unoptimized width={36} height={52} src={folder.coverImage} alt="" className="h-[52px] w-9 shrink-0 rounded-md object-contain" />}
+          {folder.coverImage && <Image unoptimized width={36} height={52} src={folder.coverImage} alt="" className="h-[52px] w-9 shrink-0 rounded object-contain" />}
           <span className="min-w-0 flex-1"><span className="block break-words text-[14px] leading-snug text-[#505660]">{folder.title}</span>
             {folder.desc && <span className="mt-1 block line-clamp-2 text-xs text-[#8995a0]">{folder.desc}</span>}
             <span className="mt-1 block text-[10px] text-[#8b9aa7]">{folder.folders.length}개 목차{folder.days.length ? ` · ${folder.days.length}개 Day` : ""}</span>
