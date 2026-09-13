@@ -1332,16 +1332,20 @@ export default function MobileApp() {
 
                                 if (pointExamples.length === 0) return null;
 
+                                const showExampleMarker = pointExamples.length > 1 || Boolean(
+                                  plainText(point.description ?? "").trim() || point.variants?.length,
+                                );
+
                                 return (
-                                  <div className={`space-y-5 ${plainText(point.description ?? "").trim() && !(point.variants?.length) ? "border-t border-[#d7ddea] pt-5" : ""}`}>
+                                  <div className="space-y-5">
                                     {pointExamples.map((example, exampleIndex) => (
                                       <div
                                         key={`${example.en}-${exampleIndex}`}
-                                        className={pointExamples.length > 1 ? "grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2.5" : "min-w-0"}
+                                        className={showExampleMarker ? "grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2.5" : "min-w-0"}
                                       >
-                                        {pointExamples.length > 1 && (
+                                        {showExampleMarker && (
                                           <span className="select-none pt-0.5 text-[11px] leading-relaxed font-medium tabular-nums text-[#9aa3b2]" aria-hidden="true">
-                                            {String(exampleIndex + 1).padStart(2, "0")}
+                                            {pointExamples.length > 1 ? String(exampleIndex + 1).padStart(2, "0") : "ex"}
                                           </span>
                                         )}
                                         <div className="min-w-0">
