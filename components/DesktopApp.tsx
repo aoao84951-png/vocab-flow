@@ -1241,8 +1241,14 @@ export default function DesktopApp() {
           if (index !== undefined) setWordViewMode("all");
           setStep(index !== undefined && index >= 0 ? "study" : dayId ? "wordList" : "day");
         }}
-        onAdd={(kind, dayId) => {
+        onAdd={(kind, dayId, targetPath) => {
           setMenuOpen(false);
+          setActionWordIndex(null); setActionDayId(null); setActionFolderId(null);
+          if (targetPath) {
+            setFolderPath(targetPath);
+            setSelectedBookId(targetPath[0] || "");
+            setSelectedDayId("");
+          }
           if (kind === "word") { setSelectedDayId(dayId || selectedDayId); setStep("addWord"); }
           else if (kind === "day") setStep("addDay");
           else setStep(folderPath.length ? "addFolder" : "addBook");

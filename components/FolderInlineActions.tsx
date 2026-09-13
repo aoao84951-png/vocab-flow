@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
-import { FolderPlus, Pencil, CornerUpRight, Trash2, X } from "lucide-react";
+import { FilePlus2, FolderPlus, Pencil, CornerUpRight, Trash2, X } from "lucide-react";
 import { FolderSymbolGlyph, FolderSymbolPicker } from "./FolderSymbols";
 import type { FolderAction } from "@/lib/folderActions";
 type Folder = { id: string; title: string; icon?: string; desc?: string; folders: Folder[] };
-export default function FolderInlineActions({folder,books,onAction,onClose}:{folder:Folder;books:Folder[];onAction:(action:FolderAction)=>void;onClose:()=>void}) {
+export default function FolderInlineActions({folder,books,onAction,onAddDay,onClose}:{folder:Folder;books:Folder[];onAction:(action:FolderAction)=>void;onAddDay:()=>void;onClose:()=>void}) {
  const [mode,setMode]=useState<"edit"|"add"|"move"|"delete"|null>(null);
  const [title,setTitle]=useState(folder.title),[icon,setIcon]=useState(folder.icon??"#"),[desc,setDesc]=useState(folder.desc??""),[symbols,setSymbols]=useState(false),[destination,setDestination]=useState("");
  const options:{id:string;label:string}[]=[];
@@ -13,7 +13,8 @@ export default function FolderInlineActions({folder,books,onAction,onClose}:{fol
  return <div className="mb-2 rounded-xl border border-[#e7edf2] bg-[#f8fafc] p-1.5 text-[10px] text-[#687887]" aria-label={`${folder.title} 관리 영역`}>
   <div className="flex min-w-0 items-center gap-1">
    <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto pb-0.5">
-    {([{key:"add",label:"추가",Icon:FolderPlus},{key:"edit",label:"수정",Icon:Pencil},{key:"move",label:"이동",Icon:CornerUpRight},{key:"delete",label:"삭제",Icon:Trash2}] as const).map(({key,label,Icon})=><button key={key} aria-pressed={mode===key} onClick={()=>{setMode(key);setSymbols(false);if(key==="add"){setTitle("");setIcon("#");setDesc("")}else if(key==="edit"){setTitle(folder.title);setIcon(folder.icon??"#");setDesc(folder.desc??"")}}} className={`flex min-h-7 shrink-0 items-center gap-1 rounded-lg px-1 ${mode===key?"bg-[#e8f1f8] text-[#527895]":"hover:bg-white"}`}><Icon size={13} strokeWidth={1.6}/>{label}</button>)}
+    <button onClick={()=>{onClose();onAddDay()}} className="flex min-h-7 shrink-0 items-center gap-1 rounded-lg px-1 hover:bg-white"><FilePlus2 size={13} strokeWidth={1.6}/>Day 추가</button>
+    {([{key:"add",label:"폴더 추가",Icon:FolderPlus},{key:"edit",label:"수정",Icon:Pencil},{key:"move",label:"이동",Icon:CornerUpRight},{key:"delete",label:"삭제",Icon:Trash2}] as const).map(({key,label,Icon})=><button key={key} aria-pressed={mode===key} onClick={()=>{setMode(key);setSymbols(false);if(key==="add"){setTitle("");setIcon("#");setDesc("")}else if(key==="edit"){setTitle(folder.title);setIcon(folder.icon??"#");setDesc(folder.desc??"")}}} className={`flex min-h-7 shrink-0 items-center gap-1 rounded-lg px-1 ${mode===key?"bg-[#e8f1f8] text-[#527895]":"hover:bg-white"}`}><Icon size={13} strokeWidth={1.6}/>{label}</button>)}
    </div>
    <button aria-label="폴더 관리 닫기" onClick={onClose} className="flex h-7 w-7 shrink-0 items-center justify-center"><X size={14}/></button>
   </div>
