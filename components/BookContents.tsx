@@ -75,11 +75,14 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
     };
     return <section key={folder.id} className={`${depth === 0 ? (index < folders.length - 1 ? "border-b border-[#edf2f6] py-1" : "py-1") : ""} ${drag?.id === folder.id ? "opacity-40" : ""}`}>
       <div {...rowProps(folder, location)} className={`flex items-center ${dropClass(folder.id)}`}>
-        <button type="button" data-folder-grab style={grabStyle} onClick={toggle} aria-expanded={pageLink ? undefined : expanded} className="flex min-h-10 min-w-0 flex-1 items-center gap-2 py-1.5 text-left">
+        <button type="button" data-folder-grab style={grabStyle} onClick={toggle} aria-expanded={pageLink ? undefined : expanded} className={`flex min-h-10 min-w-0 flex-1 items-center gap-2 py-1.5 text-left ${insideBook && depth > 0 ? "pl-[9px]" : ""}`}>
           {!folder.coverImage && isBookFolder(folder) && <NoCover />}
           {folder.coverImage && <Image unoptimized width={36} height={52} src={folder.coverImage} alt="" className="h-[52px] w-9 shrink-0 rounded object-contain" />}
-          {!isBookFolder(folder) && !folder.coverImage && <span className="w-4 shrink-0 text-[10px] text-[#8ba0b0]">{String(index + 1).padStart(2, "0")}</span>}
-          <span className="min-w-0 flex-1 break-words text-[14px] leading-snug text-[#505660]">{folder.title}</span>
+          {!isBookFolder(folder) && !folder.coverImage && (!insideBook || depth === 0) && <span className={`relative inline-flex h-5 w-4 shrink-0 items-center justify-center text-[10px] ${insideBook ? "text-[#688aa3]" : "text-[#8ba0b0]"}`}>
+            {insideBook && <span aria-hidden="true" className="absolute inset-y-0 -inset-x-0.5 rounded-full bg-[#eaf5fc]" />}
+            <span className="relative">{String(index + 1).padStart(2, "0")}</span>
+          </span>}
+          <span className={`min-w-0 flex-1 break-words text-[14px] leading-snug ${insideBook && depth > 0 ? "font-medium text-[#48515e]" : "text-[#505660]"}`}>{folder.title}</span>
           <span aria-label={`하위 목차 ${folder.folders.length}개, Day ${folder.days.length}개`} className="shrink-0 self-center text-[10px] text-[#8b9aa7]">{folder.folders.length + folder.days.length}</span>
         </button>
         {menu(folder)}
