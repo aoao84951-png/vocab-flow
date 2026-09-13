@@ -1338,9 +1338,6 @@ export default function MobileApp() {
 
                                 return (
                                   <div className="space-y-5">
-                                    {Boolean(plainText(point.description ?? "").trim()) && !point.variants?.length && (
-                                      <div aria-hidden="true" className="study-point-wave-divider" />
-                                    )}
                                     {pointExamples.map((example, exampleIndex) => (
                                       <div
                                         key={`${example.en}-${exampleIndex}`}
