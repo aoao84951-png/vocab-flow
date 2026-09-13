@@ -132,7 +132,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
     </div>
     {current.desc && <p className="mb-2 whitespace-pre-wrap break-words text-xs text-[#8995a0]">{current.desc}</p>}
     {actions(current, path)}
-    <div className="border-t border-[#e8eef3]">{chapters(current.folders, path)}{days(current, path)}</div>
+    <div>{chapters(current.folders, path)}{days(current, path)}</div>
     {!current.folders.length && !current.days.length && <p className="py-8 text-sm text-[#8b9aa7]">이곳에 하위 목차나 Day를 추가해보세요.</p>}
     {addForm}
     <div className="flex items-center justify-center gap-2 border-t border-[#edf2f6] pt-3">
