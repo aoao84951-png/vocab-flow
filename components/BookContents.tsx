@@ -125,7 +125,11 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
       <button type="button" onClick={() => enter(path.slice(0, -1))} className="flex min-h-9 min-w-0 items-center gap-1 text-[11px] text-[#8196a7]"><span aria-hidden="true" className="folder-symbol inline-flex w-3 shrink-0 justify-start text-[13px]">◁</span><span className="min-w-0 break-words">{parent ? parent.title : "단어장 목록"}</span></button>
       {parent && <button type="button" onClick={() => enter([])} className="min-h-9 text-[11px] text-[#8b9aa7]">전체 단어장</button>}
     </div>
-    <div className="mb-2 flex items-center gap-2"><h3 ref={headingRef} tabIndex={-1} className="min-w-0 flex-1 break-words text-[17px] leading-snug text-[#505660] outline-none">{current.title}</h3>{menu(current)}</div>
+    <div className="mb-2 flex items-center gap-2">
+      {current.coverImage && <Image unoptimized width={36} height={52} src={current.coverImage} alt="" className="h-[52px] w-9 shrink-0 rounded object-contain" />}
+      <h3 ref={headingRef} tabIndex={-1} className="min-w-0 flex-1 break-words text-[17px] leading-snug text-[#505660] outline-none">{current.title}</h3>
+      {menu(current)}
+    </div>
     {current.desc && <p className="mb-2 whitespace-pre-wrap break-words text-xs text-[#8995a0]">{current.desc}</p>}
     {actions(current, path)}
     <div className="border-t border-[#e8eef3]">{chapters(current.folders, path)}{days(current, path)}</div>
