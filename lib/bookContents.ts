@@ -29,3 +29,13 @@ export function resolveContentsPath(books: ContentsFolder[], requested: string[]
 export function toggleContentsChapter(open: Record<string, string>, parentId: string, id: string) {
   return { ...open, [parentId]: open[parentId] === id ? "" : id };
 }
+
+// Reopen the containing book and reveal the selected branch in place.
+export function getContentsEntry(books: ContentsFolder[], requested: string[]) {
+  const chain = resolveContentsPath(books, requested);
+  const bookIndex = Math.max(0, chain.findIndex(folder => Boolean(folder.coverImage)));
+  const path = chain.slice(0, bookIndex + 1).map(folder => folder.id);
+  const open: Record<string, string> = {};
+  for (let i = bookIndex; i < chain.length - 1; i++) open[chain[i].id] = chain[i + 1].id;
+  return { path, open };
+}

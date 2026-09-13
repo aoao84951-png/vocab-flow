@@ -21,3 +21,11 @@ test('deleting or moving the viewed chapter resolves to an existing contents pag
   assert.deepEqual(resolveContentsPath(books, ['deleted']), []);
   assert.deepEqual(resolveContentsPath(books, []), []);
 });
+test('reopening a Day stays at its containing book and reveals the full branch', () => {
+  const { getContentsEntry } = mod.exports;
+  const library = [node('category', [{ ...node('book', [node('lc', [node('part', [node('deep')])])]), coverImage: 'cover' }])];
+  assert.deepEqual(getContentsEntry(library, ['category', 'book', 'lc', 'part', 'deep']), {
+    path: ['category', 'book'], open: { book: 'lc', lc: 'part', part: 'deep' }
+  });
+  assert.deepEqual(getContentsEntry(books, ['book', 'lc', 'part']), { path: ['book'], open: { book: 'lc', lc: 'part' } });
+});

@@ -17,7 +17,7 @@ import RichTextField, { RichText } from "./RichTextField";
 import SelectionToolbar from "./SelectionToolbar";
 import { hasRichText, plainText, sanitizeRichText } from "@/lib/richText";
 import AppearanceSettings from "./AppearanceSettings";
-import { FolderSymbol, FolderSymbolPicker } from "./FolderSymbols";
+import { FolderSymbol } from "./FolderSymbols";
 import type {
   Dispatch,
   FocusEvent,
@@ -2743,7 +2743,7 @@ function AddFolder({
   const [coverImage, setCoverImage] = useState(initialFolder?.coverImage || "");
   const [coverBusy, setCoverBusy] = useState(false);
   const [title, setTitle] = useState(initialFolder?.title || "");
-  const [icon, setIcon] = useState(initialFolder?.icon ?? "#");
+  const icon = initialFolder?.icon ?? "";
   const [dayCount, setDayCount] = useState("");
 
   return (
@@ -2754,7 +2754,6 @@ function AddFolder({
 
       <div className="mt-7 space-y-4">
         <BookCoverInput value={coverImage} onChange={setCoverImage} onBusyChange={setCoverBusy} />
-        <FolderSymbolPicker value={icon} onChange={setIcon} />
         <Input
           label={labelText}
           value={title}
