@@ -101,7 +101,7 @@ type Day = {
 };
 
 type Folder = {
-  coverImage?: string;
+  coverImage?: string; isBook?: boolean;
   icon?: string;
   id: string;
   title: string;
@@ -433,6 +433,7 @@ export default function DesktopApp() {
       title: folder.title || "",
       icon: typeof folder.icon === "string" ? folder.icon : "#",
       desc: folder.desc || "",
+      isBook: typeof folder.isBook === "boolean" ? folder.isBook : Boolean(folder.coverImage),
       coverImage: typeof folder.coverImage === "string" ? folder.coverImage : "",
       folders: normalizeFolders(folder.folders || []),
       days: folder.days || [],
@@ -2109,6 +2110,7 @@ export default function DesktopApp() {
                   title: editedFolder.title,
                   icon: editedFolder.icon,
                   coverImage: editedFolder.coverImage,
+                  isBook: editedFolder.isBook,
                   days: editedFolder.days.length
                     ? editedFolder.days
                     : folder.days,
@@ -2650,6 +2652,7 @@ function AddBook({
   onDelete?: () => void;
 }) {
   const [coverImage, setCoverImage] = useState(initialBook?.coverImage || "");
+  const [isBook, setIsBook] = useState(initialBook?.isBook ?? Boolean(initialBook?.coverImage));
   const [coverBusy, setCoverBusy] = useState(false);
   const [title, setTitle] = useState(initialBook?.title || "");
   const [desc, setDesc] = useState(initialBook?.desc || "");
@@ -2664,7 +2667,7 @@ function AddBook({
       </h1>
 
       <div className="mt-7 space-y-4">
-        <BookCoverInput value={coverImage} onChange={setCoverImage} onBusyChange={setCoverBusy} />
+        <BookCoverInput isBook={isBook} onBookChange={setIsBook} value={coverImage} onChange={setCoverImage} onBusyChange={setCoverBusy} />
         <Input
           label="단어장 이름"
           value={title}
@@ -2696,6 +2699,7 @@ function AddBook({
               id: initialBook?.id || crypto.randomUUID(),
               title: title.trim(),
               coverImage,
+              isBook,
               desc: desc.trim(),
               folders: initialBook?.folders || [],
               days:
@@ -2741,6 +2745,7 @@ function AddFolder({
   onSave: (folder: Folder) => void;
 }) {
   const [coverImage, setCoverImage] = useState(initialFolder?.coverImage || "");
+  const [isBook, setIsBook] = useState(initialFolder?.isBook ?? Boolean(initialFolder?.coverImage));
   const [coverBusy, setCoverBusy] = useState(false);
   const [title, setTitle] = useState(initialFolder?.title || "");
   const icon = initialFolder?.icon ?? "";
@@ -2753,7 +2758,7 @@ function AddFolder({
       <h1 className="mt-4 text-[28px] font-bold text-[#303236]">{titleText}</h1>
 
       <div className="mt-7 space-y-4">
-        <BookCoverInput value={coverImage} onChange={setCoverImage} onBusyChange={setCoverBusy} />
+        <BookCoverInput isBook={isBook} onBookChange={setIsBook} value={coverImage} onChange={setCoverImage} onBusyChange={setCoverBusy} />
         <Input
           label={labelText}
           value={title}
@@ -2780,6 +2785,7 @@ function AddFolder({
               id: initialFolder?.id || crypto.randomUUID(),
               title: title.trim(),
               coverImage,
+              isBook,
               icon,
               desc: "",
               folders: initialFolder?.folders || [],

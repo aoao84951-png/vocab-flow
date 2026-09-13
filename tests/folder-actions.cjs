@@ -46,3 +46,13 @@ test('covers survive renaming and moves and can be explicitly removed', () => {
   assert.equal(removed[0].folders[0].coverImage, '');
   assert.equal(items[0].coverImage, 'data:image/jpeg;base64,cover');
 });
+test('book identity survives edits and moves independently of cover changes', () => {
+  const items = [{ ...folder('a'), isBook: true, coverImage: 'cover' }, folder('b')];
+  const edit = { kind: 'edit', id: 'a', title: 'a', icon: '', desc: '' };
+  const noCover = apply(items, { ...edit, coverImage: '' });
+  assert.equal(noCover[0].isBook, true);
+  assert.equal(apply(noCover, { kind: 'move', id: 'a', destination: 'b' })[0].folders[0].isBook, true);
+  assert.equal(apply(noCover, { ...edit, isBook: false })[0].isBook, false);
+  const added = apply(items, { kind: 'add', id: 'b', title: 'no cover', icon: '', desc: '', isBook: true, coverImage: '' });
+  assert.equal(added[1].folders[0].isBook, true);
+});

@@ -29,3 +29,12 @@ test('reopening a Day stays at its containing book and reveals the full branch',
   });
   assert.deepEqual(getContentsEntry(books, ['book', 'lc', 'part']), { path: ['book'], open: { book: 'lc', lc: 'part' } });
 });
+test('a book without a cover opens its own page and legacy covers remain books', () => {
+  const { getContentsEntry, isBookFolder } = mod.exports;
+  const book = { ...node('book', [node('lc')]), isBook: true, coverImage: '' };
+  assert.deepEqual(getContentsEntry([node('category', [book])], ['category', 'book', 'lc']), { path: ['category', 'book'], open: { book: 'lc' } });
+  assert.equal(isBookFolder(book), true);
+  assert.equal(isBookFolder({ coverImage: 'legacy' }), true);
+  assert.equal(isBookFolder({ isBook: false, coverImage: 'legacy' }), false);
+  assert.equal(isBookFolder(node('chapter')), false);
+});

@@ -10,7 +10,7 @@ import useModalScrollLock from "./useModalScrollLock";
 
 type Word = { id: string; word: string; meanings?: { items: string[] }[]; importanceStars?: number };
 type Day = { id: string; title: string; words: Word[] };
-type Folder = { id: string; title: string; icon?: string; desc?: string; coverImage?: string; folders: Folder[]; days: Day[] };
+type Folder = { id: string; title: string; icon?: string; desc?: string; coverImage?: string; isBook?: boolean; folders: Folder[]; days: Day[] };
 type Props = { onFolderAction: (action: FolderAction) => void; books: Folder[]; step: string; path: string[]; dayId: string; onHome: () => void; onNavigate: (path: string[], dayId?: string, wordIndex?: number) => void; onAdd: (kind: "folder" | "day" | "word", dayId?: string, targetPath?: string[]) => void };
 export default function BottomNavigation({ books, step, path, dayId, onHome, onNavigate, onAdd, onFolderAction }: Props) {
   useEffect(() => { const open = () => setPanel("contents"); window.addEventListener("voca-open-contents", open); return () => window.removeEventListener("voca-open-contents", open); }, []);

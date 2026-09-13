@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import FolderInlineActions from "./FolderInlineActions";
 import type { FolderAction } from "@/lib/folderActions";
-import { getContentsEntry, resolveContentsPath, toggleContentsChapter, type ContentsFolder } from "@/lib/bookContents";
+import { getContentsEntry, isBookFolder, resolveContentsPath, toggleContentsChapter, type ContentsFolder } from "@/lib/bookContents";
 import type useFolderDrag from "./useFolderDrag";
 
 type Props = {
@@ -31,7 +31,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
   useEffect(() => { onLocationChange(JSON.parse(locationKey)); }, [locationKey, onLocationChange]);
   const current = chain.at(-1);
   const parent = chain.at(-2);
-  const insideBook = chain.some(folder => Boolean(folder.coverImage));
+  const insideBook = chain.some(isBookFolder);
 
   const enter = (next: string[]) => {
     setRequestedPath(next); setManaging(null); setOpen({}); onPageChange();
@@ -56,20 +56,21 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
     const location = [...base, folder.id];
     const parentId = base.at(-1)!;
     const expanded = open[parentId] === folder.id;
-    // Only a book cover outside a book opens a new page. All chapters stay inline.
-    const pageLink = !insideBook && Boolean(folder.coverImage);
+    // Book identity is independent of its cover. Chapters inside a book stay inline.
+    const pageLink = !insideBook && isBookFolder(folder);
     const toggle = () => {
       setManaging(null);
       if (pageLink) enter(location);
       else setOpen(prev => toggleContentsChapter(prev, parentId, folder.id));
     };
-    return <section key={folder.id} className={`${depth === 0 ? "border-b border-[#edf2f6] py-1" : ""} ${drag?.id === folder.id ? "opacity-40" : ""}`}>
+    return <section key={folder.id} className={`${depth === 0 ? (index < folders.length - 1 ? "border-b border-[#edf2f6] py-1" : "py-1") : ""} ${drag?.id === folder.id ? "opacity-40" : ""}`}>
       <div {...rowProps(folder, location)} className={`flex items-center ${dropClass(folder.id)}`}>
         <button type="button" data-folder-grab style={grabStyle} onClick={toggle} aria-expanded={pageLink ? undefined : expanded} className="flex min-h-10 min-w-0 flex-1 items-center gap-2 py-1.5 text-left">
+          {!folder.coverImage && isBookFolder(folder) && <span aria-label="표지 없음" className="flex h-[52px] w-9 shrink-0 items-center justify-center rounded-md bg-[#f1f2f3] font-sans text-[5px] tracking-[0.8px] text-[#99a3b0]">NO COVER</span>}
           {folder.coverImage && <Image unoptimized width={36} height={52} src={folder.coverImage} alt="" className="h-[52px] w-9 shrink-0 rounded object-contain" />}
-          {!folder.coverImage && <span className="w-4 shrink-0 text-[10px] text-[#8ba0b0]">{String(index + 1).padStart(2, "0")}</span>}
+          {!isBookFolder(folder) && !folder.coverImage && <span className="w-4 shrink-0 text-[10px] text-[#8ba0b0]">{String(index + 1).padStart(2, "0")}</span>}
           <span className="min-w-0 flex-1 break-words text-[14px] leading-snug text-[#505660]">{folder.title}</span>
-          <span className="shrink-0 self-center text-[10px] text-[#8b9aa7]">{pageLink ? "열기" : expanded ? "접기" : "펼치기"}</span>
+          <span aria-label={`하위 목차 ${folder.folders.length}개, Day ${folder.days.length}개`} className="shrink-0 self-center text-[10px] text-[#8b9aa7]">{folder.folders.length + folder.days.length}</span>
         </button>
         {menu(folder)}
       </div>
@@ -86,9 +87,10 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
   if (!current) return <div>
     <h3 ref={headingRef} tabIndex={-1} className="sr-only">나의 단어장</h3>
     <p className="mb-1 text-[11px] text-[#8b9aa7]">{books.length}개 단어장</p>
-    {books.map(folder => <div key={folder.id} className={`border-b border-[#edf2f6] py-1 ${drag?.id === folder.id ? "opacity-40" : ""}`}>
+    {books.map((folder, index) => <div key={folder.id} className={`${index < books.length - 1 ? "border-b border-[#edf2f6]" : ""} py-1 ${drag?.id === folder.id ? "opacity-40" : ""}`}>
       <div {...rowProps(folder, [folder.id])} className={`flex items-center ${dropClass(folder.id)}`}>
         <button type="button" data-folder-grab style={grabStyle} onClick={() => enter([folder.id])} className="flex min-h-12 min-w-0 flex-1 items-center gap-3 py-2 text-left">
+          {!folder.coverImage && isBookFolder(folder) && <span aria-label="표지 없음" className="flex h-[52px] w-9 shrink-0 items-center justify-center rounded-md bg-[#f1f2f3] font-sans text-[5px] tracking-[0.8px] text-[#99a3b0]">NO COVER</span>}
           {folder.coverImage && <Image unoptimized width={36} height={52} src={folder.coverImage} alt="" className="h-[52px] w-9 shrink-0 rounded-md object-contain" />}
           <span className="min-w-0 flex-1"><span className="block break-words text-[14px] leading-snug text-[#505660]">{folder.title}</span>
             {folder.desc && <span className="mt-1 block line-clamp-2 text-xs text-[#8995a0]">{folder.desc}</span>}
@@ -103,7 +105,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
 
   return <div>
     <div className="mb-1 flex flex-wrap items-center justify-between gap-x-4">
-      <button type="button" onClick={() => enter(path.slice(0, -1))} className="flex min-h-9 min-w-0 items-center gap-1 text-[11px] text-[#8196a7]"><ChevronLeft size={16} /><span className="min-w-0 break-words">{parent ? parent.title : "단어장 목록"}</span></button>
+      <button type="button" onClick={() => enter(path.slice(0, -1))} className="flex min-h-9 min-w-0 items-center gap-1 text-[11px] text-[#8196a7]"><span aria-hidden="true" className="folder-symbol inline-flex w-2.5 justify-start text-[13px]">&lt;</span><span className="min-w-0 break-words">{parent ? parent.title : "단어장 목록"}</span></button>
       {parent && <button type="button" onClick={() => enter([])} className="min-h-9 text-[11px] text-[#8b9aa7]">전체 단어장</button>}
     </div>
     <div className="mb-2 flex items-center gap-2"><h3 ref={headingRef} tabIndex={-1} className="min-w-0 flex-1 break-words text-[17px] leading-snug text-[#505660] outline-none">{current.title}</h3>{menu(current)}</div>
