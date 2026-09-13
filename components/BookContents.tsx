@@ -1,5 +1,6 @@
 "use client";
 
+import NoCover from "./NoCover";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { MoreHorizontal } from "lucide-react";
@@ -66,7 +67,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
     return <section key={folder.id} className={`${depth === 0 ? (index < folders.length - 1 ? "border-b border-[#edf2f6] py-1" : "py-1") : ""} ${drag?.id === folder.id ? "opacity-40" : ""}`}>
       <div {...rowProps(folder, location)} className={`flex items-center ${dropClass(folder.id)}`}>
         <button type="button" data-folder-grab style={grabStyle} onClick={toggle} aria-expanded={pageLink ? undefined : expanded} className="flex min-h-10 min-w-0 flex-1 items-center gap-2 py-1.5 text-left">
-          {!folder.coverImage && isBookFolder(folder) && <span aria-label="표지 없음" className="flex h-[52px] w-9 shrink-0 items-center justify-center rounded-md bg-[#f1f2f3] font-sans text-[5px] tracking-[0.8px] text-[#99a3b0]">NO COVER</span>}
+          {!folder.coverImage && isBookFolder(folder) && <NoCover />}
           {folder.coverImage && <Image unoptimized width={36} height={52} src={folder.coverImage} alt="" className="h-[52px] w-9 shrink-0 rounded object-contain" />}
           {!isBookFolder(folder) && !folder.coverImage && <span className="w-4 shrink-0 text-[10px] text-[#8ba0b0]">{String(index + 1).padStart(2, "0")}</span>}
           <span className="min-w-0 flex-1 break-words text-[14px] leading-snug text-[#505660]">{folder.title}</span>
@@ -90,7 +91,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
     {books.map((folder, index) => <div key={folder.id} className={`${index < books.length - 1 ? "border-b border-[#edf2f6]" : ""} py-1 ${drag?.id === folder.id ? "opacity-40" : ""}`}>
       <div {...rowProps(folder, [folder.id])} className={`flex items-center ${dropClass(folder.id)}`}>
         <button type="button" data-folder-grab style={grabStyle} onClick={() => enter([folder.id])} className="flex min-h-12 min-w-0 flex-1 items-center gap-3 py-2 text-left">
-          {!folder.coverImage && isBookFolder(folder) && <span aria-label="표지 없음" className="flex h-[52px] w-9 shrink-0 items-center justify-center rounded-md bg-[#f1f2f3] font-sans text-[5px] tracking-[0.8px] text-[#99a3b0]">NO COVER</span>}
+          {!folder.coverImage && isBookFolder(folder) && <NoCover />}
           {folder.coverImage && <Image unoptimized width={36} height={52} src={folder.coverImage} alt="" className="h-[52px] w-9 shrink-0 rounded-md object-contain" />}
           <span className="min-w-0 flex-1"><span className="block break-words text-[14px] leading-snug text-[#505660]">{folder.title}</span>
             {folder.desc && <span className="mt-1 block line-clamp-2 text-xs text-[#8995a0]">{folder.desc}</span>}

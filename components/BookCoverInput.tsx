@@ -1,5 +1,6 @@
 "use client";
 
+import NoCover from "./NoCover";
 import NextImage from "next/image";
 import { useEffect, useRef, useState } from "react";
 
@@ -43,9 +44,9 @@ export default function BookCoverInput({ value, onChange, onBusyChange, isBook, 
   useEffect(() => () => { request.current++; }, []);
   return <div className="space-y-2 px-2 py-1">
     <p className="text-[11px] text-[#737b88]">책 표지 <span className="text-[10px] text-[#939ba5]">선택</span></p>
-    <div className="flex items-center gap-2">
-      {value && <NextImage unoptimized width={36} height={52} src={value} alt="선택한 책 표지" className="h-[52px] w-9 rounded-md object-contain" />}
-      <div className="min-w-0 space-y-2">
+    <div className="flex items-center gap-3">
+      {value ? <NextImage unoptimized width={44} height={64} src={value} alt="선택한 책 표지" className="h-16 w-11 shrink-0 rounded-md object-contain" /> : <NoCover preview />}
+      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
         <label className={`relative inline-flex focus-within:outline-2 focus-within:outline-[#a9cbe1] min-h-8 items-center rounded-xl border border-[#dce8f0] bg-white px-3 text-[11px] text-[#587b96] ${busy ? "opacity-50" : "cursor-pointer"}`}>
           {busy ? "이미지 준비 중…" : value ? "표지 바꾸기" : "표지 선택"}
           <input aria-label="책 표지 선택" type="file" accept="image/*" disabled={busy} className="absolute inset-0 w-full cursor-pointer opacity-0" onChange={async event => {
@@ -64,11 +65,11 @@ export default function BookCoverInput({ value, onChange, onBusyChange, isBook, 
             }
           }} />
         </label>
-        {value && <button type="button" disabled={busy} onClick={() => { onChange(""); onBookChange(true); }} className="ml-2 min-h-8 px-2 text-[11px] text-[#87939e]">표지 없애기</button>}
-
+        {value && <button type="button" disabled={busy} onClick={() => { onChange(""); onBookChange(true); }} className="min-h-8 text-[11px] text-[#87939e]">표지 없애기</button>}
+        {!value && <label className="flex min-h-7 items-center gap-2 text-[11px] text-[#87939e]"><input type="checkbox" checked={isBook} disabled={busy} onChange={event => onBookChange(event.target.checked)} className="h-3 w-3 accent-[#8ba8bd]" />표지 없는 책</label>}
       </div>
     </div>
-    {!value && <label className="flex min-h-7 items-center gap-2 text-[11px] text-[#87939e]"><input type="checkbox" checked={isBook} disabled={busy} onChange={event => onBookChange(event.target.checked)} className="h-3 w-3 accent-[#8ba8bd]" />표지 없는 책</label>}
+
     {error && <p role="alert" className="text-[11px] text-[#b36565]">{error}</p>}
   </div>;
 }
