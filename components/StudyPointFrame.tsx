@@ -1,5 +1,15 @@
 import type { ReactNode } from "react";
 
+export function StudyPointVariants({ children }: { children: ReactNode }) {
+  return (
+    <div className="study-point-variants">
+      <span aria-hidden="true" className="folder-symbol study-point-variant-star study-point-variant-star-start">☆</span>
+      <div className="space-y-5">{children}</div>
+      <span aria-hidden="true" className="folder-symbol study-point-variant-star study-point-variant-star-end">☆</span>
+    </div>
+  );
+}
+
 export default function StudyPointFrame({
   category,
   title,

@@ -118,6 +118,56 @@ nav[aria-label="주요 메뉴"] button[aria-current="page"] { color: #587fa3; }
   }
 }
 
+/* Open decorative rules group variants without adding a nested card. */
+.study-point-variants {
+  position: relative;
+  min-width: 0;
+  margin-inline: 4px;
+  padding: 22px 12px;
+}
+
+.study-point-variants::before,
+.study-point-variants::after {
+  content: "";
+  position: absolute;
+  height: 10px;
+  border-color: #bac8da;
+  border-style: solid;
+  pointer-events: none;
+}
+
+.study-point-variants::before {
+  top: 7px;
+  left: 20px;
+  right: 0;
+  border-width: 1px 1px 0 0;
+  border-top-right-radius: 3px;
+}
+
+.study-point-variants::after {
+  bottom: 7px;
+  left: 0;
+  right: 20px;
+  border-width: 0 0 1px 1px;
+  border-bottom-left-radius: 3px;
+}
+
+.study-point-variant-star {
+  position: absolute;
+  display: flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #a4b5cd;
+  pointer-events: none;
+  user-select: none;
+}
+
+.study-point-variant-star-start { top: 0; left: 0; }
+.study-point-variant-star-end { bottom: 0; right: 0; }
+
 /* Hide the detail scrollbar without disabling scrolling. */
 .study-detail-scroll {
   scrollbar-width: none;

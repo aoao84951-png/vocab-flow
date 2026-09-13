@@ -1,7 +1,7 @@
 "use client";
 
 import BookCoverInput from "./BookCoverInput";
-import StudyPointFrame from "./StudyPointFrame";
+import StudyPointFrame, { StudyPointVariants } from "./StudyPointFrame";
 
 import WordActionPopover from "./WordActionPopover";
 import { applyFolderAction, findFolderPath } from "@/lib/folderActions";
@@ -1249,11 +1249,6 @@ export default function MobileApp() {
                             >
                               {point.description && (
                                 <div className="flex items-start gap-1.5">
-                                  {((point.variants?.length ?? 0) > 0 ||
-                                    (point.examples?.length ?? 0) > 0 ||
-                                    point.exampleEn || point.exampleKo) && (
-                                    <span aria-hidden="true" className="shrink-0 select-none text-[13px] leading-relaxed text-[#596275]">※</span>
-                                  )}
                                   <MobilePronounceButton text={point.description} className="block min-w-0 flex-1 whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
                                     <span dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }} />
                                   </MobilePronounceButton>
@@ -1261,7 +1256,7 @@ export default function MobileApp() {
                               )}
 
                               {(point.variants ?? []).length > 0 && (
-                                <div className="space-y-5">
+                                <StudyPointVariants>
                                   {(point.variants ?? []).map((variant, variantIndex) => (
                                     <div
                                       key={`${variant.word}-${variantIndex}`}
@@ -1319,7 +1314,7 @@ export default function MobileApp() {
                                       )}
                                     </div>
                                   ))}
-                                </div>
+                                </StudyPointVariants>
                               )}
 
                               {(() => {
