@@ -78,7 +78,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
         <button type="button" data-folder-grab style={grabStyle} onClick={toggle} aria-expanded={pageLink ? undefined : expanded} className="flex min-h-10 min-w-0 flex-1 items-center gap-2 py-1.5 text-left">
           {!folder.coverImage && isBookFolder(folder) && <NoCover />}
           {folder.coverImage && <Image unoptimized width={36} height={52} src={folder.coverImage} alt="" className="h-[52px] w-9 shrink-0 rounded object-contain" />}
-          {!isBookFolder(folder) && !folder.coverImage && <span className={`shrink-0 text-[10px] ${insideBook && depth === 0 ? "-mr-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#eaf5fc] text-[#688aa3]" : "w-4 text-[#8ba0b0]"}`}>{String(index + 1).padStart(2, "0")}</span>}
+          {!isBookFolder(folder) && !folder.coverImage && <span className={`shrink-0 text-[10px] ${insideBook && depth === 0 ? "inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#eaf5fc] text-[#688aa3]" : "w-4 text-[#8ba0b0]"}`}>{String(index + 1).padStart(2, "0")}</span>}
           <span className="min-w-0 flex-1 break-words text-[14px] leading-snug text-[#505660]">{folder.title}</span>
           <span aria-label={`하위 목차 ${folder.folders.length}개, Day ${folder.days.length}개`} className="shrink-0 self-center text-[10px] text-[#8b9aa7]">{folder.folders.length + folder.days.length}</span>
         </button>
