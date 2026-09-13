@@ -35,3 +35,14 @@ test('insert among nested siblings', () => {
   assert.deepEqual(next[0].folders.map(x => x.id), ['x', 'b', 'y']);
   assert.equal(next.length, 1);
 });
+test('covers survive renaming and moves and can be explicitly removed', () => {
+  const items = [{ ...folder('a'), coverImage: 'data:image/jpeg;base64,cover' }, folder('b')];
+  const renamed = apply(items, { kind: 'edit', id: 'a', title: 'renamed', icon: '#', desc: '' });
+  assert.equal(renamed[0].coverImage, items[0].coverImage);
+  const moved = apply(renamed, { kind: 'move', id: 'a', destination: 'b' });
+  assert.equal(moved[0].folders[0].coverImage, items[0].coverImage);
+  assert.deepEqual(moved[0].folders[0].days, items[0].days);
+  const removed = apply(moved, { kind: 'edit', id: 'a', title: 'renamed', icon: '#', desc: '', coverImage: '' });
+  assert.equal(removed[0].folders[0].coverImage, '');
+  assert.equal(items[0].coverImage, 'data:image/jpeg;base64,cover');
+});

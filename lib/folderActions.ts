@@ -1,5 +1,5 @@
-export type FolderAction = { kind: "edit" | "add"; id: string; title: string; icon: string; desc: string } | { kind: "delete"; id: string } | { kind: "move"; id: string; destination: string; relativeTo?: string; placement?: "before" | "after" };
-type Node = { id: string; title: string; icon?: string; desc?: string; folders: Node[]; days: unknown[] };
+export type FolderAction = { kind: "edit" | "add"; id: string; title: string; icon: string; desc: string; coverImage?: string } | { kind: "delete"; id: string } | { kind: "move"; id: string; destination: string; relativeTo?: string; placement?: "before" | "after" };
+type Node = { id: string; title: string; icon?: string; desc?: string; coverImage?: string; folders: Node[]; days: unknown[] };
 export function applyFolderAction<T extends Node>(items: T[], action: FolderAction): T[] {
   const find = (nodes: Node[], id: string): Node | undefined => { for (const node of nodes) { if (node.id === id) return node; const child = find(node.folders, id); if (child) return child; } };
   const source = find(items, action.id);
@@ -18,8 +18,8 @@ export function applyFolderAction<T extends Node>(items: T[], action: FolderActi
   };
   const walk = (nodes: Node[]): Node[] => nodes.filter(node => !((action.kind === "delete" || action.kind === "move") && node.id === action.id)).map(node => {
     let result = { ...node, folders: walk(node.folders) };
-    if (node.id === action.id && action.kind === "edit") result = { ...result, title: action.title, icon: action.icon, desc: action.desc };
-    if (node.id === action.id && action.kind === "add") result.folders = [...result.folders, { id: crypto.randomUUID(), title: action.title, icon: action.icon, desc: action.desc, folders: [], days: [] }];
+    if (node.id === action.id && action.kind === "edit") result = { ...result, title: action.title, icon: action.icon, desc: action.desc, ...(action.coverImage !== undefined ? { coverImage: action.coverImage } : {}) };
+    if (node.id === action.id && action.kind === "add") result.folders = [...result.folders, { id: crypto.randomUUID(), title: action.title, icon: action.icon, desc: action.desc, ...(action.coverImage ? { coverImage: action.coverImage } : {}), folders: [], days: [] }];
     if (action.kind === "move" && node.id === action.destination) result.folders = insert(result.folders);
     return result;
   });

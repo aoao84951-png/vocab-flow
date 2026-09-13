@@ -1,5 +1,7 @@
 "use client";
 
+import BookCoverInput from "./BookCoverInput";
+
 import WordActionPopover from "./WordActionPopover";
 import { applyFolderAction, findFolderPath } from "@/lib/folderActions";
 import { useEffect, useRef, useState } from "react";
@@ -99,6 +101,7 @@ type Day = {
 };
 
 type Folder = {
+  coverImage?: string;
   icon?: string;
   id: string;
   title: string;
@@ -430,6 +433,7 @@ export default function DesktopApp() {
       title: folder.title || "",
       icon: typeof folder.icon === "string" ? folder.icon : "#",
       desc: folder.desc || "",
+      coverImage: typeof folder.coverImage === "string" ? folder.coverImage : "",
       folders: normalizeFolders(folder.folders || []),
       days: folder.days || [],
     }));
@@ -1251,7 +1255,7 @@ export default function DesktopApp() {
           }
           if (kind === "word") { setSelectedDayId(dayId || selectedDayId); setStep("addWord"); }
           else if (kind === "day") setStep("addDay");
-          else setStep(folderPath.length ? "addFolder" : "addBook");
+          else setStep((targetPath ?? folderPath).length ? "addFolder" : "addBook");
         }} />
 
       <style>{`
@@ -2104,6 +2108,7 @@ export default function DesktopApp() {
                   ...folder,
                   title: editedFolder.title,
                   icon: editedFolder.icon,
+                  coverImage: editedFolder.coverImage,
                   days: editedFolder.days.length
                     ? editedFolder.days
                     : folder.days,
@@ -2644,6 +2649,8 @@ function AddBook({
   onSave: (book: Book) => void;
   onDelete?: () => void;
 }) {
+  const [coverImage, setCoverImage] = useState(initialBook?.coverImage || "");
+  const [coverBusy, setCoverBusy] = useState(false);
   const [title, setTitle] = useState(initialBook?.title || "");
   const [desc, setDesc] = useState(initialBook?.desc || "");
   const [dayCount, setDayCount] = useState(initialBook?.days.length || 10);
@@ -2657,6 +2664,7 @@ function AddBook({
       </h1>
 
       <div className="mt-7 space-y-4">
+        <BookCoverInput value={coverImage} onChange={setCoverImage} onBusyChange={setCoverBusy} />
         <Input
           label="단어장 이름"
           value={title}
@@ -2680,12 +2688,14 @@ function AddBook({
         )}
 
         <button
+          disabled={coverBusy}
           onClick={() => {
             if (!title.trim()) return alert("단어장 이름을 입력해줘.");
 
             onSave({
               id: initialBook?.id || crypto.randomUUID(),
               title: title.trim(),
+              coverImage,
               desc: desc.trim(),
               folders: initialBook?.folders || [],
               days:
@@ -2730,6 +2740,8 @@ function AddFolder({
   onBack: () => void;
   onSave: (folder: Folder) => void;
 }) {
+  const [coverImage, setCoverImage] = useState(initialFolder?.coverImage || "");
+  const [coverBusy, setCoverBusy] = useState(false);
   const [title, setTitle] = useState(initialFolder?.title || "");
   const [icon, setIcon] = useState(initialFolder?.icon ?? "#");
   const [dayCount, setDayCount] = useState("");
@@ -2741,6 +2753,7 @@ function AddFolder({
       <h1 className="mt-4 text-[28px] font-bold text-[#303236]">{titleText}</h1>
 
       <div className="mt-7 space-y-4">
+        <BookCoverInput value={coverImage} onChange={setCoverImage} onBusyChange={setCoverBusy} />
         <FolderSymbolPicker value={icon} onChange={setIcon} />
         <Input
           label={labelText}
@@ -2758,6 +2771,7 @@ function AddFolder({
         />
 
         <button
+          disabled={coverBusy}
           onClick={() => {
             if (!title.trim()) return alert("이름을 입력해줘.");
 
@@ -2766,6 +2780,7 @@ function AddFolder({
             onSave({
               id: initialFolder?.id || crypto.randomUUID(),
               title: title.trim(),
+              coverImage,
               icon,
               desc: "",
               folders: initialFolder?.folders || [],
