@@ -1333,7 +1333,7 @@ export default function MobileApp() {
                                 if (pointExamples.length === 0) return null;
 
                                 return (
-                                  <div className="space-y-5">
+                                  <div className={`space-y-5 ${plainText(point.description ?? "").trim() && !(point.variants?.length) ? "border-t border-[#d7ddea] pt-5" : ""}`}>
                                     {pointExamples.map((example, exampleIndex) => (
                                       <div
                                         key={`${example.en}-${exampleIndex}`}
