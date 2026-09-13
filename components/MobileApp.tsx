@@ -1242,7 +1242,7 @@ export default function MobileApp() {
                               key={index}
                               category={<RichText text={point.category} />}
                               title={point.expression ? (
-                                <MobilePronounceButton text={point.expression} className="block text-[14px] font-bold text-[#111827]">
+                                <MobilePronounceButton text={point.expression} className="block font-bold text-[#111827]">
                                   <HighlightedText text={point.expression} keyword="" />
                                 </MobilePronounceButton>
                               ) : undefined}
