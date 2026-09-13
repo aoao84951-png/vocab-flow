@@ -1798,19 +1798,19 @@ export default function DesktopApp() {
                               >
                                 {point.description && (
                                   <div>
-                                    <PronounceButtons text={point.description} className="ipad-study-main block whitespace-pre-wrap text-[13px] leading-relaxed text-[#596275]">
+                                    <PronounceButtons text={point.description} className="ipad-study-main block whitespace-pre-wrap text-[13px] leading-relaxed text-[#4b6cb7]">
                                       <span dangerouslySetInnerHTML={{ __html: applyBracketHighlightToHtml(point.description) }} />
                                     </PronounceButtons>
                                   </div>
                                 )}
 
                                 {(point.variants ?? []).length > 0 && (
-                                  <div className="divide-y divide-[#e4e8f0]">
+                                  <div className="space-y-5">
                                     {(point.variants ?? []).map(
                                       (variant, variantIndex) => (
                                         <div
                                           key={`${variant.word}-${variantIndex}`}
-                                          className="min-w-0 py-3 first:pt-0 last:pb-0"
+                                          className="min-w-0"
                                         >
                                           {variant.word && (
                                             <div className="mb-1.5 flex items-start gap-2">
@@ -1902,11 +1902,13 @@ export default function DesktopApp() {
                                         (example, exampleIndex) => (
                                           <div
                                             key={`${example.en}-${exampleIndex}`}
-                                            className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2.5"
+                                            className={pointExamples.length > 1 ? "grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2.5" : "min-w-0"}
                                           >
-                                            <span className="select-none pt-0.5 text-[11px] leading-relaxed font-medium tabular-nums text-[#9aa3b2]" aria-hidden="true">
-                                              {String(exampleIndex + 1).padStart(2, "0")}
-                                            </span>
+                                            {pointExamples.length > 1 && (
+                                              <span className="select-none pt-0.5 text-[11px] leading-relaxed font-medium tabular-nums text-[#9aa3b2]" aria-hidden="true">
+                                                {String(exampleIndex + 1).padStart(2, "0")}
+                                              </span>
+                                            )}
                                             <div className="min-w-0">
                                               {example.en && (
                                                 <div className="flex items-start gap-2">

@@ -19,7 +19,7 @@ export default function StudyPointFrame({
           {title && <span className="study-point-title min-w-0 -translate-y-px text-[14px] leading-[1.5]">{title}</span>}
         </span>
       </legend>
-      <div className="space-y-3 pt-3 [&>div+div]:border-t [&>div+div]:border-[#e4e8f0] [&>div+div]:pt-3">
+      <div className="space-y-5 pt-3">
         {children}
       </div>
     </fieldset>
