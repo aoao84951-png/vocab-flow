@@ -1,5 +1,6 @@
 "use client";
 
+import ContentsAddForm from "./ContentsAddForm";
 import NoCover from "./NoCover";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -14,16 +15,17 @@ type Props = {
   initialPath: string[];
   selectedDayId: string;
   onNavigate: (path: string[], dayId: string) => void;
-  onAdd: (kind: "folder" | "day", path: string[]) => void;
   onFolderAction: (action: FolderAction) => void;
   drag: ReturnType<typeof useFolderDrag>;
   onPageChange: () => void;
   onLocationChange: (path: string[]) => void;
 };
 
-export default function BookContents({ books, initialPath, selectedDayId, onNavigate, onAdd, onFolderAction, drag, onPageChange, onLocationChange }: Props) {
+export default function BookContents({ books, initialPath, selectedDayId, onNavigate, onFolderAction, drag, onPageChange, onLocationChange }: Props) {
   const [requestedPath, setRequestedPath] = useState(() => getContentsEntry(books, initialPath).path);
   const [open, setOpen] = useState<Record<string, string>>(() => getContentsEntry(books, initialPath).open);
+  const [adding, setAdding] = useState<{ kind: "folder" | "day"; path: string[] } | null>(null);
+  const onAdd = (kind: "folder" | "day", target: string[]) => { setManaging(null); setAdding({ kind, path: target }); onPageChange(); };
   const [managing, setManaging] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const chain = resolveContentsPath(books, requestedPath);
@@ -35,7 +37,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
   const insideBook = chain.some(isBookFolder);
 
   const enter = (next: string[]) => {
-    setRequestedPath(next); setManaging(null); setOpen({}); onPageChange();
+    setRequestedPath(next); setAdding(null); setManaging(null); setOpen({}); onPageChange();
     requestAnimationFrame(() => headingRef.current?.focus());
   };
   const menu = (folder: ContentsFolder) => <button type="button" aria-label={`${folder.title} 관리`} aria-expanded={managing === folder.id} onClick={() => setManaging(managing === folder.id ? null : folder.id)} className="flex h-10 w-8 shrink-0 items-center justify-center rounded-full text-[#8b9cac] hover:bg-[#eff7fc]"><MoreHorizontal size={16} strokeWidth={1.7} /></button>;
@@ -85,7 +87,14 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
     </section>;
   });
 
+  const addForm = adding && <ContentsAddForm key={JSON.stringify(adding)} kind={adding.kind} root={!adding.path.length} parentTitle={resolveContentsPath(books, adding.path).at(-1)?.title} onCancel={() => setAdding(null)} onSubmit={values => {
+    onFolderAction(adding.kind === "day" ? { kind: "add-day", id: adding.path.at(-1)!, title: values.title } : { kind: "add", id: adding.path.at(-1) ?? "", icon: "", ...values });
+    setOpen(previous => { const next = { ...previous }; for (let i = 0; i < adding.path.length - 1; i++) next[adding.path[i]] = adding.path[i + 1]; return next; });
+    setAdding(null);
+  }} />;
+
   if (!current) return <div>
+    {addForm}
     <h3 ref={headingRef} tabIndex={-1} className="sr-only">나의 단어장</h3>
     <p className="mb-1 text-[11px] text-[#8b9aa7]">{books.length}개 단어장</p>
     {books.map((folder, index) => <div key={folder.id} className={`${index < books.length - 1 ? "border-b border-[#edf2f6]" : ""} py-1 ${drag?.id === folder.id ? "opacity-40" : ""}`}>
@@ -105,6 +114,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
   </div>;
 
   return <div>
+    {addForm}
     <div className="mb-1 flex flex-wrap items-center justify-between gap-x-4">
       <button type="button" onClick={() => enter(path.slice(0, -1))} className="flex min-h-9 min-w-0 items-center gap-1 text-[11px] text-[#8196a7]"><span aria-hidden="true" className="folder-symbol inline-flex w-3 shrink-0 justify-start text-[13px]">◁</span><span className="min-w-0 break-words">{parent ? parent.title : "단어장 목록"}</span></button>
       {parent && <button type="button" onClick={() => enter([])} className="min-h-9 text-[11px] text-[#8b9aa7]">전체 단어장</button>}

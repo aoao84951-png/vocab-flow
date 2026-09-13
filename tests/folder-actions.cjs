@@ -56,3 +56,16 @@ test('book identity survives edits and moves independently of cover changes', ()
   const added = apply(items, { kind: 'add', id: 'b', title: 'no cover', icon: '', desc: '', isBook: true, coverImage: '' });
   assert.equal(added[1].folders[0].isBook, true);
 });
+test('create a root book and add a Day at the specified nested folder', () => {
+  const root = apply(source, { kind: 'add', id: '', title: 'new book', icon: '', desc: '', isBook: true });
+  assert.equal(root.length, source.length + 1);
+  assert.equal(root.at(-1).title, 'new book');
+  assert.equal(root.at(-1).isBook, true);
+  const nested = apply(root, { kind: 'add-day', id: 'grandchild', title: 'Day 02' });
+  const days = nested[0].folders[0].folders[0].days;
+  assert.equal(days.length, 2);
+  assert.equal(days[1].title, 'Day 02');
+  assert.deepEqual(days[1].words, []);
+  assert.equal(source[0].folders[0].folders[0].days.length, 1);
+  assert.equal(apply(root, { kind: 'add-day', id: 'missing', title: 'Day' }), root);
+});
