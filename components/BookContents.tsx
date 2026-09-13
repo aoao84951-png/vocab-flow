@@ -114,7 +114,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
     {actions(current, path)}
     <div className="border-t border-[#e8eef3]">{chapters(current.folders, path)}{days(current, path)}</div>
     {!current.folders.length && !current.days.length && <p className="py-8 text-sm text-[#8b9aa7]">이곳에 하위 목차나 Day를 추가해보세요.</p>}
-    <div className="mt-3 flex items-center justify-center gap-2 border-t border-[#edf2f6] pt-3">
+    <div className="flex items-center justify-center gap-2 border-t border-[#edf2f6] pt-3">
       <button type="button" onClick={() => onAdd("day", path)} className="min-h-10 flex-1 max-w-40 rounded-xl bg-[#f5f9fc] px-3 text-xs text-[#68869e]">Day 추가</button>
       <button type="button" onClick={() => onAdd("folder", path)} className="min-h-10 flex-1 max-w-40 rounded-xl bg-[#f5f9fc] px-3 text-xs text-[#68869e]">하위 목차 추가</button>
     </div>
