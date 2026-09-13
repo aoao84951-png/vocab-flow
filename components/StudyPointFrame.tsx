@@ -12,7 +12,7 @@ export default function StudyPointFrame({
   return (
     <fieldset className="min-w-0 rounded-xl border border-[#d7ddea] bg-white px-3 pb-3 [overflow-wrap:anywhere] sm:px-4 sm:pb-4">
       <legend className="max-w-full px-1">
-        <span className="flex items-center gap-2">
+        <span className="flex items-baseline gap-2">
           <span className="shrink-0 rounded-full bg-[#e7ecf5] px-2 py-1 text-[11px] font-bold text-[#303236]">
             {category}
           </span>
