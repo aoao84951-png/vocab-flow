@@ -12,10 +12,11 @@ export default function ContentsAddForm({ kind, root, parentTitle, onCancel, onS
   const [coverImage, setCoverImage] = useState("");
   const [isBook, setIsBook] = useState(false);
   const [busy, setBusy] = useState(false);
+  const form = useRef<HTMLFormElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const label = kind === "day" ? "Day" : root ? "단어장" : "하위 목차";
-  useEffect(() => { input.current?.focus({ preventScroll: true }); }, []);
-  return <form aria-label={`${label} 추가`} className="mb-3 space-y-2 rounded-xl border border-[#e7edf2] bg-[#f8fafc] p-3" onSubmit={event => { event.preventDefault(); if (title.trim() && !busy) onSubmit({ title: title.trim(), desc: desc.trim(), coverImage, isBook }); }}>
+  useEffect(() => { form.current?.scrollIntoView({ block: "nearest" }); input.current?.focus({ preventScroll: true }); }, []);
+  return <form ref={form} aria-label={`${label} 추가`} className="my-3 space-y-2 rounded-xl border border-[#e7edf2] bg-[#f8fafc] p-3" onSubmit={event => { event.preventDefault(); if (title.trim() && !busy) onSubmit({ title: title.trim(), desc: desc.trim(), coverImage, isBook }); }}>
     <div className="flex items-center justify-between gap-2"><h4 className="text-[13px] text-[#505660]">{label} 추가</h4><button type="button" onClick={onCancel} className="min-h-8 px-2 text-[11px] text-[#8196a7]">취소</button></div>
     {parentTitle && <p className="break-words text-[11px] text-[#8b9aa7]">{parentTitle} 안에 추가</p>}
     <input ref={input} aria-label={`${label} 이름`} placeholder={kind === "day" ? "예: Day 01" : `${label} 이름`} value={title} onChange={event => setTitle(event.target.value)} className="h-9 w-full rounded-lg border border-[#e1e9ef] bg-white px-2 text-[12px] outline-none focus:border-[#9bbbd2]" />

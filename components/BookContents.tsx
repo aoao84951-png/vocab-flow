@@ -25,7 +25,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
   const [requestedPath, setRequestedPath] = useState(() => getContentsEntry(books, initialPath).path);
   const [open, setOpen] = useState<Record<string, string>>(() => getContentsEntry(books, initialPath).open);
   const [adding, setAdding] = useState<{ kind: "folder" | "day"; path: string[] } | null>(null);
-  const onAdd = (kind: "folder" | "day", target: string[]) => { setManaging(null); setAdding({ kind, path: target }); onPageChange(); };
+  const onAdd = (kind: "folder" | "day", target: string[]) => { setManaging(null); setAdding({ kind, path: target }); };
   const [managing, setManaging] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const chain = resolveContentsPath(books, requestedPath);
@@ -94,7 +94,6 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
   }} />;
 
   if (!current) return <div>
-    {addForm}
     <h3 ref={headingRef} tabIndex={-1} className="sr-only">나의 단어장</h3>
     <p className="mb-1 text-[11px] text-[#8b9aa7]">{books.length}개 단어장</p>
     {books.map((folder, index) => <div key={folder.id} className={`${index < books.length - 1 ? "border-b border-[#edf2f6]" : ""} py-1 ${drag?.id === folder.id ? "opacity-40" : ""}`}>
@@ -110,11 +109,11 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
       </div>{actions(folder, [folder.id])}
     </div>)}
     {!books.length && <p className="py-8 text-sm text-[#8b9aa7]">첫 단어장을 만들어보세요. 표지는 나중에 넣어도 괜찮아요.</p>}
+    {addForm}
     <div className="mt-3 flex justify-center"><button type="button" onClick={() => onAdd("folder", [])} className="min-h-10 rounded-xl bg-[#f5f9fc] px-6 text-xs text-[#68869e]">단어장 추가</button></div>
   </div>;
 
   return <div>
-    {addForm}
     <div className="mb-1 flex flex-wrap items-center justify-between gap-x-4">
       <button type="button" onClick={() => enter(path.slice(0, -1))} className="flex min-h-9 min-w-0 items-center gap-1 text-[11px] text-[#8196a7]"><span aria-hidden="true" className="folder-symbol inline-flex w-3 shrink-0 justify-start text-[13px]">◁</span><span className="min-w-0 break-words">{parent ? parent.title : "단어장 목록"}</span></button>
       {parent && <button type="button" onClick={() => enter([])} className="min-h-9 text-[11px] text-[#8b9aa7]">전체 단어장</button>}
@@ -124,6 +123,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
     {actions(current, path)}
     <div className="border-t border-[#e8eef3]">{chapters(current.folders, path)}{days(current, path)}</div>
     {!current.folders.length && !current.days.length && <p className="py-8 text-sm text-[#8b9aa7]">이곳에 하위 목차나 Day를 추가해보세요.</p>}
+    {addForm}
     <div className="flex items-center justify-center gap-2 border-t border-[#edf2f6] pt-3">
       <button type="button" onClick={() => onAdd("day", path)} className="min-h-10 flex-1 max-w-40 rounded-xl bg-[#f5f9fc] px-3 text-xs text-[#68869e]">Day 추가</button>
       <button type="button" onClick={() => onAdd("folder", path)} className="min-h-10 flex-1 max-w-40 rounded-xl bg-[#f5f9fc] px-3 text-xs text-[#68869e]">하위 목차 추가</button>
