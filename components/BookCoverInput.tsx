@@ -46,7 +46,7 @@ export default function BookCoverInput({ value, onChange, onBusyChange, isBook, 
     <p className="text-[11px] text-[#737b88]">책 표지 <span className="text-[10px] text-[#939ba5]">선택</span></p>
     <div className="flex items-center gap-3">
       {value ? <NextImage unoptimized width={44} height={64} src={value} alt="선택한 책 표지" className="h-16 w-11 shrink-0 rounded-md object-contain" /> : <NoCover preview />}
-      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+      <div className="flex min-w-0 flex-col items-start gap-1">
         <label className={`relative inline-flex focus-within:outline-2 focus-within:outline-[#a9cbe1] min-h-8 items-center rounded-xl border border-[#dce8f0] bg-white px-3 text-[11px] text-[#587b96] ${busy ? "opacity-50" : "cursor-pointer"}`}>
           {busy ? "이미지 준비 중…" : value ? "표지 바꾸기" : "표지 선택"}
           <input aria-label="책 표지 선택" type="file" accept="image/*" disabled={busy} className="absolute inset-0 w-full cursor-pointer opacity-0" onChange={async event => {
