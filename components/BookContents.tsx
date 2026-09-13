@@ -88,7 +88,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
       {expanded && !pageLink && <div className={depth < 2 ? "ml-1.5 border-l border-[#edf2f6] pl-2" : "border-l border-[#edf2f6] pl-0"}>
         {folder.desc && <p className="mb-2 whitespace-pre-wrap break-words text-sm text-[#8995a0]">{folder.desc}</p>}
         {chapters(folder.folders, location, depth + 1)}
-        {days(folder, location, depth < 2 ? 9 : 23)}
+        {days(folder, location, insideBook && depth === 0 ? 13 : depth < 2 ? 9 : 23)}
         {!folder.folders.length && !folder.days.length && <p className="py-3 text-sm text-[#8b9aa7]">아직 목차나 Day가 없어요.</p>}
       </div>}
     </section>;
