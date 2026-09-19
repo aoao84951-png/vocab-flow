@@ -64,10 +64,11 @@ html[data-app-font="summer"] body {
   font-display: swap;
 }
 
-/* This file contains symbols only, so Safari cannot select it for Korean text. */
+/* Symbols only; use COLR/CPAL without a competing OpenType-SVG rendering path.
+   The versioned URL also avoids reusing the previous font from browser caches. */
 @font-face {
   font-family: "Summer Symbols";
-  src: url("/fonts/aa-summer-symbols-v2.woff2") format("woff2");
+  src: url("/fonts/aa-summer-symbols-v3.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
