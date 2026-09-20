@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Vocab Flow 하단 언어 버튼 숨김 · 6차</title>
+<style>body{font:17px/1.7 system-ui,sans-serif;color:#303236;max-width:720px;margin:24px auto;padding:0 18px 80px}h1{font-size:25px}button,select{font:inherit;padding:9px;border:1px solid #bbb;border-radius:8px;background:#fff;color:inherit}button:disabled{opacity:.5}label{display:block;margin:12px 0}.field{box-sizing:border-box;width:100%;font-family:inherit;border:2px solid #aaa;min-height:64px;border-radius:10px;padding:14px;font-size:22px;white-space:pre-wrap}.field:focus{outline:3px solid #dceefa;border-color:#587fa3}.controls{display:flex;gap:8px;flex-wrap:wrap}#status{padding:10px;background:#eff7fc;border-radius:8px}small{color:#666}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid #ddd;text-align:left;padding:6px}</style></head>
+<body><h1>Vocab Flow 하단 언어 버튼 숨김 · 6차</h1>
+<p>하단의 A/한 버튼이 사라지는지 확인하는 독립 실험입니다. 두 모드 모두 성공했던 외장 키보드 직접 한글 조합 방식을 사용하며, 후보만 화면 키보드 표시를 억제합니다. 실제 앱 설정은 변경하지 않았습니다.</p>
+<p><strong>매직키보드 등 외장 키보드를 연결한 상태에서 테스트해 주세요.</strong> 후보에서는 화면 키보드가 나오지 않을 수 있습니다. 물리 키보드의 한/영 전환은 평소 쓰는 키로 확인합니다.</p>
+<ol><li>먼저 <strong>기준</strong>을 선택하고 시작합니다. 첫 칸에 <strong>입니다</strong>를 입력합니다.</li><li>Tab으로 둘째 칸에 이동 → <strong>ㄹ</strong> → 백스페이스 한 번. 이전 글자가 나타나는지도 확인합니다.</li><li>둘째 칸에서 한/영 전환 → <strong>abc</strong> → 다시 한글로 전환 → <strong>한글</strong>을 입력합니다.</li><li>아래 <strong>입력칸 밖으로 이동</strong> 버튼을 누르고, 둘째 칸을 다시 터치합니다. 하단 버튼이 나타나거나 움직이는지 봅니다.</li><li>회차 완료 후 관찰 결과를 선택합니다. <strong>후보</strong>로 바꾸어 같은 과정을 1회 반복하고 기록 파일을 받습니다.</li></ol>
+<p>화면 위쪽에 잠깐 뜨는 언어 전환 알림은 정상입니다. 확인할 대상은 사진에서 표시했던 <strong>오른쪽 아래 A/한 버튼</strong>입니다. 시스템 버튼의 표시 여부는 웹페이지에서 자동으로 읽을 수 없습니다.</p>
+<p><small>입력 내용과 키 이벤트는 이 탭 메모리에만 보관하며 서버에 전송하지 않습니다. 새로고침 전에 파일을 받아 주세요.</small></p>
+<label>모드 <select id="mode"><option value="text">기준 — 기본 키보드 표시</option><option value="none">후보 — 화면 키보드 표시 억제</option></select></label>
+<label>키보드 <select id="keyboard"><option>외장 키보드</option></select></label>
+<div class="controls"><button id="start">이번 회차 시작</button><button id="finish" disabled>회차 완료</button><button id="download">기록 파일 받기</button></div>
+<p id="status" role="status">기록 대기</p>
+<p id="first-label">첫 칸 — 입니다</p><textarea id="first" class="field" aria-labelledby="first-label"></textarea>
+<p id="second-label">둘째 칸 — ㄹ 입력 후 백스페이스</p><textarea id="second" class="field" aria-labelledby="second-label"></textarea>
+<p><button id="outside" type="button">입력칸 밖으로 이동</button></p>
+<label>최근 회차에서 눈으로 확인한 결과 <select id="outcome" disabled><option value="unknown">선택해 주세요</option><option value="normal">정상</option><option value="carryover">이전 글자 재등장</option><option value="lost">글자 누락 / 커서 이동 실패</option><option value="flicker">키보드 깜빡임 등 불편</option><option value="invalid">잘못 입력해서 다시 테스트 필요</option></select></label>
+<label>입력 중 오른쪽 아래 A/한 버튼이 보였나요? <select id="visibility" disabled><option value="unknown">선택해 주세요</option><option value="hidden">계속 안 보임</option><option value="visible">보임</option><option value="intermittent">일부 순간만 보임</option></select></label>
+<label>칸 진입·이탈·이동 때 하단 버튼이 움직이거나 깜빡였나요? <select id="flicker" disabled><option value="unknown">선택해 주세요</option><option value="no">없음</option><option value="yes">있음</option></select></label>
+<label>물리 키보드의 한/영 전환과 abc → 한글 입력이 정상인가요? <select id="language" disabled><option value="unknown">선택해 주세요</option><option value="normal">정상</option><option value="failed">전환 실패 / 다른 글자 입력</option></select></label>
+<label>첫 글자 누락이나 커서 이동 실패가 있었나요? <select id="lost" disabled><option value="unknown">선택해 주세요</option><option value="no">없음</option><option value="yes">있음</option></select></label>
+<p><small>이 페이지는 시스템 버튼 숨김 성공 여부를 자동 판정하지 않습니다. 관찰 결과와 입력 기록을 함께 확인합니다.</small></p>
+<table><thead><tr><th>회차</th><th>모드 / 이동</th><th>첫 입력</th><th>완료 상태</th></tr></thead><tbody id="history"></tbody></table>
+<script src="/diagnostics/vendor/hangul-0.2.6.min.js"></script><script src="/diagnostics/hardware-hangul.js"></script><script src="/diagnostics/focus-test-v6.js"></script></body></html>
