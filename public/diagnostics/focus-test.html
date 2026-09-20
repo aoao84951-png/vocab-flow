@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Vocab Flow 한글 칸 이동 실험</title>
+<style>body{font:17px/1.7 system-ui,sans-serif;color:#303236;max-width:720px;margin:24px auto;padding:0 18px 80px}h1{font-size:25px}button,select{font:inherit;padding:9px;border:1px solid #bbb;border-radius:8px;background:#fff;color:inherit}button:disabled{opacity:.5}label{display:block;margin:12px 0}.field{border:2px solid #aaa;min-height:64px;border-radius:10px;padding:14px;font-size:22px;white-space:pre-wrap}.field:focus{outline:3px solid #dceefa;border-color:#587fa3}.controls{display:flex;gap:8px;flex-wrap:wrap}#status{padding:10px;background:#eff7fc;border-radius:8px}small{color:#666}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid #ddd;text-align:left;padding:6px}</style></head>
+<body><h1>Vocab Flow 한글 칸 이동 실험</h1>
+<p>기존 앱에는 적용하지 않은 실험입니다. 같은 문구로 세 이동 방식을 비교합니다. 테스트 글자와 키·입력 이벤트만 이 탭 메모리에 기록하며 서버로 보내지 않습니다. 페이지를 닫기 전에 파일을 받아 주세요.</p>
+<ol><li>모드를 고르고 <strong>이번 회차 시작</strong>을 누릅니다.</li><li>첫 칸에 직접 <strong>입니다</strong>를 입력합니다. 공백·Enter는 누르지 않습니다.</li><li><strong>Tab 또는 둘째 칸 터치</strong>로 이동해서 <strong>ㄹ</strong> 하나를 입력합니다. 정상은 ㄹ, 이전 글자가 섞이면 달 등이 나옵니다.</li><li><strong>백스페이스 한 번</strong>으로 지운 후 <strong>회차 완료</strong>를 누릅니다.</li></ol>
+<p>먼저 모드별로 같은 이동 방식으로 3회씩 해 주세요. 증상이 간헐적이면 10회까지 반복하고, Tab과 터치를 따로 비교해 주세요. 키 입력이 빠지거나 키보드가 깜빡이는지도 결과에 남겨 주세요.</p>
+<label>모드 <select id="mode"><option value="native">기준 — 기본 이동</option><option value="blur">후보 1 — 포커스 해제 후 80ms 대기</option><option value="disable">후보 2 — 이전 칸 편집 중지 후 80ms 대기</option></select></label>
+<label>키보드 <select id="keyboard"><option>외장 키보드</option><option>화면 키보드</option></select></label>
+<div class="controls"><button id="start">이번 회차 시작</button><button id="finish" disabled>회차 완료</button><button id="download">기록 파일 받기</button></div>
+<p id="status" role="status">기록 대기</p>
+<p id="first-label">첫 칸 — 입니다</p><div id="first" class="field" contenteditable="true" role="textbox" aria-labelledby="first-label" tabindex="0"></div>
+<p id="second-label">둘째 칸 — ㄹ 입력 후 백스페이스</p><div id="second" class="field" contenteditable="true" role="textbox" aria-labelledby="second-label" tabindex="0"></div>
+<label>최근 회차에서 눈으로 확인한 결과 <select id="outcome" disabled><option value="unknown">선택해 주세요</option><option value="normal">정상</option><option value="carryover">이전 글자 재등장</option><option value="lost">글자 누락 / 커서 이동 실패</option><option value="flicker">키보드 깜빡임 등 불편</option><option value="invalid">잘못 입력해서 다시 테스트 필요</option></select></label>
+<p><small>아래 자동 판정은 정해진 문구를 입력했을 때만 유효하며, 해결 여부를 확정하지 않습니다. 눈으로 확인한 결과와 이벤트 기록을 함께 분석합니다.</small></p>
+<table><thead><tr><th>회차</th><th>모드 / 이동</th><th>첫 입력</th><th>완료 상태</th></tr></thead><tbody id="history"></tbody></table>
+<script src="/diagnostics/focus-test.js"></script></body></html>
