@@ -5,15 +5,19 @@ const ts = require('typescript');
 const { chromium, webkit } = require('@playwright/test');
 
 // Real browser DOM/execCommand coverage, with hardware key events replayed.
-// This does not emulate the iPad system IME; its fix is based on the v5 device trial.
+// This does not emulate the iPad system IME; device behavior was validated in the v5–v9 trials.
 for (const engine of [chromium, webkit]) test(`${engine.name()}: iPad rich input preserves formatting, editing, history and native fallback`, async () => {
   const browser = await engine.launch({headless:true});
   try {
     const page = await browser.newPage();
     await page.setContent('<div id="a" contenteditable="true" tabindex="0"></div><div id="b" contenteditable="true" tabindex="0"></div>');
     await page.addScriptTag({path:require.resolve('hangul-js')});
+    const badge = ts.transpileModule(fs.readFileSync('lib/caretLanguageIndicator.ts','utf8'), {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
+    await page.addScriptTag({content:`window.exports={};
+${badge}
+window.badgeExports=window.exports;`});
     const compiled = ts.transpileModule(fs.readFileSync('lib/ipadHardwareInput.ts','utf8'), {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
-    await page.addScriptTag({content:`window.exports={};window.require=()=>window.Hangul;\n${compiled}`});
+    await page.addScriptTag({content:`window.exports={};window.require=name=>name==='hangul-js'?window.Hangul:window.badgeExports;\n${compiled}`});
     const results = await page.evaluate(() => {
       const a=document.querySelector('#a'),b=document.querySelector('#b'), controllers=[];
       let emitted=0,blurs=0;a.addEventListener('blur',()=>blurs++);
@@ -55,5 +59,32 @@ for (const engine of [chromium, webkit]) test(`${engine.name()}: iPad rich input
     for(const key of ['bold','undoBold','redoBold','softwareKeyAllowed','softwareInputAllowed','noForcedBlur','detached'])assert.equal(results[key],true,key);
     assert.equal(results.softwareValue,'가나');assert.equal(results.paste,'가나 paste');assert.equal(results.undoPaste,'가나');
     assert.deepEqual(results.device,[true,false]);assert(results.emitted>0);
+    const local = await page.evaluate(() => {
+      const a=document.querySelector('#a'), b=document.querySelector('#b');
+      a.innerHTML=''; b.innerHTML='';
+      const controllers=[a,b].map(el=>window.exports.attachIPadHardwareInput(el,()=>{},true));
+      const focus=el=>{el.focus();const r=document.createRange();r.selectNodeContents(el);r.collapse(false);getSelection().removeAllRanges();getSelection().addRange(r);};
+      const key=(el,code,key=code,extra={})=>el.dispatchEvent(new KeyboardEvent('keydown',{code,key,bubbles:true,cancelable:true,...extra}));
+      focus(a);
+      for(const code of ['KeyD','KeyL','KeyQ','KeyS','KeyL','KeyE','KeyK'])key(a,code,'x');
+      focus(b); key(b,'KeyF','ㄹ');key(b,'Backspace');
+      key(b,'CapsLock');
+      for(const code of ['KeyA','KeyB','KeyC'])key(b,code,'ㅁ');
+      key(b,'CapsLock');for(const code of ['KeyG','KeyK','KeyS','KeyR','KeyM','KeyF'])key(b,code,'x');
+      const values=[a.textContent,b.textContent];
+      for(let i=0;i<7;i++)key(b,'CapsLock');
+      const badge=document.querySelector('.caret-language-badge');
+      const label=badge.dataset.language;
+      focus(a);key(a,'KeyA','ㅁ');key(a,'Digit1','1',{shiftKey:true});
+      const shared=a.textContent;
+      const modes=[a.inputMode,b.inputMode];
+      for(const c of controllers)c.destroy();
+      return {values,label,shared,modes,removed:!document.querySelector('.caret-language-badge'),restored:a.getAttribute('inputmode')};
+    });
+    assert.deepEqual(local.values,['입니다','abc한글']);
+    assert.equal(local.label,'en');
+    assert.equal(local.shared,'입니다a!');
+    assert.deepEqual(local.modes,['none','none']);
+    assert.equal(local.removed,true);assert.equal(local.restored,null);
   } finally { await browser.close(); }
 });

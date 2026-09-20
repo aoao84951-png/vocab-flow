@@ -3,6 +3,8 @@
 import { RotateCw, Settings2, Type } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
+import { useIPadKeyboardMode, setIPadKeyboardMode } from '@/lib/ipadKeyboardPreference';
+
 const FONT_KEY = "voca-font";
 const CHANGE_EVENT = "voca-font-change";
 let currentFont = "default";
@@ -75,8 +77,15 @@ export default function AppearanceSettings() {
 }
 
 export function AppearanceActions() {
+  const keyboardMode = useIPadKeyboardMode();
   const font = useFont();
   return <>
+          {keyboardMode !== 'native' && <button type="button"
+            onClick={() => setIPadKeyboardMode(keyboardMode === 'hardware' ? 'screen' : 'hardware')}
+            className="flex min-h-12 w-full items-center justify-between gap-2 rounded-xl px-3 text-left text-sm text-[#4b5058] hover:bg-[#f5f9fc]">
+            <span>키보드</span>
+            <span className="rounded-full bg-[#eaf4fc] px-2.5 py-1 text-xs">{keyboardMode === 'hardware' ? '외장 키보드' : '화면 키보드'}</span>
+          </button>}
           <button type="button"
             aria-label={`글꼴 변경 (현재: ${font === "summer" ? "여름소리" : "기본"})`}
             onClick={() => {

@@ -1,4 +1,7 @@
 import Hangul from 'hangul-js';
+import { CaretLanguageIndicator } from './caretLanguageIndicator';
+
+let language: 'ko' | 'en' = 'ko';
 
 // iPadOS reports a Mac platform in desktop browsing mode.
 export function isIPad(navigator: Pick<Navigator, 'userAgent' | 'platform' | 'maxTouchPoints'>) {
@@ -9,8 +12,11 @@ type Bookmark = { path: number[]; offset: number };
 type Snapshot = { html: string; start?: Bookmark; end?: Bookmark };
 
 /** Hardware-key workaround. Never blurs, refocuses, or replaces the editing host. */
-export function attachIPadHardwareInput(el: HTMLElement, emit: () => void) {
+export function attachIPadHardwareInput(el: HTMLElement, emit: () => void, localKeyboard = false) {
   const doc = el.ownerDocument;
+  const originalInputMode = el.getAttribute('inputmode');
+  if(localKeyboard) el.inputMode = 'none';
+  let indicator: CaretLanguageIndicator | null = null;
   let editing = false, guardUntil = 0;
   let run: { start: number; keys: string[]; output: string; html: string } | null = null;
   let undo: Snapshot[] = [], redo: Snapshot[] = [];
@@ -81,13 +87,35 @@ export function attachIPadHardwareInput(el: HTMLElement, emit: () => void) {
     if (event.isComposing || ['Process','Unidentified','Dead'].includes(event.key) || !event.code) {
       guardUntil = 0; run = null; return;
     }
-    const key = event.key;
+    if(localKeyboard && (event.code === 'CapsLock' || event.key === 'CapsLock') && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      if(event.repeat) return;
+      run = null;
+      language = language === 'ko' ? 'en' : 'ko';
+      indicator ??= new CaretLanguageIndicator();
+      indicator.show(el,language);
+      return;
+    }
+    let key = event.key;
     if (event.ctrlKey || event.metaKey) {
       run = null;
       if (key.toLowerCase() === 'z') { event.preventDefault(); history(!event.shiftKey); }
       return;
     }
     if (event.altKey) { run = null; guardUntil = 0; return; }
+    if(localKeyboard) {
+      if(/^Key[A-Z]$/.test(event.code)) {
+        const letter = event.code.slice(3);
+        const shifted: Record<string,string> = {E:'ㄸ',O:'ㅒ',P:'ㅖ',Q:'ㅃ',R:'ㄲ',T:'ㅆ',W:'ㅉ'};
+        key = language === 'en' ? (event.shiftKey ? letter : letter.toLowerCase()) : (event.shiftKey && shifted[letter] || 'ㅁㅠㅊㅇㄷㄹㅎㅗㅑㅓㅏㅣㅡㅜㅐㅔㅂㄱㄴㅅㅕㅍㅈㅌㅛㅋ'[letter.charCodeAt(0)-65]);
+      } else if(/^Digit[0-9]$/.test(event.code)) {
+        const n = Number(event.code.slice(5)); key = event.shiftKey ? ')!@#$%^&*('[n] : String(n);
+      } else {
+        const punctuation: Record<string,string[]> = {Space:[' ',' '],Minus:['-','_'],Equal:['=','+'],BracketLeft:['[','{'],BracketRight:[']','}'],Backslash:['\\','|'],Semicolon:[';',':'],Quote:["'",'"'],Backquote:['`','~'],Comma:[',','<'],Period:['.','>'],Slash:['/','?']};
+        if(punctuation[event.code]) key = punctuation[event.code][event.shiftKey ? 1 : 0];
+        else if(key.length === 1 && !/^Numpad/.test(event.code)) { event.preventDefault(); return; }
+      }
+    }
     if (key === 'Tab' || key.startsWith('Arrow') || ['Home','End','Escape'].includes(key)) { run = null; return; }
     if (['Shift','Control','Alt','Meta','CapsLock'].includes(key)) return;
     if (key.length !== 1 && !['Backspace','Delete','Enter'].includes(key)) return;
@@ -151,6 +179,11 @@ export function attachIPadHardwareInput(el: HTMLElement, emit: () => void) {
   return {
     reset() { native(); undo = []; redo = []; },
     destroy() {
+      indicator?.destroy();
+      if(localKeyboard) {
+        if(originalInputMode === null) el.removeAttribute('inputmode');
+        else el.setAttribute('inputmode',originalInputMode);
+      }
       el.removeEventListener('keydown',keydown); el.removeEventListener('beforeinput',beforeinput); el.removeEventListener('input',input,true);
       el.removeEventListener('pointerdown',commit); el.removeEventListener('blur',commit); el.removeEventListener('focus',focus);
       el.removeEventListener('compositionstart',native); el.removeEventListener('paste',paste); el.removeEventListener('cut',native);
