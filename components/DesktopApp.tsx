@@ -1,4 +1,5 @@
 "use client";
+import { useIPadEditor } from "@/lib/useIPadEditor";
 
 import BookCoverInput from "./BookCoverInput";
 import StudyPointFrame, { StudyPointVariants } from "./StudyPointFrame";
@@ -4996,11 +4997,15 @@ function EditorBox({
   onBlur?: (html: string) => void;
 }) {
   const innerRef = useRef<HTMLDivElement | null>(null);
+  const hardware = useIPadEditor(innerRef, () => {
+    if(innerRef.current) resetEditorIfEmpty(innerRef.current);
+  }, true);
 
   useEffect(() => {
     if (!innerRef.current) return;
     innerRef.current.innerHTML = sanitizeRichText(defaultHtml);
-  }, [defaultHtml]);
+    hardware.current?.reset();
+  }, [defaultHtml, hardware]);
 
   return (
     <div
@@ -5032,11 +5037,15 @@ function InlineEditorBox({
   placeholder: string;
 }) {
   const innerRef = useRef<HTMLDivElement | null>(null);
+  const hardware = useIPadEditor(innerRef, () => {
+    if(innerRef.current) resetEditorIfEmpty(innerRef.current);
+  }, true);
 
   useEffect(() => {
     if (!innerRef.current) return;
     innerRef.current.innerHTML = sanitizeRichText(defaultHtml);
-  }, [defaultHtml]);
+    hardware.current?.reset();
+  }, [defaultHtml, hardware]);
 
   return (
     <div

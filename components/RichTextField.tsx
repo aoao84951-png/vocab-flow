@@ -1,23 +1,15 @@
 "use client";
 import { useEffect, useRef, type InputHTMLAttributes, type ChangeEvent } from 'react';
-import { attachIPadHardwareInput, isIPad } from '@/lib/ipadHardwareInput';
-import { useIPadKeyboardMode } from '@/lib/ipadKeyboardPreference';
+import { useIPadEditor } from '@/lib/useIPadEditor';
 import { hasRichText, plainText, sanitizeRichText } from '@/lib/richText';
 export function RichText({text}: {text: string}) {
   return <span dangerouslySetInnerHTML={{__html:sanitizeRichText(text).split(/(<[^>]+>)/g).map(part=>part.startsWith("<")?part:part.replace(/\[\[(.*?)\]\]/g, '<strong style="color:#d92d20">$1</strong>')).join("")}} />;
 }
 export default function RichTextField({value, onChange, placeholder, className, 'aria-label': label, disabled, autoFocus}: InputHTMLAttributes<HTMLInputElement>) {
-  const keyboardMode=useIPadKeyboardMode();
   const ref=useRef<HTMLDivElement>(null);
   useEffect(()=>{if(autoFocus)ref.current?.focus();},[autoFocus]);
-  const hardware=useRef<ReturnType<typeof attachIPadHardwareInput> | null>(null);
   const emitRef=useRef<() => void>(()=>{});
-  useEffect(()=>{
-    if(!ref.current || !isIPad(navigator))return;
-    const controller=attachIPadHardwareInput(ref.current,()=>emitRef.current(),keyboardMode === 'hardware');
-    hardware.current=controller;
-    return()=>{controller.destroy();hardware.current=null;};
-  },[keyboardMode]);
+  const hardware=useIPadEditor(ref,()=>emitRef.current());
   const composing=useRef(false);
   const last=useRef(String(value ?? ''));
   useEffect(()=>{
@@ -26,7 +18,7 @@ export default function RichTextField({value, onChange, placeholder, className, 
       ref.current.innerHTML=sanitizeRichText(next);
       ref.current.setAttribute('data-initialized','true');last.current=next;hardware.current?.reset();
     }
-  },[value]);
+  },[value,hardware]);
   const emit=()=>{
     const el=ref.current;if(!el)return;
     const html=sanitizeRichText(el.innerHTML);

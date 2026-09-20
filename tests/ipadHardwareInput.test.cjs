@@ -86,5 +86,31 @@ window.badgeExports=window.exports;`});
     assert.equal(local.shared,'입니다a!');
     assert.deepEqual(local.modes,['none','none']);
     assert.equal(local.removed,true);assert.equal(local.restored,null);
+    const multiline = await page.evaluate(() => {
+      const el=document.querySelector('#b');el.innerHTML='';
+      let emitted=0;
+      const c=window.exports.attachIPadHardwareInput(el,()=>emitted++,true,true);
+      el.focus();const r=document.createRange();r.selectNodeContents(el);r.collapse(false);getSelection().removeAllRanges();getSelection().addRange(r);
+      const key=(code,key=code)=>el.dispatchEvent(new KeyboardEvent('keydown',{code,key,bubbles:true,cancelable:true}));
+      key('CapsLock'); // Previous field left the shared mode in English.
+      for(const code of ['KeyG','KeyK','KeyS'])key(code,'x');
+      key('Enter');
+      for(const code of ['KeyR','KeyM','KeyF'])key(code,'x');
+      const lines=el.innerText.trim();
+      key('Backspace');key('KeyF','x');
+      const edited=el.innerText.trim();
+      key('CapsLock');key('KeyA','ㅁ');
+      const saved=el.innerHTML;
+      const label=document.querySelector('.caret-language-badge').dataset.language;
+      const inputMode=el.inputMode;
+      c.destroy();
+      return {lines,edited,saved,label,inputMode,emitted};
+    });
+    assert.equal(multiline.lines,'한\n글');
+    assert.equal(multiline.edited,'한\n글');
+    assert.match(multiline.saved,/한<br>글a/);
+    assert.equal(multiline.label,'en');assert.equal(multiline.inputMode,'none');
+    assert(multiline.emitted>0);
+
   } finally { await browser.close(); }
 });

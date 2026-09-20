@@ -12,7 +12,7 @@ type Bookmark = { path: number[]; offset: number };
 type Snapshot = { html: string; start?: Bookmark; end?: Bookmark };
 
 /** Hardware-key workaround. Never blurs, refocuses, or replaces the editing host. */
-export function attachIPadHardwareInput(el: HTMLElement, emit: () => void, localKeyboard = false) {
+export function attachIPadHardwareInput(el: HTMLElement, emit: () => void, localKeyboard = false, multiline = false) {
   const doc = el.ownerDocument;
   const originalInputMode = el.getAttribute('inputmode');
   if(localKeyboard) el.inputMode = 'none';
@@ -123,7 +123,15 @@ export function attachIPadHardwareInput(el: HTMLElement, emit: () => void, local
     // Only character keys with a physical-key code opt into this path.
     if (!/^(Key[A-Z]|Digit[0-9]|Numpad\w+|Space|Backspace|Delete|Enter|Intl\w+|Minus|Equal|BracketLeft|BracketRight|Backslash|Semicolon|Quote|Backquote|Comma|Period|Slash)$/.test(event.code)) return;
     event.preventDefault(); guardUntil = performance.now() + 100;
-    if (key === 'Enter') { run = null; return; } // These fields are single-line.
+    if (key === 'Enter') {
+      run = null;
+      if(multiline) {
+        const before = snap();
+        command('insertLineBreak');
+        update(before);
+      }
+      return;
+    }
     const range = selection()!, before = snap();
     const at = offset(range.startContainer, range.startOffset);
     if (run && (!range.collapsed || at !== run.start + run.output.length || run.html !== el.innerHTML)) run = null;
