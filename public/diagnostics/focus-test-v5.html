@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Vocab Flow 외장 키보드 직접 조합 · 5차</title>
+<style>body{font:17px/1.7 system-ui,sans-serif;color:#303236;max-width:720px;margin:24px auto;padding:0 18px 80px}h1{font-size:25px}button,select{font:inherit;padding:9px;border:1px solid #bbb;border-radius:8px;background:#fff;color:inherit}button:disabled{opacity:.5}label{display:block;margin:12px 0}.field{box-sizing:border-box;width:100%;font-family:inherit;border:2px solid #aaa;min-height:64px;border-radius:10px;padding:14px;font-size:22px;white-space:pre-wrap}.field:focus{outline:3px solid #dceefa;border-color:#587fa3}.controls{display:flex;gap:8px;flex-wrap:wrap}#status{padding:10px;background:#eff7fc;border-radius:8px}small{color:#666}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid #ddd;text-align:left;padding:6px}</style></head>
+<body><h1>Vocab Flow 외장 키보드 직접 조합 · 5차</h1>
+<p>외장 키보드의 정확한 키 정보를 받아 페이지에서 한글을 조합합니다. 아이패드가 보내는 글자 삽입·삭제 결과는 차단합니다. 칸을 이동할 때 강제 포커스 해제나 지연은 없습니다. 실제 앱에는 아직 적용하지 않았습니다.</p>
+<p><strong>외장 키보드·한국어 두벌식 전용 실험입니다.</strong> 화면 키보드·다른 언어 조합·서식은 지원하지 않습니다. 한/영 전환은 평소 키로 해 주세요. 글자가 안 나오거나 다르게 나오면 그대로 기록을 보내 주세요.</p>
+<ol><li><strong>이번 회차 시작</strong>을 누르고 첫 칸에 <strong>입니다</strong>를 직접 입력합니다.</li><li>Tab 또는 터치로 둘째 칸으로 이동한 뒤 <strong>ㄹ</strong>을 입력하고 백스페이스를 한 번 누릅니다.</li><li><strong>회차 완료</strong>를 누른 후 글자 결과와 칸 이동 순간의 한/영 표시 깜빡임을 선택합니다.</li></ol>
+<p>먼저 후보 모드로 <strong>Tab 1회·터치 1회만</strong> 확인해 주세요. 둘 다 정상이면 추가 회차에서 안녕하세요, 값이, 꽤, 닭, 영어 전환, 삭제도 자유롭게 확인할 수 있습니다. 자유 입력에서는 자동 문구 판정은 무시하고 관찰 결과를 선택해 주세요.</p>
+<p><small>기록은 이 탭 메모리에만 보관되며 서버에 전송하지 않습니다. 마지막에 기록 파일을 받아 보내 주세요.</small></p>
+<label>모드 <select id="mode"><option value="hardware">후보 — 키 입력으로 직접 조합</option><option value="native">비교 — 기본 아이패드 입력</option></select></label>
+<label>키보드 <select id="keyboard"><option>외장 키보드</option></select></label>
+<div class="controls"><button id="start">이번 회차 시작</button><button id="finish" disabled>회차 완료</button><button id="download">기록 파일 받기</button></div>
+<p id="status" role="status">기록 대기</p>
+<p id="first-label">첫 칸 — 입니다</p><textarea id="first" class="field" aria-labelledby="first-label"></textarea>
+<p id="second-label">둘째 칸 — ㄹ 입력 후 백스페이스</p><textarea id="second" class="field" aria-labelledby="second-label"></textarea>
+<label>최근 회차에서 눈으로 확인한 결과 <select id="outcome" disabled><option value="unknown">선택해 주세요</option><option value="normal">정상</option><option value="carryover">이전 글자 재등장</option><option value="lost">글자 누락 / 커서 이동 실패</option><option value="flicker">키보드 깜빡임 등 불편</option><option value="invalid">잘못 입력해서 다시 테스트 필요</option></select></label>
+<label>칸을 옮기는 순간 한/영 표시가 움직이거나 깜빡였나요? <select id="flicker" disabled><option value="unknown">선택해 주세요</option><option value="no">없음</option><option value="yes">있음</option></select></label><label>새 칸의 첫 키 입력이 빠지거나 커서가 잘못 이동했나요? <select id="lost" disabled><option value="unknown">선택해 주세요</option><option value="no">없음</option><option value="yes">있음</option></select></label><p>시작·완료 버튼을 누를 때가 아니라 <strong>첫 칸에서 둘째 칸으로 옮기는 순간</strong>을 기준으로 선택해 주세요. 시스템 한/영 표시는 자동으로 관찰할 수 없어 직접 확인이 필요합니다.</p><p><small>아래 자동 판정은 정해진 문구를 입력했을 때만 유효하며, 해결 여부를 확정하지 않습니다. 눈으로 확인한 결과와 이벤트 기록을 함께 분석합니다.</small></p>
+<table><thead><tr><th>회차</th><th>모드 / 이동</th><th>첫 입력</th><th>완료 상태</th></tr></thead><tbody id="history"></tbody></table>
+<script src="/diagnostics/vendor/hangul-0.2.6.min.js"></script><script src="/diagnostics/hardware-hangul.js"></script><script src="/diagnostics/focus-test-v5.js"></script></body></html>
