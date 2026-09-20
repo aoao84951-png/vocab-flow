@@ -3651,7 +3651,7 @@ function AddWord({
 
   return (
     <div data-word-editor className={`min-h-dvh px-5 pt-7 ${formPage === "notes" ? "mx-auto w-full max-w-[760px]" : ""}`}>
-      <MobileSelectionToolbar />
+      <MobileSelectionToolbar key={formPage} />
       <BackButton onClick={() => formPage === "notes" ? changeFormPage("basic") : onBack()} label={formPage === "notes" ? "기본 정보로" : "뒤로"} />
 
       <h1 className="mt-5 text-[28px] font-bold text-[#303236]">

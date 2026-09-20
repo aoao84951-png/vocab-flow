@@ -3791,7 +3791,7 @@ function AddWord({
         }}
       />
 
-      <SelectionToolbar />
+      <SelectionToolbar key={formPage} />
       <div>
       <BackButton onClick={() => formPage === "notes" ? changeFormPage("basic") : onBack()} label={formPage === "notes" ? "기본 정보로" : "뒤로"} />
 

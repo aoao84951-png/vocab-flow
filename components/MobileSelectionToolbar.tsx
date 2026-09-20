@@ -53,7 +53,7 @@ export default function MobileSelectionToolbar() {
       const next = selection.getRangeAt(0);
       const node = next.commonAncestorContainer;
       const field = (node instanceof Element ? node : node.parentElement)?.closest<HTMLElement>('[contenteditable="true"]');
-      if (!field?.closest('[data-word-editor]') || document.activeElement !== field) { hide(); return; }
+      if (!field?.closest('[data-word-editor]') || !field.getClientRects().length || document.activeElement !== field) { hide(); return; }
       range.current = next.cloneRange();
       editor.current = field;
       const styledNode = next.startContainer instanceof Element ? next.startContainer : next.startContainer.parentElement;

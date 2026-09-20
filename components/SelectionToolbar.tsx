@@ -17,7 +17,7 @@ export default function SelectionToolbar(){
    if(!selection||selection.isCollapsed||!selection.rangeCount){setPosition(null);setPalette(false);return;}
    const next=selection.getRangeAt(0);const node=next.commonAncestorContainer;
    const field=(node instanceof Element?node:node.parentElement)?.closest<HTMLElement>('[contenteditable="true"]');
-   if(!field?.closest('[data-word-editor]')){setPosition(null);return;}
+   if(!field?.closest('[data-word-editor]')||!field.getClientRects().length){setPosition(null);setPalette(false);return;}
    range.current=next.cloneRange();editor.current=field;
    const styledNode = next.startContainer instanceof Element ? next.startContainer : next.startContainer.parentElement;
    setFontFamily(getComputedStyle(styledNode || field).fontFamily || getComputedStyle(field).fontFamily || 'inherit');
