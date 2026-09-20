@@ -81,6 +81,13 @@ export default function MobileSelectionToolbar() {
 
   useLayoutEffect(() => {
     if (!visible) return;
+    // The fixed palette needs real scroll space, including at the end of the form.
+    const spacer = palette ? document.createElement('div') : null;
+    if (spacer) {
+      spacer.setAttribute('aria-hidden', 'true');
+      spacer.style.pointerEvents = 'none';
+      editor.current?.closest('[data-word-editor]')?.appendChild(spacer);
+    }
     const place = () => {
       const element = root.current;
       if (!element) return;
@@ -91,12 +98,33 @@ export default function MobileSelectionToolbar() {
       element.style.width = `${viewport?.width ?? window.innerWidth}px`;
       element.style.top = `${(viewport?.offsetTop ?? 0) + height}px`;
       element.style.setProperty('--panel-height', `${Math.min(panelHeight.current, Math.max(100, height - 76))}px`);
+      if (spacer && range.current) {
+        const gap = 16;
+        spacer.style.height = `${element.getBoundingClientRect().height + gap}px`;
+        const top = (viewport?.offsetTop ?? 0) + gap;
+        const bottom = element.getBoundingClientRect().top - gap;
+        // Prefer the selection to the whole field, which may span many lines.
+        const selection = range.current.getBoundingClientRect();
+        const target = selection.height ? selection : editor.current.getBoundingClientRect();
+        let remaining = target.bottom > bottom
+          ? Math.min(target.bottom - bottom, target.top - top)
+          : Math.min(0, target.top - top);
+        // Support both the page and an editor inside a scrolling container.
+        for (let parent = editor.current.parentElement; parent && Math.abs(remaining) > 1; parent = parent.parentElement) {
+          if (parent === document.scrollingElement || !/(auto|scroll)/.test(getComputedStyle(parent).overflowY)) continue;
+          const before = parent.scrollTop;
+          parent.scrollBy({ top: remaining, behavior: 'instant' });
+          remaining -= parent.scrollTop - before;
+        }
+        if (Math.abs(remaining) > 1) window.scrollBy({ top: remaining, behavior: 'instant' });
+      }
     };
     place();
     window.visualViewport?.addEventListener('resize', place);
     window.visualViewport?.addEventListener('scroll', place);
     window.addEventListener('resize', place);
     return () => {
+      spacer?.remove();
       window.visualViewport?.removeEventListener('resize', place);
       window.visualViewport?.removeEventListener('scroll', place);
       window.removeEventListener('resize', place);
