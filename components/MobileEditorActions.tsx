@@ -40,7 +40,6 @@ export default function MobileEditorActions({ children }: { children: ReactNode 
       element.style.top = `${(viewport?.offsetTop ?? 0) + height}px`;
       element.style.left = `${viewport?.offsetLeft ?? 0}px`;
       element.style.width = `${viewport?.width ?? window.innerWidth}px`;
-      element.style.paddingBottom = 'max(12px, env(safe-area-inset-bottom))';
       // Safari keeps a full-height layout viewport behind the keyboard. Reserve
       // only that obscured portion so native caret scrolling is not clamped back
       // to the pre-keyboard document bottom when the palette spacer disappears.
@@ -104,9 +103,9 @@ export default function MobileEditorActions({ children }: { children: ReactNode 
   }, [mounted]);
 
   return <>
-    <div ref={spacer} aria-hidden="true" style={{ height: 72 }} />
+    <div ref={spacer} aria-hidden="true" style={{ height: 'var(--mobile-bottom-bar-height)' }} />
     {mounted && createPortal(<div ref={bar} data-mobile-editor-actions
-      className="fixed left-0 top-[100dvh] z-30 w-full -translate-y-full border-t border-[#edf0f3] bg-white pt-3 pb-3">
+      className="fixed left-0 top-[100dvh] z-30 h-[var(--mobile-bottom-bar-height)] w-full -translate-y-full border-t border-[#edf0f3] bg-white pt-2 pb-[calc(12px+var(--mobile-bottom-inset))]">
       <div className="mx-auto flex w-full max-w-[430px] items-center gap-2 px-5">{children}</div>
     </div>, document.body)}
   </>;
