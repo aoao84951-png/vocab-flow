@@ -35,11 +35,12 @@ for(const engine of [chromium,webkit])test(`${engine.name()}: animated caret bad
  assert(geometry.visible);assert(geometry.x>=geometry.left && geometry.x<geometry.left+90);
  assert(geometry.y>=geometry.top && geometry.y<geometry.bottom+40);
  await page.waitForTimeout(280);
- assert.equal(await page.locator('#caret-language-badge').getAttribute('data-expanded'),'true');
- assert.equal(await page.locator('#caret-language-badge .language-thumb').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(220, 238, 250)');
+ assert(Math.abs((await page.locator('#caret-language-badge').boundingBox()).width-44)<1);
+ assert.equal(await page.locator('#caret-language-badge').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(220, 238, 250)');
  await page.screenshot({path:'/tmp/vocab-caret-expanded-'+engine.name()+'.png'});
  await page.waitForTimeout(650);
- assert.equal(await page.locator('#caret-language-badge').getAttribute('data-expanded'),'false');
+ assert.equal(await page.locator('#caret-language-badge .label-ko').evaluate(el=>getComputedStyle(el).opacity),'1');
+ assert.equal(await page.locator('#caret-language-badge .label-en').evaluate(el=>getComputedStyle(el).opacity),'0');
  assert(Math.abs((await page.locator('#caret-language-badge').boundingBox()).width-44)<1);
  await page.screenshot({path:'/tmp/vocab-caret-compact-'+engine.name()+'.png'});
  await page.waitForTimeout(750);assert.equal(await page.locator('#caret-language-badge').isVisible(),false);
