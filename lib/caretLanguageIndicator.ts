@@ -28,9 +28,11 @@ export class CaretLanguageIndicator {
 
     this.hide = () => { if(this.timer) clearTimeout(this.timer); if(this.exitTimer) clearTimeout(this.exitTimer); this.badge.hidden = true; this.badge.dataset.visible = 'false'; this.field = null; };
     const focusout = (event: FocusEvent) => { if(event.target === this.field) this.hide(); };
-    const selectionchange = () => { if(this.field) this.place(); };
+    const selectionchange = () => { if(this.field && this.badge.dataset.visible === 'true') this.place(); };
+    const input = (event: Event) => { if(event.target === this.field) this.dismiss(); };
     document.addEventListener('focusout', focusout);
     document.addEventListener('selectionchange', selectionchange);
+    document.addEventListener('input',input,true);
     document.addEventListener('scroll',this.hide,true);
     window.addEventListener('blur',this.hide);
     window.addEventListener('resize',this.hide);
@@ -39,6 +41,7 @@ export class CaretLanguageIndicator {
     this.cleanup = () => {
       document.removeEventListener('focusout',focusout);
       document.removeEventListener('selectionchange',selectionchange);
+      document.removeEventListener('input',input,true);
       document.removeEventListener('scroll',this.hide,true);
       window.removeEventListener('blur',this.hide);
       window.removeEventListener('resize',this.hide);
@@ -65,10 +68,15 @@ export class CaretLanguageIndicator {
     this.badge.dataset.language = language;
     this.badge.dataset.visible = 'true';
     this.place();
-    this.timer = setTimeout(() => {
-      this.badge.dataset.visible = 'false';
-      this.exitTimer = setTimeout(this.hide,180);
-    },1400);
+    this.timer = setTimeout(() => this.dismiss(),900);
+  }
+
+  dismiss() {
+    // Repeated keystrokes must not postpone the exit; a new toggle can reverse it.
+    if(this.badge.hidden || this.badge.dataset.visible !== 'true') return;
+    if(this.timer) clearTimeout(this.timer);
+    this.badge.dataset.visible = 'false';
+    this.exitTimer = setTimeout(this.hide,220);
   }
 
   place() {

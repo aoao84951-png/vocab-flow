@@ -111,6 +111,31 @@ window.badgeExports=window.exports;`});
     assert.match(multiline.saved,/한<br>글a/);
     assert.equal(multiline.label,'en');assert.equal(multiline.inputMode,'none');
     assert(multiline.emitted>0);
+    await page.evaluate(() => {
+      const el=document.querySelector('#b');
+      window.fadeController=window.exports.attachIPadHardwareInput(el,()=>{},true,true);
+      el.focus();
+      window.pressFadeKey=code=>el.dispatchEvent(new KeyboardEvent('keydown',{code,key:code,bubbles:true,cancelable:true}));
+      window.pressFadeKey('CapsLock');
+    });
+    const fadingBadge=page.locator('.caret-language-badge');
+    await page.waitForTimeout(250);
+    assert.equal(await fadingBadge.getAttribute('data-visible'),'true');
+    await page.evaluate(()=>window.pressFadeKey('KeyA'));
+    assert.equal(await fadingBadge.getAttribute('data-visible'),'false');
+    assert.equal(await fadingBadge.evaluate(el=>el.hidden),false); // Animate rather than vanish.
+    await page.waitForTimeout(90);
+    await page.evaluate(()=>window.pressFadeKey('CapsLock'));
+    await page.waitForTimeout(180);
+    assert.equal(await fadingBadge.getAttribute('data-visible'),'true'); // Old exit cannot hide a new toggle.
+    assert.equal(await fadingBadge.evaluate(el=>el.hidden),false);
+    await page.evaluate(()=>window.pressFadeKey('KeyB'));
+    await page.waitForTimeout(120);
+    await page.evaluate(()=>window.pressFadeKey('KeyC'));
+    await page.waitForTimeout(140);
+    assert.equal(await fadingBadge.evaluate(el=>el.hidden),true); // Typing doesn't extend the timeout.
+    await page.evaluate(()=>window.fadeController.destroy());
+
 
   } finally { await browser.close(); }
 });
