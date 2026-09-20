@@ -31,7 +31,7 @@ export default function MobileEditorActions({ children }: { children: ReactNode 
       // Account for Safari's visual viewport and browsers that resize the layout.
       // Multiplying by scale avoids mistaking pinch zoom for a keyboard.
       const keyboardOpen = fullHeight - height * (viewport?.scale ?? 1) > 120;
-      const hidden = openingKeyboard || keyboardOpen ||
+      const hidden = openingKeyboard || keyboardOpen || !!document.querySelector('[data-word-editor] [data-mobile-formatting]') ||
         (editing && field.getAttribute('inputmode') === 'none');
       element.style.visibility = hidden ? 'hidden' : 'visible';
       element.inert = hidden;

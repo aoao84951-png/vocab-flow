@@ -218,3 +218,7 @@ nav[aria-label="주요 메뉴"] button[aria-current="page"] { color: #587fa3; }
 @media (display-mode: standalone) {
   :root { --mobile-bottom-inset: calc(20px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* Keep native touch callouts from covering the mobile editor's own format controls. */
+[data-word-editor] [contenteditable="true"],
+[data-word-editor] [contenteditable="true"] * { -webkit-touch-callout: none; }

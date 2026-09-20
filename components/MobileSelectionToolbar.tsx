@@ -18,6 +18,7 @@ export default function MobileSelectionToolbar() {
   const paletteOpen = useRef(false);
   const panelHeight = useRef(300);
   const inputMode = useRef<{ field: HTMLElement; value: string | null } | null>(null);
+  const refreshPreview = useRef<(() => void) | null>(null);
   const pendingSelection = useRef<EditorSelection | null>(null);
   const [revision, setRevision] = useState(0);
   const [selectedColors, setSelectedColors] = useState<{ text: string | null; background: string | null }>({ text: null, background: null });
@@ -31,6 +32,7 @@ export default function MobileSelectionToolbar() {
     if (!previous) return;
     if (previous.value === null) previous.field.removeAttribute('inputmode');
     else previous.field.setAttribute('inputmode', previous.value);
+    previous.field.removeAttribute('data-mobile-formatting');
     inputMode.current = null;
   };
   const [visible, setVisible] = useState(false);
@@ -53,7 +55,7 @@ export default function MobileSelectionToolbar() {
       const next = selection.getRangeAt(0);
       const node = next.commonAncestorContainer;
       const field = (node instanceof Element ? node : node.parentElement)?.closest<HTMLElement>('[contenteditable="true"]');
-      if (!field?.closest('[data-word-editor]') || !field.getClientRects().length || document.activeElement !== field) { hide(); return; }
+      if (!field?.closest('[data-word-editor]') || !field.getClientRects().length) { hide(); return; }
       range.current = next.cloneRange();
       editor.current = field;
       const styledNode = next.startContainer instanceof Element ? next.startContainer : next.startContainer.parentElement;
@@ -63,26 +65,38 @@ export default function MobileSelectionToolbar() {
       setVisible(true);
     };
     const outside = (event: PointerEvent) => {
-      if (event.target instanceof Node && !root.current?.contains(event.target)) hide();
+      if (event.target instanceof Node && !root.current?.contains(event.target) &&
+          (paletteOpen.current || !editor.current?.contains(event.target))) hide();
+    };
+    const contextMenu = (event: MouseEvent) => {
+      if (event.target instanceof Element && event.target.closest('[data-word-editor] [contenteditable="true"]')) event.preventDefault();
     };
     const key = (event: KeyboardEvent) => { if (event.key === 'Escape') hide(); };
     document.addEventListener('selectionchange', update);
     document.addEventListener('pointerup', update);
     document.addEventListener('pointerdown', outside);
     document.addEventListener('keydown', key);
+    document.addEventListener('contextmenu', contextMenu);
     return () => {
       releaseKeyboard();
       document.removeEventListener('selectionchange', update);
       document.removeEventListener('pointerup', update);
       document.removeEventListener('pointerdown', outside);
       document.removeEventListener('keydown', key);
+      document.removeEventListener('contextmenu', contextMenu);
     };
   }, []);
 
   useLayoutEffect(() => {
     if (!visible) return;
     // The fixed palette needs real scroll space, including at the end of the form.
-    const spacer = palette ? document.createElement('div') : null;
+    const spacer = document.createElement('div');
+    const preview = palette ? document.createElement('div') : null;
+    if (preview) {
+      preview.className = styles.selectionPreview;
+      preview.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(preview);
+    }
     if (spacer) {
       spacer.setAttribute('aria-hidden', 'true');
       spacer.style.pointerEvents = 'none';
@@ -118,16 +132,38 @@ export default function MobileSelectionToolbar() {
         }
         if (Math.abs(remaining) > 1) window.scrollBy({ top: remaining, behavior: 'instant' });
       }
+      if (preview) {
+        const rects = range.current ? Array.from(range.current.getClientRects()) : [];
+        preview.replaceChildren(...rects.filter(rect => rect.width && rect.height).map(rect => {
+          const mark = document.createElement('span');
+          Object.assign(mark.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` });
+          return mark;
+        }));
+      }
     };
     // Reposition on scrolling, but never pull the user's scroll back to the selection.
     const reposition = () => place();
-    const resize = () => place(true);
-    place(palette);
+    let settle = 0;
+    const resize = () => {
+      place();
+      window.clearTimeout(settle);
+      settle = window.setTimeout(() => place(true), 120);
+    };
+    refreshPreview.current = reposition;
+    place(true);
+    const observer = new ResizeObserver(reposition);
+    if (editor.current) observer.observe(editor.current);
+    document.addEventListener('scroll', reposition, true);
     window.visualViewport?.addEventListener('resize', resize);
     window.visualViewport?.addEventListener('scroll', reposition);
     window.addEventListener('resize', resize);
     return () => {
-      spacer?.remove();
+      window.clearTimeout(settle);
+      observer.disconnect();
+      refreshPreview.current = null;
+      preview?.remove();
+      spacer.remove();
+      document.removeEventListener('scroll', reposition, true);
       window.visualViewport?.removeEventListener('resize', resize);
       window.visualViewport?.removeEventListener('scroll', reposition);
       window.removeEventListener('resize', resize);
@@ -150,6 +186,11 @@ export default function MobileSelectionToolbar() {
     range.current = restoreEditorSelection(field, bookmark);
     if (range.current) setSelectedColors(selectedEditorColors(field, range.current));
     pendingSelection.current = null;
+    if (paletteOpen.current) {
+      field.blur();
+      window.getSelection()?.removeAllRanges();
+      refreshPreview.current?.();
+    }
   }, [revision]);
 
   const command = (name: string, value?: string) => {
@@ -161,8 +202,13 @@ export default function MobileSelectionToolbar() {
     editor.current?.dispatchEvent(new Event('input', { bubbles: true }));
     range.current = restoreEditorSelection(editor.current, bookmark);
     if (range.current) setSelectedColors(selectedEditorColors(editor.current, range.current));
-    setRevision(value => value + 1);
     setActive(actions.filter(([, , action]) => action !== 'removeFormat' && document.queryCommandState(action)).map(([, , action]) => action));
+    if (paletteOpen.current) {
+      editor.current.blur();
+      window.getSelection()?.removeAllRanges();
+      refreshPreview.current?.();
+    }
+    setRevision(value => value + 1);
   };
   const togglePalette = () => {
     const next = !paletteOpen.current;
@@ -171,22 +217,28 @@ export default function MobileSelectionToolbar() {
       const keyboardHeight = window.innerHeight - (viewport?.height ?? window.innerHeight);
       panelHeight.current = Math.max(290, Math.min(380, keyboardHeight));
     }
-    paletteOpen.current = next;
-    // Remove the palette's scroll space before Safari starts reopening the keyboard.
-    flushSync(() => setPalette(next));
     const field = editor.current;
-    if (next && field && range.current) {
-      const bookmark = readEditorSelection(field, range.current);
+    if (!field || !range.current) return;
+    const bookmark = readEditorSelection(field, range.current);
+    paletteOpen.current = next;
+    if (next) {
       inputMode.current = { field, value: field.getAttribute('inputmode') };
-      // Keep the editable focused while the palette replaces the software keyboard.
       field.setAttribute('inputmode', 'none');
+      field.setAttribute('data-mobile-formatting', 'true');
+      // Keep the target range, not an active iOS selection/menu, while choosing colors.
       field.blur();
-      field.focus({ preventScroll: true });
       range.current = restoreEditorSelection(field, bookmark);
+      field.blur();
+      window.getSelection()?.removeAllRanges();
+      flushSync(() => setPalette(true));
     } else {
       releaseKeyboard();
-      field?.blur();
-      restore(true);
+      // End the selection before returning to typing, so Safari does not reopen its menu.
+      range.current.collapse(false);
+      window.getSelection()?.removeAllRanges();
+      flushSync(() => { setPalette(false); setVisible(false); });
+      field.focus({ preventScroll: true });
+      restore(false);
     }
   };
   if (!visible) return null;
@@ -199,7 +251,7 @@ export default function MobileSelectionToolbar() {
         </div>
         <button type="button" className={styles.dismiss} aria-label={palette ? '색상 패널 닫고 키보드 열기' : '서식창 닫기'} onClick={() => {
           if (palette) togglePalette();
-          else { editor.current?.blur(); setVisible(false); }
+          else { editor.current?.blur(); window.getSelection()?.removeAllRanges(); setVisible(false); }
         }}><X /></button>
       </div>
       {palette && <div id="mobile-format-colors" className={styles.panel}>

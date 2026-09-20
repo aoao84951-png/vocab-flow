@@ -50,3 +50,6 @@
   box-shadow: none;
 }
 .root { -webkit-user-select: none; user-select: none; }
+
+.selectionPreview { position: fixed; inset: 0; z-index: 199; pointer-events: none; overflow: hidden; }
+.selectionPreview span { position: absolute; background: rgba(90, 155, 225, .18); border-radius: 2px; }
