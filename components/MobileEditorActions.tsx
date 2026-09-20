@@ -40,7 +40,8 @@ export default function MobileEditorActions({ children }: { children: ReactNode 
       element.style.left = `${viewport?.offsetLeft ?? 0}px`;
       element.style.width = `${viewport?.width ?? window.innerWidth}px`;
       element.style.paddingBottom = 'max(12px, env(safe-area-inset-bottom))';
-      if (spacer.current) spacer.current.style.height = `${element.getBoundingClientRect().height}px`;
+      // Hidden actions must not leave a full button bar above the keyboard.
+      if (spacer.current) spacer.current.style.height = hidden ? '12px' : `${element.getBoundingClientRect().height}px`;
     };
     const update = () => place();
     const focus = (event: FocusEvent) => {

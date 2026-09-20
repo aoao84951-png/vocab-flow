@@ -683,6 +683,11 @@ export default function MobileApp() {
         return;
       }
 
+      // Safari can still pan its visual viewport when the document has reached
+      // its layout scroll boundary. Let native gestures handle the word form.
+      if (scrollable === document.scrollingElement &&
+          event.target instanceof Element && event.target.closest('[data-word-editor]')) return;
+
       const atTop = scrollable.scrollTop <= 0;
       const atBottom =
         scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import { Bold, Italic, Underline, Strikethrough, RemoveFormatting, Palette, X, Plus } from 'lucide-react';
 import styles from './MobileSelectionToolbar.module.css';
 import { readEditorSelection, restoreEditorSelection, selectedEditorColors, paletteColorMatches, type EditorSelection } from '@/lib/editorSelection';
@@ -88,7 +88,7 @@ export default function MobileSelectionToolbar() {
       spacer.style.pointerEvents = 'none';
       editor.current?.closest('[data-word-editor]')?.appendChild(spacer);
     }
-    const place = () => {
+    const place = (revealSelection = false) => {
       const element = root.current;
       if (!element) return;
       if (!editor.current?.isConnected) { setVisible(false); return; }
@@ -98,9 +98,9 @@ export default function MobileSelectionToolbar() {
       element.style.width = `${viewport?.width ?? window.innerWidth}px`;
       element.style.top = `${(viewport?.offsetTop ?? 0) + height}px`;
       element.style.setProperty('--panel-height', `${Math.min(panelHeight.current, Math.max(100, height - 76))}px`);
-      if (spacer && range.current) {
+      if (spacer) spacer.style.height = `${element.getBoundingClientRect().height + 16}px`;
+      if (revealSelection && range.current) {
         const gap = 16;
-        spacer.style.height = `${element.getBoundingClientRect().height + gap}px`;
         const top = (viewport?.offsetTop ?? 0) + gap;
         const bottom = element.getBoundingClientRect().top - gap;
         // Prefer the selection to the whole field, which may span many lines.
@@ -119,15 +119,18 @@ export default function MobileSelectionToolbar() {
         if (Math.abs(remaining) > 1) window.scrollBy({ top: remaining, behavior: 'instant' });
       }
     };
-    place();
-    window.visualViewport?.addEventListener('resize', place);
-    window.visualViewport?.addEventListener('scroll', place);
-    window.addEventListener('resize', place);
+    // Reposition on scrolling, but never pull the user's scroll back to the selection.
+    const reposition = () => place();
+    const resize = () => place(true);
+    place(palette);
+    window.visualViewport?.addEventListener('resize', resize);
+    window.visualViewport?.addEventListener('scroll', reposition);
+    window.addEventListener('resize', resize);
     return () => {
       spacer?.remove();
-      window.visualViewport?.removeEventListener('resize', place);
-      window.visualViewport?.removeEventListener('scroll', place);
-      window.removeEventListener('resize', place);
+      window.visualViewport?.removeEventListener('resize', resize);
+      window.visualViewport?.removeEventListener('scroll', reposition);
+      window.removeEventListener('resize', resize);
     };
   }, [visible, palette]);
 
@@ -169,7 +172,8 @@ export default function MobileSelectionToolbar() {
       panelHeight.current = Math.max(290, Math.min(380, keyboardHeight));
     }
     paletteOpen.current = next;
-    setPalette(next);
+    // Remove the palette's scroll space before Safari starts reopening the keyboard.
+    flushSync(() => setPalette(next));
     const field = editor.current;
     if (next && field && range.current) {
       const bookmark = readEditorSelection(field, range.current);
