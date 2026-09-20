@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal, flushSync } from 'react-dom';
 import { Bold, Italic, Underline, Strikethrough, RemoveFormatting, Palette, X, Plus } from 'lucide-react';
 import styles from './MobileSelectionToolbar.module.css';
+import { mobileEditorScrollDelta } from '@/lib/mobileEditorViewport';
 import { readEditorSelection, restoreEditorSelection, selectedEditorColors, paletteColorMatches, type EditorSelection } from '@/lib/editorSelection';
 
 const names = ['기본', '회색', '갈색', '주황색', '노란색', '초록색', '파란색', '보라색', '분홍색', '빨간색'];
@@ -18,7 +19,8 @@ export default function MobileSelectionToolbar() {
   const paletteOpen = useRef(false);
   const panelHeight = useRef(300);
   const inputMode = useRef<{ field: HTMLElement; value: string | null } | null>(null);
-  const refreshPreview = useRef<(() => void) | null>(null);
+  const refreshPreview = useRef<((reveal?: boolean) => void) | null>(null);
+  const formattingSettle = useRef(0);
   const pendingSelection = useRef<EditorSelection | null>(null);
   const [revision, setRevision] = useState(0);
   const [selectedColors, setSelectedColors] = useState<{ text: string | null; background: string | null }>({ text: null, background: null });
@@ -78,6 +80,7 @@ export default function MobileSelectionToolbar() {
     document.addEventListener('keydown', key);
     document.addEventListener('contextmenu', contextMenu);
     return () => {
+      window.clearTimeout(formattingSettle.current);
       releaseKeyboard();
       document.removeEventListener('selectionchange', update);
       document.removeEventListener('pointerup', update);
@@ -114,15 +117,11 @@ export default function MobileSelectionToolbar() {
       element.style.setProperty('--panel-height', `${Math.min(panelHeight.current, Math.max(100, height - 76))}px`);
       if (spacer) spacer.style.height = `${element.getBoundingClientRect().height + 16}px`;
       if (revealSelection && range.current) {
-        const gap = 16;
-        const top = (viewport?.offsetTop ?? 0) + gap;
-        const bottom = element.getBoundingClientRect().top - gap;
         // Prefer the selection to the whole field, which may span many lines.
         const selection = range.current.getBoundingClientRect();
         const target = selection.height ? selection : editor.current.getBoundingClientRect();
-        let remaining = target.bottom > bottom
-          ? Math.min(target.bottom - bottom, target.top - top)
-          : Math.min(0, target.top - top);
+        const bounds = element.getBoundingClientRect();
+        let remaining = mobileEditorScrollDelta(target, bounds.bottom, height, bounds.top);
         // Support both the page and an editor inside a scrolling container.
         for (let parent = editor.current.parentElement; parent && Math.abs(remaining) > 1; parent = parent.parentElement) {
           if (parent === document.scrollingElement || !/(auto|scroll)/.test(getComputedStyle(parent).overflowY)) continue;
@@ -149,7 +148,7 @@ export default function MobileSelectionToolbar() {
       window.clearTimeout(settle);
       settle = window.setTimeout(() => place(true), 120);
     };
-    refreshPreview.current = reposition;
+    refreshPreview.current = place;
     place(true);
     const observer = new ResizeObserver(reposition);
     if (editor.current) observer.observe(editor.current);
@@ -159,6 +158,7 @@ export default function MobileSelectionToolbar() {
     window.addEventListener('resize', resize);
     return () => {
       window.clearTimeout(settle);
+      window.clearTimeout(formattingSettle.current);
       observer.disconnect();
       refreshPreview.current = null;
       preview?.remove();
@@ -190,6 +190,12 @@ export default function MobileSelectionToolbar() {
       field.blur();
       window.getSelection()?.removeAllRanges();
       refreshPreview.current?.();
+      // Standalone iOS can pan after execCommand's temporary focus has ended.
+      // Correct only this transition, never continuously during user scrolling.
+      window.clearTimeout(formattingSettle.current);
+      formattingSettle.current = window.setTimeout(() => {
+        if (paletteOpen.current) refreshPreview.current?.(true);
+      }, 180);
     }
   }, [revision]);
 
@@ -237,13 +243,15 @@ export default function MobileSelectionToolbar() {
       range.current.collapse(false);
       window.getSelection()?.removeAllRanges();
       flushSync(() => { setPalette(false); setVisible(false); });
-      field.focus({ preventScroll: true });
+      // Let iOS reveal the caret as its keyboard opens. preventScroll restores
+      // the pre-keyboard scroll position and leaves bottom fields underneath it.
+      field.focus();
       restore(false);
     }
   };
   if (!visible) return null;
   return createPortal(
-    <div ref={root} style={{fontFamily}} className={`${styles.root} ${palette ? styles.expanded : ''}`} onPointerDown={event => { if ((event.target as Element).closest('button')) event.preventDefault(); }} onMouseDown={event => event.preventDefault()}>
+    <div ref={root} data-mobile-selection-toolbar style={{fontFamily}} className={`${styles.root} ${palette ? styles.expanded : ''}`} onPointerDown={event => { if ((event.target as Element).closest('button')) event.preventDefault(); }} onMouseDown={event => event.preventDefault()}>
       <div className={styles.toolbar} role="toolbar" aria-label="텍스트 서식">
         <div className={styles.strip}>
           {actions.map(([Icon, label, action]) => <button type="button" key={action} aria-label={label} aria-pressed={active.includes(action)} onClick={() => command(action)}><Icon /></button>)}

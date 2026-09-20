@@ -8,8 +8,9 @@ const dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'vocab-palette-'));
 process.on('exit', () => fs.rmSync(dir, { recursive: true, force: true }));
 const compile = (file, output, edit = s => s) => fs.writeFileSync(path.join(dir, output), ts.transpileModule(edit(fs.readFileSync(path.join(repo, file), 'utf8')), { compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } }).outputText);
 compile('lib/editorSelection.ts', 'selection.js');
-compile('components/MobileEditorActions.tsx', 'actions.js');
-compile('components/MobileSelectionToolbar.tsx', 'toolbar.js', s => s.replace(/import \{ Bold,.*?from 'lucide-react';/, "const Bold = () => null, Italic = Bold, Underline = Bold, Strikethrough = Bold, RemoveFormatting = Bold, Palette = Bold, X = Bold, Plus = Bold;").replace("import styles from './MobileSelectionToolbar.module.css';", "const styles = new Proxy({}, {get: (_, key) => key});").replace("'@/lib/editorSelection'", "'./selection'"));
+compile('lib/mobileEditorViewport.ts', 'viewport.js');
+compile('components/MobileEditorActions.tsx', 'actions.js', s => s.replace("'@/lib/mobileEditorViewport'", "'./viewport'"));
+compile('components/MobileSelectionToolbar.tsx', 'toolbar.js', s => s.replace(/import \{ Bold,.*?from 'lucide-react';/, "const Bold = () => null, Italic = Bold, Underline = Bold, Strikethrough = Bold, RemoveFormatting = Bold, Palette = Bold, X = Bold, Plus = Bold;").replace("import styles from './MobileSelectionToolbar.module.css';", "const styles = new Proxy({}, {get: (_, key) => key});").replace("'@/lib/editorSelection'", "'./selection'").replace("'@/lib/mobileEditorViewport'", "'./viewport'"));
 fs.writeFileSync(path.join(dir, 'entry.js'), `import React from 'react'; import {createRoot} from 'react-dom/client'; import Toolbar from './toolbar'; import Actions from './actions'; createRoot(document.getElementById('mount')).render(React.createElement(React.Fragment,null,React.createElement(Toolbar),React.createElement(Actions,null,'Save')));`);
 webpackModule.webpack({mode:'development', entry:path.join(dir,'entry.js'),output:{path:dir,filename:'bundle.js'},resolve:{modules:[path.join(repo,'node_modules')]},devtool:false}, async (err,stats) => {
  if(err || stats.hasErrors()) throw err || Error(stats.toString());
@@ -20,7 +21,7 @@ webpackModule.webpack({mode:'development', entry:path.join(dir,'entry.js'),outpu
    for(const nested of [false,true]) {
     const page = await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
     const css=fs.readFileSync(path.join(repo,'components/MobileSelectionToolbar.module.css'),'utf8');
-    await page.setContent(`<meta name="viewport" content="width=device-width, initial-scale=1"><style>*{box-sizing:border-box} body{margin:0} button{border:0;background:none} [data-mobile-editor-actions]{position:fixed;height:72px} ${css}</style><div id="scroll" style="${nested?'height:844px;overflow-y:auto':''}"><div data-word-editor><div style="height:4800px"></div><div contenteditable="true" style="padding:12px;min-height:48px">stroll past a bench</div><div id="mount"></div></div></div>`);
+    await page.setContent(`<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1"><style>*{box-sizing:border-box} body{margin:0} button{border:0;background:none} [data-mobile-editor-actions]{position:fixed;height:72px} ${css}</style><div id="scroll" style="${nested?'height:844px;overflow-y:auto':''}"><div data-word-editor><div style="height:4800px"></div><div contenteditable="true" style="padding:12px;min-height:48px">stroll past a bench</div><div id="mount"></div></div></div>`);
     await page.addScriptTag({path:path.join(dir,'bundle.js')});
     await page.waitForTimeout(150);
     const actionSpacing = await page.evaluate(()=>{
@@ -37,7 +38,7 @@ webpackModule.webpack({mode:'development', entry:path.join(dir,'entry.js'),outpu
       viewport.dispatchEvent(new Event('resize'));
       return {normal,keyboard,restored:spacer.style.height};
     });
-    if(actionSpacing.normal!=='72px'||actionSpacing.keyboard!=='12px'||actionSpacing.restored!=='72px') throw Error(JSON.stringify(actionSpacing));
+    if(actionSpacing.normal!=='72px'||actionSpacing.keyboard!=='356px'||actionSpacing.restored!=='72px') throw Error(JSON.stringify(actionSpacing));
     if(!nested){
       const source=fs.readFileSync(path.join(repo,'components/MobileApp.tsx'),'utf8');
       const handlers=source.slice(source.indexOf('    let startY = 0;'),source.indexOf('    html.style.overscrollBehaviorY'));
