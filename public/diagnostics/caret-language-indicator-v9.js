@@ -6,10 +6,11 @@ window.CaretLanguageIndicator = class {
     this.badge.setAttribute('role','status'); this.badge.setAttribute('aria-live','polite');
     const style = document.createElement('style');
     style.textContent = `
-      #caret-language-badge{position:fixed;z-index:1000;pointer-events:none;box-sizing:border-box;width:88px;height:34px;border-radius:18px;background:rgba(255,255,255,.94);border:1px solid #dce7ef;box-shadow:0 3px 14px #587fa31c;backdrop-filter:blur(12px);overflow:hidden;font:600 16px/32px system-ui,sans-serif;opacity:0;transform:translateY(-3px) scale(.96);transform-origin:20px 0;transition:opacity 160ms ease,transform 200ms cubic-bezier(.2,.8,.2,1),width 240ms cubic-bezier(.2,.8,.2,1)}
+      #caret-language-badge{position:fixed;z-index:1000;pointer-events:none;box-sizing:border-box;width:88px;height:34px;border-radius:18px;background:rgba(255,255,255,.94);border:1px solid #dce7ef;box-shadow:0 3px 14px #587fa31c;backdrop-filter:blur(12px);overflow:hidden;font:600 16px/32px system-ui,sans-serif;opacity:0;transform:translateY(-3px) scale(.96);transform-origin:20px 0;transition:opacity 160ms ease,transform 200ms cubic-bezier(.2,.8,.2,1),width 240ms cubic-bezier(.2,.8,.2,1),background-color 240ms ease,border-color 240ms ease}
       #caret-language-badge[data-visible="true"]{opacity:1;transform:translateY(0) scale(1)}
-      #caret-language-badge[data-expanded="false"]{width:44px}
-      #caret-language-badge .language-thumb{position:absolute;left:2px;top:2px;width:40px;height:28px;border-radius:15px;background:#dceefa;box-shadow:inset 0 0 0 1px #c9e2f2;transform:translateX(0);transition:transform 220ms cubic-bezier(.2,.8,.2,1)}
+      #caret-language-badge[data-expanded="false"]{width:44px;background:#dceefa;border-color:#c9e2f2}
+      #caret-language-badge .language-thumb{position:absolute;left:2px;top:2px;width:40px;height:28px;border-radius:15px;background:#dceefa;transform:translateX(0);transition:transform 220ms cubic-bezier(.2,.8,.2,1),opacity 180ms ease}
+      #caret-language-badge[data-expanded="false"] .language-thumb{opacity:0}
       #caret-language-badge[data-language="en"][data-expanded="true"] .language-thumb{transform:translateX(42px)}
       #caret-language-badge .language-labels{position:relative;display:flex;width:84px;transform:translateX(0);transition:transform 240ms cubic-bezier(.2,.8,.2,1)}
       #caret-language-badge[data-language="en"][data-expanded="false"] .language-labels{transform:translateX(-42px)}
