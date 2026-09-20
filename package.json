@@ -6,17 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:ipad": "node --test tests/ipadHardwareInput.test.cjs"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.1",
     "@supabase/supabase-js": "^2.106.1",
+    "hangul-js": "^0.2.6",
     "lucide-react": "^1.21.0",
     "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
