@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Vocab Flow 한/영 전환 수정 + 커서 옆 표시 · 8차</title>
+<style>body{font:17px/1.7 system-ui,sans-serif;color:#303236;max-width:720px;margin:24px auto;padding:0 18px 80px}h1{font-size:25px}button,select{font:inherit;padding:9px;border:1px solid #bbb;border-radius:8px;background:#fff;color:inherit}button:disabled{opacity:.5}label{display:block;margin:12px 0}.field{box-sizing:border-box;width:100%;font-family:inherit;border:2px solid #aaa;min-height:64px;border-radius:10px;padding:14px;font-size:22px;white-space:pre-wrap}.field:focus{outline:3px solid #dceefa;border-color:#587fa3}.controls{display:flex;gap:8px;flex-wrap:wrap}#status{padding:10px;background:#eff7fc;border-radius:8px}small{color:#666}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid #ddd;text-align:left;padding:6px}</style></head>
+<body><h1>Vocab Flow 한/영 전환 수정 + 커서 옆 표시 · 8차</h1>
+<p>하단 버튼을 숨긴 채 <strong>Caps Lock으로 이 페이지의 한글/영어를 전환</strong>하는 실험입니다. 외장 키보드의 키 위치로 글자를 결정하며 실제 앱에는 적용하지 않았습니다.</p>
+<p><strong>시작할 때 항상 한글입니다.</strong> 이 페이지의 언어는 아이패드 시스템 언어와 별개입니다. 전환할 때 커서 옆에 잠깐 나타나는 한 / A 표시를 기준으로 입력해 주세요. 이 표시는 앱이 그리며 실제 입력 언어와 함께 바뀝니다. 대문자·쌍자음은 Shift를 사용합니다. 지구본·Control+Space 대신 이번에는 Caps Lock을 사용해 주세요. 화면 키보드와 다른 배열은 지원하지 않습니다.</p>
+<ol><li><strong>이번 회차 시작</strong> → 첫 칸에 <strong>입니다</strong>.</li><li>Tab으로 둘째 칸 → <strong>ㄹ</strong> → 백스페이스 한 번.</li><li><strong>Caps Lock 한 번 → abc → Caps Lock 한 번 → 한글</strong>. 둘째 칸이 <strong>abc한글</strong>이면 정상입니다.</li><li><strong>입력칸 밖으로 이동</strong> → 둘째 칸 다시 터치. 하단 버튼이 계속 없는지 확인합니다.</li><li>회차 완료 후 결과를 선택하고 기록 파일을 받습니다. Caps Lock을 연속으로 몇 번 눌러 매번 전환되는지도 확인해 주세요.</li></ol>
+<p><small>키·입력 기록은 이 탭 메모리에만 보관하며 서버에 전송하지 않습니다. 새로고침 전에 파일을 받아 주세요.</small></p>
+<label>모드 <select id="mode"><option value="none">버튼 숨김 + Caps Lock 자체 전환</option></select></label>
+<p id="local-language" role="status">시작하면 한글 · Caps Lock으로 전환</p>
+<label>키보드 <select id="keyboard"><option>외장 키보드</option></select></label>
+<div class="controls"><button id="start">이번 회차 시작</button><button id="finish" disabled>회차 완료</button><button id="download">기록 파일 받기</button></div>
+<p id="status" role="status">기록 대기</p>
+<p id="first-label">첫 칸 — 입니다</p><textarea id="first" class="field" aria-labelledby="first-label"></textarea>
+<p id="second-label">둘째 칸 — ㄹ 입력 후 백스페이스</p><textarea id="second" class="field" aria-labelledby="second-label"></textarea>
+<p><button id="outside" type="button">입력칸 밖으로 이동</button></p>
+<label>최근 회차에서 눈으로 확인한 결과 <select id="outcome" disabled><option value="unknown">선택해 주세요</option><option value="normal">정상</option><option value="carryover">이전 글자 재등장</option><option value="lost">글자 누락 / 커서 이동 실패</option><option value="flicker">키보드 깜빡임 등 불편</option><option value="invalid">잘못 입력해서 다시 테스트 필요</option></select></label>
+<label>입력 중 오른쪽 아래 A/한 버튼이 보였나요? <select id="visibility" disabled><option value="unknown">선택해 주세요</option><option value="hidden">계속 안 보임</option><option value="visible">보임</option><option value="intermittent">일부 순간만 보임</option></select></label>
+<label>칸 진입·이탈·이동 때 하단 버튼이 움직이거나 깜빡였나요? <select id="flicker" disabled><option value="unknown">선택해 주세요</option><option value="no">없음</option><option value="yes">있음</option></select></label>
+<label>물리 키보드의 한/영 전환과 abc → 한글 입력이 정상인가요? <select id="language" disabled><option value="unknown">선택해 주세요</option><option value="normal">정상</option><option value="failed">전환 실패 / 다른 글자 입력</option></select></label>
+<label>커서 옆 한 / A 표시가 실제 입력 언어와 일치하나요? <select id="indicator" disabled><option value="unknown">선택해 주세요</option><option value="normal">위치·표시 정상</option><option value="wrong-language">표시와 입력 언어가 다름</option><option value="wrong-position">위치가 잘못됨 / 안 보임</option></select></label>
+<label>첫 글자 누락이나 커서 이동 실패가 있었나요? <select id="lost" disabled><option value="unknown">선택해 주세요</option><option value="no">없음</option><option value="yes">있음</option></select></label>
+<p><small>이 페이지는 시스템 버튼 숨김 성공 여부를 자동 판정하지 않습니다. 관찰 결과와 입력 기록을 함께 확인합니다.</small></p>
+<table><thead><tr><th>회차</th><th>모드 / 이동</th><th>첫 입력</th><th>완료 상태</th></tr></thead><tbody id="history"></tbody></table>
+<script src="/diagnostics/vendor/hangul-0.2.6.min.js"></script><script src="/diagnostics/hardware-hangul.js"></script><script src="/diagnostics/local-keyboard-v8.js"></script><script src="/diagnostics/caret-language-indicator.js"></script><script src="/diagnostics/focus-test-v8.js"></script></body></html>
