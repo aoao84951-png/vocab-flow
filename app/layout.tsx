@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { FontPreference } from "@/components/AppearanceSettings";
+import { InputDiagnostics } from "@/components/InputDiagnostics";
 import PwaServiceWorker from "@/components/PwaServiceWorker";
 
 const geistSans = Geist({
@@ -43,7 +44,7 @@ export default function RootLayout({
       lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col"><FontPreference /><PwaServiceWorker />{children}</body>
+      <body className="min-h-full flex flex-col"><FontPreference /><PwaServiceWorker />{children}<InputDiagnostics /></body>
     </html>
   );
 }
