@@ -29,15 +29,14 @@ test('all six voices shorten comma silence without changing text or speaking rat
   assert.equal(voices.length, 6);
   for (const voice of voices) {
     const ssml = config.azureSpeech('Hello, <world> & everyone.', voice.id);
-    assert.match(ssml, /Hello, &lt;world&gt; &amp; everyone/);
-    assert.match(ssml, /<mstts:silence type="Comma-exact" value="100ms"\/>/);
+    assert.ok(ssml.includes('Hello<break time="100ms"/> &lt;world&gt; &amp; everyone'));
+    assert.match(ssml, /<break time="100ms"\/>/);
     assert.ok(!ssml.includes('<prosody'));
-    assert.ok(!ssml.includes('<break'));
     const numbers = config.azureSpeech('It costs 1,000 dollars，alright?', voice.id);
-    assert.ok(numbers.includes('1,000 dollars，alright?'));
+    assert.ok(numbers.includes('1,000 dollars<break time="100ms"/>alright?'));
     const plain = config.azureSpeech('Hello.', voice.id);
     assert.equal(plain, `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${voice.id.slice(0, 5)}"><voice name="${voice.id}">Hello.</voice></speak>`);
-    assert.notEqual(createHash('sha256').update(ssml).digest('hex'), createHash('sha256').update(ssml.replace(/<mstts:silence[^>]+\/>/, '')).digest('hex'));
+    assert.notEqual(createHash('sha256').update(ssml).digest('hex'), createHash('sha256').update(ssml.replace(/<break[^>]+\/>/, '')).digest('hex'));
     assert.ok(config.reservedCharacters(ssml) >= ssml.length);
   }
   assert.throws(() => config.azureSpeech('test', 'injected'));
