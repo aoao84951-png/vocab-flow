@@ -1493,7 +1493,7 @@ export default function DesktopApp() {
                                       key={`${group.pos}-${groupIndex}`}
                                       className="relative flex items-start gap-1.5"
                                     >
-                                      <span className="ipad-pos-badge inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-[4px] bg-[#dceefa] text-[10px] font-bold text-[#4b5058]">
+                                      <span className="ipad-pos-badge inline-flex h-[16px] min-w-[16px] shrink-0 items-center justify-center whitespace-nowrap rounded-[4px] bg-[#dceefa] px-[3px] text-[10px] font-bold text-[#4b5058]">
                                         <span className="ipad-pos-text">
                                           {group.pos}
                                         </span>

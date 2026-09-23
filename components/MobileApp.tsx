@@ -2162,7 +2162,7 @@ const getDayProgress = (day: Day) => {
                                 >
 
                                   <span
-                                    className="mt-[1px] inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-[4px] bg-[#dceefa] text-[9px] font-bold text-[#4b5058]"
+                                    className="mt-[1px] inline-flex h-[15px] min-w-[15px] shrink-0 items-center justify-center whitespace-nowrap rounded-[4px] bg-[#dceefa] px-[3px] text-[9px] font-bold text-[#4b5058]"
                                   >
                                     {group.pos}
                                   </span>
