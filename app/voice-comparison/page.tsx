@@ -46,6 +46,7 @@ export default function VoiceComparison() {
     const key = JSON.stringify([id, text.trim()]);
     try {
       if (voice.provider === "azure" && !azureReady) {
+        if (!voice.sampleUrl) throw new Error("Azure 연결 후 이 목소리를 들을 수 있어요.");
         current.audio.src = voice.sampleUrl;
         current.audio.onended = () => { if (playback.current === current) stop(); };
         current.audio.onerror = () => { if (playback.current === current) { stop(); setError("공식 샘플을 불러오지 못했어요. 아래 Azure 공식 갤러리에서도 들을 수 있어요."); } };
@@ -79,7 +80,7 @@ export default function VoiceComparison() {
   return <main className="mx-auto w-full max-w-2xl px-5 py-8 text-[#303236]">
     <Link href="/" className="text-sm text-[#587fa3]">← 단어장으로</Link>
     <h1 className="mt-6 text-2xl font-bold">목소리 비교</h1>
-    <p className="mt-2 text-sm leading-relaxed text-[#596275]">Google은 아래 예문을 기본 속도 1.0으로 읽어요. 모델 이름만 비교하지 않고, 기존 남성과 다른 여성 목소리를 함께 준비했어요.</p>
+    <p className="mt-2 text-sm leading-relaxed text-[#596275]">Google과 Azure의 남녀 목소리를 같은 예문으로 비교해 보세요. 모두 기본 속도로 읽으며, 목소리마다 읽는 속도와 쉬는 길이는 다를 수 있어요.</p>
     <HybridVoiceSettings />
     <label className="mt-6 block text-sm font-bold" htmlFor="comparison-text">비교할 예문</label>
     <textarea id="comparison-text" maxLength={600} rows={4} value={text} onChange={e => { stop(); setError(""); setText(e.target.value); setFavorite(null); }} className="mt-2 w-full rounded-2xl border border-[#ddeaf3] p-4 text-base outline-none focus:border-[#587fa3]" />
@@ -89,12 +90,13 @@ export default function VoiceComparison() {
     <div className="mt-5 space-y-3">
       {COMPARISON_VOICES.filter(v => v.region === region).map(voice => {
         const available = voice.provider === "google" || azureReady;
+        const hasSample = voice.provider === "azure" && Boolean(voice.sampleUrl);
         return <section key={voice.id} className="rounded-2xl border border-[#ddeaf3] p-4">
-          <div className="flex items-center justify-between gap-3"><div><h2 className="font-bold">{voice.label}</h2><p className="mt-1 text-xs text-[#596275]">{voice.region}식 · {voice.gender} · {available ? "내 예문 / 기본 속도" : "공식 샘플 / 다른 문장"}</p></div>
-            <button type="button" disabled={available && !text.trim()} onClick={() => void play(voice.id)} aria-label={`${voice.label} ${active === voice.id ? "중지" : "듣기"}`} className="min-w-20 rounded-xl bg-[#eff7fc] px-4 py-3 text-sm font-bold disabled:opacity-40">{active === voice.id ? loading ? "취소" : "중지" : available ? "듣기" : "샘플 듣기"}</button></div>
+          <div className="flex items-center justify-between gap-3"><div><h2 className="font-bold">{voice.label}</h2><p className="mt-1 text-xs text-[#596275]">{voice.region}식 · {voice.gender} · {available ? "내 예문 / 기본 속도" : hasSample ? "공식 샘플 / 다른 문장" : "서버 연결 필요"}</p></div>
+            <button type="button" disabled={available ? !text.trim() : !hasSample} onClick={() => void play(voice.id)} aria-label={`${voice.label} ${active === voice.id ? "중지" : "듣기"}`} className="min-w-20 rounded-xl bg-[#eff7fc] px-4 py-3 text-sm font-bold disabled:opacity-40">{active === voice.id ? loading ? "취소" : "중지" : available ? "듣기" : hasSample ? "샘플 듣기" : "연결 필요"}</button></div>
           {active === voice.id && loading && <p role="status" className="mt-2 text-xs text-[#596275]">음성을 준비하고 있어요…</p>}
           {!available ? <div className="mt-3 space-y-2 text-xs leading-relaxed text-[#596275]">
-            <p>로그인 없이 Microsoft 공식 샘플을 들어보세요. 위에 입력한 예문이 아닌 별도 샘플이며, 원래 속도 그대로 재생됩니다.</p>
+            <p>{hasSample ? "로그인 없이 Microsoft 공식 샘플을 들어보세요. 위에 입력한 예문이 아닌 별도 샘플이며, 원래 속도 그대로 재생됩니다." : "Azure 서버 연결 후 위 예문으로 들을 수 있어요. 공식 갤러리에서도 목소리를 확인할 수 있어요."}</p>
             <div className="flex flex-wrap gap-3">
               <a href="https://speech.microsoft.com/portal/voicegallery" target="_blank" rel="noreferrer" onClick={stop} className="text-[#587fa3] underline">Azure 공식 갤러리</a>
               <a href="https://speech.microsoft.com/portal/audiocontentcreation" target="_blank" rel="noreferrer" onClick={stop} className="text-[#587fa3] underline">내 예문으로 듣기 · Azure 로그인</a>
