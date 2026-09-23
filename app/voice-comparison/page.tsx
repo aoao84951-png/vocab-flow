@@ -1,5 +1,6 @@
 "use client";
 
+import HybridVoiceSettings from "@/components/HybridVoiceSettings";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { COMPARISON_TEXT, COMPARISON_VOICES } from "@/lib/voiceComparison";
@@ -55,7 +56,10 @@ export default function VoiceComparison() {
       let blob = cache.current.get(key);
       if (!blob) {
         const response = await fetch("/api/voice-comparison", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, text: text.trim() }), signal: current.controller.signal });
-        if (!response.ok) throw new Error("음성을 불러오지 못했어요. 잠시 후 다시 눌러 주세요.");
+        if (!response.ok) {
+          const failure = await response.json().catch(() => ({}));
+          throw new Error(failure.error || "음성을 불러오지 못했어요. 잠시 후 다시 눌러 주세요.");
+        }
         blob = await response.blob();
         if (cache.current.size >= 24) cache.current.clear();
         cache.current.set(key, blob);
@@ -76,6 +80,7 @@ export default function VoiceComparison() {
     <Link href="/" className="text-sm text-[#587fa3]">← 단어장으로</Link>
     <h1 className="mt-6 text-2xl font-bold">목소리 비교</h1>
     <p className="mt-2 text-sm leading-relaxed text-[#596275]">Google은 아래 예문을 기본 속도 1.0으로 읽어요. 모델 이름만 비교하지 않고, 기존 남성과 다른 여성 목소리를 함께 준비했어요.</p>
+    <HybridVoiceSettings />
     <label className="mt-6 block text-sm font-bold" htmlFor="comparison-text">비교할 예문</label>
     <textarea id="comparison-text" maxLength={600} rows={4} value={text} onChange={e => { stop(); setError(""); setText(e.target.value); setFavorite(null); }} className="mt-2 w-full rounded-2xl border border-[#ddeaf3] p-4 text-base outline-none focus:border-[#587fa3]" />
     <div className="mt-4 flex gap-2" role="group" aria-label="발음 지역">
@@ -102,6 +107,6 @@ export default function VoiceComparison() {
       })}
     </div>
     {error && <p role="alert" className="mt-4 text-sm text-red-600">{error}</p>}
-    <p className="mt-6 text-xs leading-relaxed text-[#8a94a6]">여기는 비교용 화면이에요. 단어장의 기존 발음 설정은 바뀌지 않아요. 마음에 드는 지역과 목소리를 알려주시면 적용할 수 있어요.</p>
+    <p className="mt-6 text-xs leading-relaxed text-[#8a94a6]">아래 듣기 버튼은 비교용이에요. 단어장에 사용할 방식과 Azure 목소리는 위의 ‘단어장 음성 · 월 사용량’에서 설정하세요.</p>
   </main>;
 }

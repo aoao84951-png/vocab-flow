@@ -17,7 +17,7 @@ test('comparison fixes rate at 1.0, validates candidates, and reports unavailabl
   const voices = vm.runInContext('COMPARISON_VOICES', config);
   const calls = [];
   const route = load('app/api/voice-comparison/route.ts', {
-    COMPARISON_VOICES: voices, NextResponse: Response,
+    COMPARISON_VOICES: voices, NextResponse: Response, azureStatus: async () => ({ ready: false }),
     googleTts: async req => { calls.push(await req.json()); return new Response('audio'); },
   });
   assert.equal((await route.GET()).status, 200);

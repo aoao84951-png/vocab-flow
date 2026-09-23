@@ -1,6 +1,7 @@
 "use client";
 
 import { getPronunciationSignal, playPronunciationBlob as playBlob } from "@/lib/pronunciationPlayback";
+import { loadHybridAudio } from "@/lib/hybridTtsClient";
 import { plainText } from "@/lib/richText";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -115,6 +116,9 @@ export default function PronounceButtons({
     try {
       setIsLoading(true);
       const voice = getVoice(cleanedText);
+      const hybrid = await loadHybridAudio(cleanedText, voice, () => !signal.aborted);
+      if (signal.aborted) return;
+      if (hybrid) { await playBlob(hybrid, signal); return; }
       const cacheKey = await makeCacheKey(cleanedText, voice);
       const cachedAudio = await getCachedAudio(cacheKey);
 

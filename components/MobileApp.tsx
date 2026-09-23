@@ -24,6 +24,7 @@ import AppearanceSettings from "./AppearanceSettings";
 import { FolderSymbol } from "./FolderSymbols";
 import type { Dispatch, MutableRefObject, PointerEvent, ReactNode, SetStateAction } from "react";
 import { supabase } from "@/app/lib/supabase";
+import { loadHybridAudio } from "@/lib/hybridTtsClient";
 import EnglishAccentSelector, { getSelectedEnglishVoice } from "./EnglishAccentSelector";
 
 type Meaning = {
@@ -367,6 +368,9 @@ function MobilePronounceButton({
     if (playback.cancelled) throw createMobileTtsAbortError();
 
     const voice = accent === "KO" ? "ko-KR-Wavenet-A" : getSelectedEnglishVoice();
+    const hybrid = await loadHybridAudio(cleanedText, voice, () => !playback.cancelled);
+    if (playback.cancelled) throw createMobileTtsAbortError();
+    if (hybrid) return hybrid;
     const cacheKey = await makeMobileTtsCacheKey(cleanedText, voice);
     const cachedAudio = await getMobileCachedTtsAudio(cacheKey);
 
@@ -2223,7 +2227,7 @@ const getDayProgress = (day: Day) => {
               onPointerUp={handleStudyPointerUp}
               onPointerCancel={handleStudyPointerCancel}
             >
-            <EnglishAccentSelector className="fixed left-3 top-[62px] z-40" />
+            <div className="fixed left-3 top-[62px] z-40 flex items-center gap-2"><EnglishAccentSelector /><a href="/voice-comparison" className="rounded-full border border-[#d7ddea] bg-white px-2 py-1.5 text-[11px] text-[#587fa3]">음성·사용량</a></div>
             <header
               onClick={(e) => e.stopPropagation()}
               className="relative z-50 flex h-10 shrink-0 items-center justify-between"

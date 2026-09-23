@@ -1566,7 +1566,7 @@ export default function DesktopApp() {
             onPointerDown={handleStudyPointerDown}
             onPointerUp={handleStudyPointerUp}
           >
-            <EnglishAccentSelector className="fixed left-4 top-[88px] z-40" />
+            <div className="fixed left-4 top-[88px] z-40 flex items-center gap-2"><EnglishAccentSelector /><a href="/voice-comparison" className="rounded-full border border-[#d7ddea] bg-white px-2 py-1.5 text-[11px] text-[#587fa3]">음성·사용량</a></div>
             <header
               onClick={(e) => e.stopPropagation()}
               className="sticky top-0 z-50 flex h-[76px] shrink-0 items-center justify-between border-b border-[#d7ddea] bg-[#f8fafc]/95 px-5 shadow-[0_1px_0_rgba(88,127,163,0.03)] backdrop-blur"
