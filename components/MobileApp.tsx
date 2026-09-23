@@ -12,6 +12,7 @@ import { isNavigationEntry, mainScreen, type Screen } from "@/lib/navigationHist
 import DailyHome, { rememberLocation, rememberStudy } from "./DailyHome";
 import BottomNavigation from "./BottomNavigation";
 import PointCategoryInput from "./PointCategoryInput";
+import PartOfSpeechInput from "./PartOfSpeechInput";
 import WordSearch from "./WordSearch";
 import { matchesWordSearch } from "@/lib/wordSearch";
 import WordOptionsMenu from "./WordOptionsMenu";
@@ -3706,31 +3707,10 @@ function AddWord({
             {meanings.map((group, groupIndex) => (
               <div key={groupIndex} className="rounded-2xl border border-[#ddeaf3] p-4">
                 <div className="flex gap-2">
-                  <div className="relative w-[66px] shrink-0">
-                    <select
-                      value={group.pos}
-                      onChange={(e) =>
-                        updateMeaningGroup(groupIndex, { pos: e.target.value })
-                      }
-                      className="h-10 w-full appearance-none rounded-xl border border-[#ddeaf3] pl-5 pr-7 text-[13px] outline-none"
-                    >
-                      <option value="동">동</option>
-                      <option value="명">명</option>
-                      <option value="형">형</option>
-                      <option value="부">부</option>
-                      <option value="전">전</option>
-                      <option value="접">접</option>
-                      <option value="대">대</option>
-                      <option value="감">감</option>
-                      <option value="숙">숙</option>
-                      <option value="구">구</option>
-                      <option value="한">한</option>
-                    </select>
-
-                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#8a94a6]">
-                      <ChevronDownIcon />
-                    </span>
-                  </div>
+                  <PartOfSpeechInput
+                    value={group.pos}
+                    onChange={(pos) => updateMeaningGroup(groupIndex, { pos })}
+                  />
 
                   <button
                     onClick={() =>
@@ -3960,33 +3940,10 @@ function AddWord({
                           {variant.meanings.map((meaning, meaningIndex) => (
                             <div key={meaningIndex} className="space-y-2">
                               <div className="flex gap-2">
-                                <div className="relative w-[66px] shrink-0">
-                                  <select
-                                    value={meaning.pos}
-                                    onChange={(e) =>
-                                      updateStudyPointVariantMeaning(index, variantIndex, meaningIndex, {
-                                        pos: e.target.value,
-                                      })
-                                    }
-                                    className="h-10 w-full appearance-none rounded-xl border border-[#ddeaf3] pl-5 pr-7 text-[13px] outline-none"
-                                  >
-                                    <option value="동">동</option>
-                                    <option value="명">명</option>
-                                    <option value="형">형</option>
-                                    <option value="부">부</option>
-                                    <option value="전">전</option>
-                                    <option value="접">접</option>
-                                    <option value="대">대</option>
-                                    <option value="감">감</option>
-                                    <option value="숙">숙</option>
-                                    <option value="구">구</option>
-                                    <option value="한">한</option>
-                                  </select>
-
-                                  <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#8a94a6]">
-                                    <ChevronDownIcon />
-                                  </span>
-                                </div>
+                                <PartOfSpeechInput
+                                  value={meaning.pos}
+                                  onChange={(pos) => updateStudyPointVariantMeaning(index, variantIndex, meaningIndex, { pos })}
+                                />
 
                                 <button
                                   type="button"
