@@ -1,4 +1,5 @@
 "use client";
+import { stopPronunciation } from "@/lib/pronunciationPlayback";
 import { useIPadEditor } from "@/lib/useIPadEditor";
 
 import BookCoverInput from "./BookCoverInput";
@@ -364,6 +365,10 @@ export default function DesktopApp() {
   );
   const words = selectedDay?.words ?? [];
   const currentWord = words[wordIndex];
+
+  useEffect(() => {
+    return () => stopPronunciation();
+  }, [step, selectedBookId, selectedDayId, wordIndex, currentWord?.id]);
   const currentWordHasExtraContent = Boolean(
     currentWord &&
     (currentWord.examples.length > 0 ||

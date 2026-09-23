@@ -565,6 +565,10 @@ export default function MobileApp() {
   const words = selectedDay?.words ?? [];
   const currentWord = words[wordIndex];
 
+  useEffect(() => {
+    return () => stopActiveMobileTtsPlayback();
+  }, [step, selectedBookId, selectedDayId, wordIndex, currentWord?.id]);
+
   const sortedWords = selectedDay
   ? selectedDay.words
       .map((word, originalIndex) => ({ word, originalIndex }))

@@ -1,5 +1,6 @@
 "use client";
 
+import { getPronunciationSignal, playPronunciationBlob as playBlob } from "@/lib/pronunciationPlayback";
 import { plainText } from "@/lib/richText";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -73,16 +74,6 @@ const makeCacheKey = async (text: string, voice: string) => {
   return `/tts-cache/${voice}-${Math.abs(hash)}.mp3`;
 };
 
-const playBlob = (blob: Blob) => {
-  const audioUrl = URL.createObjectURL(blob);
-  const audio = new Audio(audioUrl);
-
-  audio.onended = () => URL.revokeObjectURL(audioUrl);
-  audio.onerror = () => URL.revokeObjectURL(audioUrl);
-
-  void audio.play();
-};
-
 const fetchTtsAudio = async (text: string, voice: string) => {
   const response = await fetch("/api/tts", {
     method: "POST",
@@ -119,6 +110,7 @@ export default function PronounceButtons({
 
   const speak = async () => {
     if (isLoading) return;
+    const signal = getPronunciationSignal();
 
     try {
       setIsLoading(true);
@@ -127,14 +119,15 @@ export default function PronounceButtons({
       const cachedAudio = await getCachedAudio(cacheKey);
 
       if (cachedAudio) {
-        playBlob(cachedAudio);
+        await playBlob(cachedAudio, signal);
         return;
       }
 
       const audioBlob = await fetchTtsAudio(cleanedText, voice);
       await saveAudioToCache(cacheKey, audioBlob);
-      playBlob(audioBlob);
+      await playBlob(audioBlob, signal);
     } catch (error) {
+      if (signal.aborted || (error as Error).name === "AbortError") return;
       console.error(error);
       alert("발음 오디오를 불러오지 못했습니다.");
     } finally {
