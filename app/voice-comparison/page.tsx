@@ -34,6 +34,8 @@ export default function VoiceComparison() {
   }, []);
   const stop = () => { dispose(playback.current); playback.current = null; setActive(null); setLoading(false); };
   const play = async (id: string) => {
+    const voice = COMPARISON_VOICES.find(item => item.id === id);
+    if (!voice) return;
     const same = active === id;
     stop(); setError("");
     if (same) return;
@@ -42,6 +44,14 @@ export default function VoiceComparison() {
     setActive(id); setLoading(true);
     const key = JSON.stringify([id, text.trim()]);
     try {
+      if (voice.provider === "azure" && !azureReady) {
+        current.audio.src = voice.sampleUrl;
+        current.audio.onended = () => { if (playback.current === current) stop(); };
+        current.audio.onerror = () => { if (playback.current === current) { stop(); setError("공식 샘플을 불러오지 못했어요. 아래 Azure 공식 갤러리에서도 들을 수 있어요."); } };
+        await current.audio.play();
+        if (playback.current === current) setLoading(false);
+        return;
+      }
       let blob = cache.current.get(key);
       if (!blob) {
         const response = await fetch("/api/voice-comparison", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, text: text.trim() }), signal: current.controller.signal });
@@ -64,8 +74,8 @@ export default function VoiceComparison() {
   };
   return <main className="mx-auto w-full max-w-2xl px-5 py-8 text-[#303236]">
     <Link href="/" className="text-sm text-[#587fa3]">← 단어장으로</Link>
-    <h1 className="mt-6 text-2xl font-bold">같은 문장, 다른 목소리</h1>
-    <p className="mt-2 text-sm leading-relaxed text-[#596275]">모두 기본 속도 1.0 · 쉼표는 짧게. 연음과 문장 강세, 쉼표 뒤 흐름을 비교해 보세요. 목소리마다 실제 읽는 시간은 다를 수 있어요.</p>
+    <h1 className="mt-6 text-2xl font-bold">목소리 비교</h1>
+    <p className="mt-2 text-sm leading-relaxed text-[#596275]">Google은 아래 예문을 기본 속도 1.0으로 읽어요. 모델 이름만 비교하지 않고, 기존 남성과 다른 여성 목소리를 함께 준비했어요.</p>
     <label className="mt-6 block text-sm font-bold" htmlFor="comparison-text">비교할 예문</label>
     <textarea id="comparison-text" maxLength={600} rows={4} value={text} onChange={e => { stop(); setError(""); setText(e.target.value); setFavorite(null); }} className="mt-2 w-full rounded-2xl border border-[#ddeaf3] p-4 text-base outline-none focus:border-[#587fa3]" />
     <div className="mt-4 flex gap-2" role="group" aria-label="발음 지역">
@@ -75,10 +85,19 @@ export default function VoiceComparison() {
       {COMPARISON_VOICES.filter(v => v.region === region).map(voice => {
         const available = voice.provider === "google" || azureReady;
         return <section key={voice.id} className="rounded-2xl border border-[#ddeaf3] p-4">
-          <div className="flex items-center justify-between gap-3"><div><h2 className="font-bold">{voice.label}</h2><p className="mt-1 text-xs text-[#596275]">{voice.region}식 · 남성 · 기본 속도</p></div>
-            <button type="button" disabled={!available || !text.trim()} onClick={() => void play(voice.id)} aria-label={`${voice.label} ${active === voice.id ? "중지" : "듣기"}`} className="min-w-20 rounded-xl bg-[#eff7fc] px-4 py-3 text-sm font-bold disabled:opacity-40">{active === voice.id ? loading ? "취소" : "중지" : "듣기"}</button></div>
+          <div className="flex items-center justify-between gap-3"><div><h2 className="font-bold">{voice.label}</h2><p className="mt-1 text-xs text-[#596275]">{voice.region}식 · {voice.gender} · {available ? "내 예문 / 기본 속도" : "공식 샘플 / 다른 문장"}</p></div>
+            <button type="button" disabled={available && !text.trim()} onClick={() => void play(voice.id)} aria-label={`${voice.label} ${active === voice.id ? "중지" : "듣기"}`} className="min-w-20 rounded-xl bg-[#eff7fc] px-4 py-3 text-sm font-bold disabled:opacity-40">{active === voice.id ? loading ? "취소" : "중지" : available ? "듣기" : "샘플 듣기"}</button></div>
           {active === voice.id && loading && <p role="status" className="mt-2 text-xs text-[#596275]">음성을 준비하고 있어요…</p>}
-          {!available ? <p className="mt-3 text-xs text-[#8a94a6]">Azure 연결 후 같은 예문을 들어볼 수 있어요.</p> : <button type="button" aria-pressed={favorite === voice.id} onClick={() => setFavorite(voice.id)} className="mt-3 text-xs text-[#587fa3]">{favorite === voice.id ? "✓ 비교 후보로 표시했어요" : "이 목소리가 더 좋아요"}</button>}
+          {!available ? <div className="mt-3 space-y-2 text-xs leading-relaxed text-[#596275]">
+            <p>로그인 없이 Microsoft 공식 샘플을 들어보세요. 위에 입력한 예문이 아닌 별도 샘플이며, 원래 속도 그대로 재생됩니다.</p>
+            <div className="flex flex-wrap gap-3">
+              <a href="https://speech.microsoft.com/portal/voicegallery" target="_blank" rel="noreferrer" onClick={stop} className="text-[#587fa3] underline">Azure 공식 갤러리</a>
+              <a href="https://speech.microsoft.com/portal/audiocontentcreation" target="_blank" rel="noreferrer" onClick={stop} className="text-[#587fa3] underline">내 예문으로 듣기 · Azure 로그인</a>
+            </div>
+            <details><summary className="cursor-pointer">로그인과 앱 연결은 어떻게 하나요?</summary>
+              <p className="mt-2">위 링크에서 Microsoft 계정으로 로그인한 뒤 Azure Speech 리소스를 선택하면 직접 문장을 넣어 생성할 수 있어요. 리소스가 없다면 생성 과정이 필요합니다. 이 단어장 안에서 생성하려면 별도로 서버 연결이 필요하며, 로그인만으로 자동 연결되지는 않아요. 키는 채팅에 보내지 마세요.</p>
+            </details>
+          </div> : <button type="button" aria-pressed={favorite === voice.id} onClick={() => setFavorite(voice.id)} className="mt-3 text-xs text-[#587fa3]">{favorite === voice.id ? "✓ 비교 후보로 표시했어요" : "이 목소리가 더 좋아요"}</button>}
         </section>;
       })}
     </div>

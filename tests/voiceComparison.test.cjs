@@ -23,7 +23,7 @@ test('comparison fixes rate at 1.0, validates candidates, and reports unavailabl
   assert.equal((await route.GET()).status, 200);
   assert.equal((await (await route.GET()).json()).azureReady, false);
   assert.equal((await route.POST(request({ id: 'uk-neural2', text: 'Hello, everyone.', speakingRate: 9 }))).status, 200);
-  assert.equal(calls[0].voice, 'en-GB-Neural2-B');
+  assert.equal(calls[0].voice, 'en-GB-Neural2-A');
   assert.equal(calls[0].speakingRate, 1);
   assert.equal((await route.POST(request({ id: 'uk-azure', text: 'Hello.' }))).status, 503);
   for (const body of [null, {}, { id: 'unknown', text: 'Hello' }, { id: 'us-wavenet', text: ' ' }, { id: 'us-wavenet', text: 'x'.repeat(601) }]) {
