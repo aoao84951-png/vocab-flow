@@ -161,7 +161,7 @@ const resetEditorIfEmpty = (el: HTMLDivElement) => {
 
 type MobileAccent = "EN" | "KO";
 
-const MOBILE_TTS_CACHE_NAME = "vocab-flow-tts-cache-v2";
+const MOBILE_TTS_CACHE_NAME = "vocab-flow-tts-cache-v3-short-pauses";
 
 const normalizeMobileTtsText = (value: string) =>
   plainText(value)

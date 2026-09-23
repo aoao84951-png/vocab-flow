@@ -12,7 +12,7 @@ interface PronounceButtonsProps {
   className?: string;
 }
 
-const CACHE_NAME = "vocab-flow-tts-cache-v2";
+const CACHE_NAME = "vocab-flow-tts-cache-v3-short-pauses";
 
 const normalizeText = (value: string) =>
   plainText(value)
