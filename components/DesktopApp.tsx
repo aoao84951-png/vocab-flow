@@ -254,6 +254,15 @@ export default function DesktopApp() {
         !activeAudio.paused &&
         !activeAudio.ended
       ) {
+        // This capture handler stops the click before the TTS component can
+        // release pointer focus. Do it here too so study shortcuts keep working.
+        if (
+          event.detail > 0 &&
+          clickedTrigger instanceof HTMLElement &&
+          clickedTrigger.matches("[data-tts-trigger='true']")
+        ) {
+          clickedTrigger.blur();
+        }
         stopAudio(activeAudio);
         audioWindow.__vocabFlowActiveAudio = null;
         audioWindow.__vocabFlowActiveAudioTrigger = null;
