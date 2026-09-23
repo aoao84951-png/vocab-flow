@@ -30,7 +30,7 @@ const getLanguageCode = (voice: string) => {
 
 export async function POST(req: Request) {
   try {
-    const { text, voice } = await req.json();
+    const { text, voice, speakingRate = 0.92 } = await req.json();
 
     if (typeof text !== "string" || !text.trim()) {
       return NextResponse.json(
@@ -46,6 +46,10 @@ export async function POST(req: Request) {
       );
     }
 
+    if (typeof speakingRate !== "number" || !Number.isFinite(speakingRate) || speakingRate < 0.5 || speakingRate > 1.5) {
+      return NextResponse.json({ error: "지원하지 않는 재생 속도입니다." }, { status: 400 });
+    }
+
     const [response] = await client.synthesizeSpeech({
       input: buildTtsInput(text, voice),
       voice: {
@@ -54,7 +58,7 @@ export async function POST(req: Request) {
       },
       audioConfig: {
         audioEncoding: "MP3",
-        speakingRate: 0.92,
+        speakingRate,
         pitch: 0,
       },
     });
