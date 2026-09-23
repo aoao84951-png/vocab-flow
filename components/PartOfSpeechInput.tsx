@@ -70,7 +70,7 @@ export default function PartOfSpeechInput({
             <option value={ADD_OPTION}>추가</option>
           </select>
           <div aria-hidden="true" className="pointer-events-none grid min-h-[38px] grid-cols-[minmax(0,1fr)_24px] items-center text-[13px]">
-            <span className="px-2 py-2 text-center [overflow-wrap:anywhere]">{value}</span>
+            <span className="py-2 pl-2 text-center [overflow-wrap:anywhere]">{value}</span>
             <span className="flex items-center justify-center text-[#8a94a6]">
               <span className="folder-symbol text-[14px]">▽</span>
             </span>
