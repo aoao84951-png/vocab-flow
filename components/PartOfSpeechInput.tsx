@@ -48,7 +48,7 @@ export default function PartOfSpeechInput({
               setEditing(false);
             }
           }}
-          className="h-10 w-full rounded-xl border border-[#587fa3] px-3 text-[13px] outline-none"
+          className="h-10 w-full rounded-xl border border-[#587fa3] px-3 text-center text-[13px] outline-none"
         />
       ) : (
         <>
@@ -64,15 +64,15 @@ export default function PartOfSpeechInput({
                 onChange(event.target.value);
               }
             }}
-            className="h-10 w-full appearance-none rounded-xl border border-[#ddeaf3] pl-3 pr-7 text-[13px] outline-none"
+            className="h-10 w-full appearance-none rounded-xl border border-[#ddeaf3] pl-5 pr-7 text-center text-[13px] [text-align-last:center] outline-none"
           >
             {OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
             {custom && <option value={value}>{value}</option>}
             <option value={ADD_OPTION}>추가</option>
           </select>
-          <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a94a6]">
-            <path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <span aria-hidden="true" className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#8a94a6]">
+            <span className="folder-symbol text-[14px]">▽</span>
+          </span>
         </>
       )}
     </div>
