@@ -21,8 +21,7 @@ export default function PartOfSpeechInput({
 
   return (
     <div
-      className="relative shrink-0"
-      style={{ width: editing ? 100 : custom ? Math.min(140, Math.max(66, value.length * 13 + 36)) : 66 }}
+      className={`relative shrink-0 ${editing ? "w-[100px]" : "w-max min-w-[66px] max-w-[160px]"}`}
     >
       {editing ? (
         <input
@@ -51,7 +50,7 @@ export default function PartOfSpeechInput({
           className="h-10 w-full rounded-xl border border-[#587fa3] px-3 text-center text-[13px] outline-none"
         />
       ) : (
-        <>
+        <div className="relative rounded-xl border border-[#ddeaf3] focus-within:border-[#587fa3]">
           <select
             aria-label="품사"
             value={value}
@@ -64,16 +63,19 @@ export default function PartOfSpeechInput({
                 onChange(event.target.value);
               }
             }}
-            className="h-10 w-full appearance-none rounded-xl border border-[#ddeaf3] pl-5 pr-7 text-center text-[13px] [text-align-last:center] outline-none"
+            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
           >
             {OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
             {custom && <option value={value}>{value}</option>}
             <option value={ADD_OPTION}>추가</option>
           </select>
-          <span aria-hidden="true" className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#8a94a6]">
-            <span className="folder-symbol text-[14px]">▽</span>
-          </span>
-        </>
+          <div aria-hidden="true" className="pointer-events-none grid min-h-[38px] grid-cols-[minmax(0,1fr)_24px] items-center text-[13px]">
+            <span className="px-2 py-2 text-center [overflow-wrap:anywhere]">{value}</span>
+            <span className="flex items-center justify-center text-[#8a94a6]">
+              <span className="folder-symbol text-[14px]">▽</span>
+            </span>
+          </div>
+        </div>
       )}
     </div>
   );
