@@ -87,16 +87,22 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
   const grabStyle = { WebkitTouchCallout: "none" as const, userSelect: "none" as const, cursor: drag ? "grabbing" : "grab" };
   const days = (folder: ContentsFolder, location: string[], inset = 0) => {
     const groups = groupDays(folder.days);
-    const row = (day: ContentsDay, siblings: ContentsDay[], supplement = false) => {
+    const row = (day: ContentsDay, siblings: ContentsDay[], supplement = false, hasSupplements = false) => {
       const index = siblings.findIndex(item => item.id === day.id);
+      const rowSpacing = supplement ? "min-h-6 py-0.5 [@media(pointer:coarse)]:min-h-7"
+        : hasSupplements ? "min-h-7 py-1 [@media(pointer:coarse)]:min-h-8"
+        : "min-h-8 py-1.5 [@media(pointer:coarse)]:min-h-10";
+      const menuHeight = supplement ? "h-6 [@media(pointer:coarse)]:h-7"
+        : hasSupplements ? "h-7 [@media(pointer:coarse)]:h-8"
+        : "h-8 [@media(pointer:coarse)]:h-10";
       return <div key={day.id}>
         <div data-folder-row={day.id} data-folder-kind="day" data-folder-title={day.title} data-folder-path={JSON.stringify(location)} data-supplement-to={supplement ? day.supplementTo : undefined} className={`group flex items-center rounded-lg ${day.id === selectedDayId ? "bg-[#eff7fc]" : "hover:bg-[#f5f9fc]"} ${dropClass(day.id)} ${drag?.id === day.id ? "opacity-40" : ""}`}>
-          <button type="button" data-folder-grab style={{ ...grabStyle, paddingLeft: inset + (supplement ? 22 : 10) }} onClick={() => onNavigate(location, day.id)} aria-current={day.id === selectedDayId ? "page" : undefined} className="flex min-h-8 min-w-0 flex-1 items-center gap-2 rounded-lg py-1.5 pr-2 text-left [@media(pointer:coarse)]:min-h-10">
+          <button type="button" data-folder-grab style={{ ...grabStyle, paddingLeft: inset + (supplement ? 22 : 10) }} onClick={() => onNavigate(location, day.id)} aria-current={day.id === selectedDayId ? "page" : undefined} className={`flex min-w-0 flex-1 items-center gap-2 rounded-lg pr-2 text-left ${rowSpacing}`}>
             {supplement && <CornerDownRight aria-label="보충 Day" size={14} className="shrink-0 text-[#8b9aa7]" />}
             <span className={`min-w-0 break-words leading-snug ${supplement ? "text-[12px] text-[#788b9a]" : "text-[13px] text-[#505660]"}`}>{day.title}</span>
             <span className="shrink-0 text-[11px] tabular-nums text-[#8b9aa7]">{day.words.length}개</span>
           </button>
-          <button type="button" aria-label={`${day.title} 관리`} aria-expanded={managing === day.id} onClick={() => setManaging(managing === day.id ? null : day.id)} className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#8b9cac] [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100 ${managing === day.id ? "!opacity-100" : ""}`}><MoreHorizontal size={16} strokeWidth={1.7} /></button>
+          <button type="button" aria-label={`${day.title} 관리`} aria-expanded={managing === day.id} onClick={() => setManaging(managing === day.id ? null : day.id)} className={`flex ${menuHeight} w-8 shrink-0 items-center justify-center rounded-lg text-[#8b9cac] [@media(pointer:coarse)]:w-10 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100 ${managing === day.id ? "!opacity-100" : ""}`}><MoreHorizontal size={16} strokeWidth={1.7} /></button>
         </div>
         {managing === day.id && <DayInlineActions key={day.id} title={day.title}
           parentFolder={destinations.find(option => option.id === location.at(-2))}
@@ -106,7 +112,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
       </div>;
     };
     return groups.map(group => <div key={group.day.id} className="border-b border-[#edf2f6] py-1 last:border-b-0">
-      {row(group.day, groups.map(item => item.day))}
+      {row(group.day, groups.map(item => item.day), false, group.supplements.length > 0)}
       {group.supplements.map(day => row(day, group.supplements, true))}
     </div>);
   };
@@ -196,7 +202,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
           {selected && actions(selected, [...base, selected.id])}
         </div>;
       })}
-      <div className="min-h-[156px]">
+      <div className={focused.current.days.length ? undefined : "min-h-[156px]"}>
         {focused.current !== current && focused.current.desc && <p className="mb-2 whitespace-pre-wrap break-words text-xs text-[#8995a0]">{focused.current.desc}</p>}
         {days(focused.current, activePath)}
         {!focused.current.days.length && <p className="py-8 text-center text-sm text-[#8b9aa7]">아직 등록된 Day가 없어요.</p>}
