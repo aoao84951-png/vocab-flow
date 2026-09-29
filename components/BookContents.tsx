@@ -90,10 +90,10 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
     const row = (day: ContentsDay, siblings: ContentsDay[], supplement = false, hasSupplements = false) => {
       const index = siblings.findIndex(item => item.id === day.id);
       const rowSpacing = supplement ? "min-h-6 py-0.5 [@media(pointer:coarse)]:min-h-7"
-        : hasSupplements ? "min-h-7 py-1 [@media(pointer:coarse)]:min-h-8"
+        : hasSupplements ? "min-h-6 pt-1 pb-0"
         : "min-h-8 py-1.5 [@media(pointer:coarse)]:min-h-10";
       const menuHeight = supplement ? "h-6 [@media(pointer:coarse)]:h-7"
-        : hasSupplements ? "h-7 [@media(pointer:coarse)]:h-8"
+        : hasSupplements ? "h-6"
         : "h-8 [@media(pointer:coarse)]:h-10";
       return <div key={day.id}>
         <div data-folder-row={day.id} data-folder-kind="day" data-folder-title={day.title} data-folder-path={JSON.stringify(location)} data-supplement-to={supplement ? day.supplementTo : undefined} className={`group flex items-center rounded-lg ${day.id === selectedDayId ? "bg-[#eff7fc]" : "hover:bg-[#f5f9fc]"} ${dropClass(day.id)} ${drag?.id === day.id ? "opacity-40" : ""}`}>
