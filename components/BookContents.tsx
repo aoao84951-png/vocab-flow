@@ -74,7 +74,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
     setRequestedPath(next); setAdding(null); setManaging(null); onPageChange();
     requestAnimationFrame(() => headingRef.current?.focus());
   };
-  const menu = (folder: ContentsFolder, compact = false) => <button type="button" aria-label={`${folder.title} 관리`} aria-expanded={managing === folder.id} onClick={() => setManaging(managing === folder.id ? null : folder.id)} className={`flex ${compact ? "h-8 [@media(pointer:coarse)]:h-10" : "h-10"} w-8 shrink-0 items-center justify-center rounded-lg text-[#8b9cac] hover:bg-[#eff7fc]`}><MoreHorizontal size={16} strokeWidth={1.7} /></button>;
+  const menu = (folder: ContentsFolder, compact = false) => <button type="button" aria-label={`${folder.title} 관리`} aria-expanded={managing === folder.id} onClick={() => setManaging(managing === folder.id ? null : folder.id)} className={`flex ${compact ? "h-8 [@media(pointer:coarse)]:h-10" : "h-10"} w-8 shrink-0 items-center justify-center rounded-lg text-[#8b9cac] hover:bg-[#eff7fc] [@media(pointer:coarse)]:w-10`}><MoreHorizontal size={16} strokeWidth={1.7} /></button>;
   const actions = (folder: ContentsFolder, location: string[]) => managing === folder.id && <FolderInlineActions key={folder.id} folder={folder} books={books} onAction={onFolderAction} onAddDay={() => onAdd("day", location)} onClose={() => setManaging(null)} />;
   const rowProps = (folder: ContentsFolder, location: string[]) => ({
     "data-folder-row": folder.id,
