@@ -1,12 +1,24 @@
-import { detachDay, groupDays, supplementCandidates } from "./dayLinks";
+import { detachDay, groupDays, removeDayLinks, supplementCandidates } from "./dayLinks";
 
-export type FolderAction = { kind: "edit" | "add"; id: string; title: string; icon: string; desc: string; coverImage?: string; isBook?: boolean } | { kind: "add-day"; id: string; title: string } | { kind: "edit-day"; id: string; dayId: string; title: string } | { kind: "link-day"; id: string; dayId: string; supplementTo: string | null } | { kind: "move-day"; id: string; dayId: string; relativeTo: string; placement: "before" | "after" } | { kind: "delete"; id: string } | { kind: "move"; id: string; destination: string; relativeTo?: string; placement?: "before" | "after" };
+export type FolderAction = { kind: "edit" | "add"; id: string; title: string; icon: string; desc: string; coverImage?: string; isBook?: boolean } | { kind: "add-day"; id: string; title: string } | { kind: "edit-day"; id: string; dayId: string; title: string } | { kind: "transfer-day"; id: string; dayId: string; destination: string } | { kind: "link-day"; id: string; dayId: string; supplementTo: string | null } | { kind: "move-day"; id: string; dayId: string; relativeTo: string; placement: "before" | "after" } | { kind: "delete"; id: string } | { kind: "move"; id: string; destination: string; relativeTo?: string; placement?: "before" | "after" };
 type Node = { id: string; title: string; icon?: string; desc?: string; coverImage?: string; isBook?: boolean; folders: Node[]; days: { id: string; title?: string; words?: unknown[]; supplementTo?: string }[] };
 export function applyFolderAction<T extends Node>(items: T[], action: FolderAction): T[] {
   const find = (nodes: Node[], id: string): Node | undefined => { for (const node of nodes) { if (node.id === id) return node; const child = find(node.folders, id); if (child) return child; } };
   if (action.kind === "add" && !action.id) return [...items, { id: crypto.randomUUID(), title: action.title, icon: action.icon, desc: action.desc, coverImage: action.coverImage ?? "", isBook: action.isBook ?? false, folders: [], days: [] }] as T[];
   const source = find(items, action.id);
   if (!source) return items;
+  if (action.kind === "transfer-day") {
+    const day = source.days.find(item => item.id === action.dayId);
+    const destination = find(items, action.destination);
+    if (!day || !destination || destination.id === source.id || destination.days.some(item => item.id === day.id)) return items;
+    const transfer = (nodes: Node[]): Node[] => nodes.map(node => ({
+      ...node,
+      days: node.id === source.id ? removeDayLinks(node.days, day.id)
+        : node.id === destination.id ? [...node.days, detachDay(day)] : node.days,
+      folders: transfer(node.folders),
+    }));
+    return transfer(items) as T[];
+  }
   if (action.kind === "edit-day" || action.kind === "move-day" || action.kind === "link-day") {
     const day = source.days.find(item => item.id === action.dayId);
     if (!day) return items;

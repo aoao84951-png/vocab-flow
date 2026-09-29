@@ -9,6 +9,32 @@ new Function('exports', 'module', 'require', ts.transpileModule(fs.readFileSync(
 const { applyFolderAction: apply, findFolderPath } = mod.exports;
 const folder = (id, folders = []) => ({ id, title: id, folders, days: [{ id: `day-${id}`, words: [{ word: 'hello' }] }] });
 const source = [folder('a', [folder('child', [folder('grandchild')])]), folder('b'), folder('c')];
+test('transfer a Day to ancestors, descendants and other books without losing identity or words', () => {
+  for (const destination of ['a', 'grandchild', 'b']) {
+    const next = apply(source, { kind: 'transfer-day', id: 'child', dayId: 'day-child', destination });
+    const find = nodes => nodes.flatMap(n => [n, ...find(n.folders)]);
+    const nodes = find(next);
+    assert.equal(nodes.find(n => n.id === 'child').days.length, 0);
+    assert.deepEqual(nodes.find(n => n.id === destination).days.at(-1), source[0].folders[0].days[0]);
+    assert.equal(nodes.flatMap(n => n.days).filter(d => d.id === 'day-child').length, 1);
+    assert.equal(source[0].folders[0].days.length, 1);
+  }
+});
+test('invalid Day transfers are no-ops, including same-folder and duplicate IDs', () => {
+  for (const [id, dayId, destination] of [['a', 'day-a', 'a'], ['a', 'day-a', 'missing'], ['a', 'missing', 'b'], ['missing', 'day-a', 'b'], ['a', 'day-a', '']]) {
+    assert.equal(apply(source, { kind: 'transfer-day', id, dayId, destination }), source);
+  }
+  const duplicate = [folder('a'), { ...folder('b'), days: [{ id: 'day-a' }] }];
+  assert.equal(apply(duplicate, { kind: 'transfer-day', id: 'a', dayId: 'day-a', destination: 'b' }), duplicate);
+});
+test('moving a parent or a supplement removes only the affected links, not the other Days', () => {
+  const items = [{ ...folder('a'), days: [{ id: 'main', words: ['main'] }, { id: 'extra', supplementTo: 'main', words: ['extra'] }] }, folder('b')];
+  const parent = apply(items, { kind: 'transfer-day', id: 'a', dayId: 'main', destination: 'b' });
+  assert.deepEqual(parent[0].days, [{ id: 'extra', words: ['extra'] }]);
+  const extra = apply(items, { kind: 'transfer-day', id: 'a', dayId: 'extra', destination: 'b' });
+  assert.deepEqual(extra[1].days.at(-1), { id: 'extra', words: ['extra'] });
+  assert.equal(items[0].days[1].supplementTo, 'main');
+});
 test('reorder at root in either direction without changing original', () => {
   const next = apply(source, { kind: 'move', id: 'a', destination: '', relativeTo: 'b', placement: 'after' });
   assert.deepEqual(next.map(x => x.id), ['b', 'a', 'c']);

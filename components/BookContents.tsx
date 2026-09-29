@@ -44,6 +44,25 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
   const insideBook = chain.some(isBookFolder);
   const focused = current && insideBook ? getFocusedContents(current, open) : undefined;
   const activePath = focused ? [...path, ...focused.folders.slice(1).map(folder => folder.id)] : path;
+  const destinations: { id: string; title: string; path: string[] }[] = [];
+  const collectDestinations = (folders: ContentsFolder[], base: string[] = [], titles: string[] = []) => folders.forEach(folder => {
+    const nextPath = [...base, folder.id], nextTitles = [...titles, folder.title];
+    destinations.push({ id: folder.id, title: nextTitles.join(" / "), path: nextPath });
+    collectDestinations(folder.folders, nextPath, nextTitles);
+  });
+  collectDestinations(books);
+  const transferDay = (folder: ContentsFolder, day: ContentsDay, destination: string) => {
+    const target = destinations.find(option => option.id === destination);
+    if (!target || target.id === folder.id) return;
+    onFolderAction({ kind: "transfer-day", id: folder.id, dayId: day.id, destination });
+    setManaging(null); setAdding(null);
+    // Keep the underlying study location valid when its Day changes folders.
+    if (day.id === selectedDayId) { onNavigate(target.path, day.id); return; }
+    const entry = getContentsEntry(books, target.path);
+    setRequestedPath(resolveContentsPath(books, target.path).some(isBookFolder) ? entry.path : target.path);
+    setOpen(previous => ({ ...previous, ...entry.open, [target.id]: target.id }));
+    onPageChange();
+  };
   const locationKey = JSON.stringify(activePath);
   useEffect(() => { onLocationChange(JSON.parse(locationKey)); }, [locationKey, onLocationChange]);
   useEffect(() => {
@@ -78,7 +97,11 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
           </button>
           <button type="button" aria-label={`${day.title} 관리`} aria-expanded={managing === day.id} onClick={() => setManaging(managing === day.id ? null : day.id)} className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#8b9cac] [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100 ${managing === day.id ? "!opacity-100" : ""}`}><MoreHorizontal size={16} strokeWidth={1.7} /></button>
         </div>
-        {managing === day.id && <DayInlineActions key={day.id} title={day.title} supplementTo={day.supplementTo} linkOptions={supplementCandidates(folder.days, day.id)} onLink={supplementTo => { onFolderAction({ kind: "link-day", id: folder.id, dayId: day.id, supplementTo }); setManaging(null); }} onClose={() => setManaging(null)} onSave={title => { onFolderAction({ kind: "edit-day", id: folder.id, dayId: day.id, title }); setManaging(null); }} onMove={direction => { const target = siblings[index + (direction === "up" ? -1 : 1)]; if (target) onFolderAction({ kind: "move-day", id: folder.id, dayId: day.id, relativeTo: target.id, placement: direction === "up" ? "before" : "after" }); }} first={index === 0} last={index === siblings.length - 1} />}
+        {managing === day.id && <DayInlineActions key={day.id} title={day.title}
+          parentFolder={destinations.find(option => option.id === location.at(-2))}
+          destinations={destinations.filter(option => option.id !== folder.id)}
+          onTransfer={destination => transferDay(folder, day, destination)}
+          supplementTo={day.supplementTo} linkOptions={supplementCandidates(folder.days, day.id)} onLink={supplementTo => { onFolderAction({ kind: "link-day", id: folder.id, dayId: day.id, supplementTo }); setManaging(null); }} onClose={() => setManaging(null)} onSave={title => { onFolderAction({ kind: "edit-day", id: folder.id, dayId: day.id, title }); setManaging(null); }} onMove={direction => { const target = siblings[index + (direction === "up" ? -1 : 1)]; if (target) onFolderAction({ kind: "move-day", id: folder.id, dayId: day.id, relativeTo: target.id, placement: direction === "up" ? "before" : "after" }); }} first={index === 0} last={index === siblings.length - 1} />}
       </div>;
     };
     return groups.map(group => <div key={group.day.id} className="border-b border-[#edf2f6] py-1 last:border-b-0">
