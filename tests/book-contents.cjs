@@ -38,3 +38,28 @@ test('a book without a cover opens its own page and legacy covers remain books',
   assert.equal(isBookFolder({ isBook: false, coverImage: 'legacy' }), false);
   assert.equal(isBookFolder(node('chapter')), false);
 });
+
+test('focused contents defaults to the first branch, switches siblings and resolves stale selections', () => {
+  const { getFocusedContents } = mod.exports;
+  const book = node('book', [node('lc', [node('part1'), node('part2')]), node('rc')]);
+  assert.equal(getFocusedContents(book, {}).current.id, 'part1');
+  assert.equal(getFocusedContents(book, { book: 'lc', lc: 'part2' }).current.id, 'part2');
+  assert.equal(getFocusedContents(book, { book: 'rc', lc: 'part2' }).current.id, 'rc');
+  assert.equal(getFocusedContents(book, { book: 'lc', lc: 'deleted' }).current.id, 'part1');
+});
+
+test('direct Days on intermediate folders and arbitrarily deep branches stay reachable', () => {
+  const { getFocusedContents } = mod.exports;
+  const book = { ...node('book', [node('lc', [node('part', [node('deep')])])]), days: [{ id: 'direct' }] };
+  assert.equal(getFocusedContents(book, {}).current.id, 'book');
+  const nested = getFocusedContents(book, { book: 'lc' });
+  assert.deepEqual(nested.folders.map(f => f.id), ['book', 'lc', 'part', 'deep']);
+  assert.equal(getFocusedContents(book, { book: 'book' }).current.id, 'book');
+});
+
+test('reopening a direct Day overrides a remembered deeper branch', () => {
+  const { getContentsEntry, getFocusedContents } = mod.exports;
+  const book = { ...node('book', [node('part')]), isBook: true, days: [{ id: 'direct', title: 'Direct Day', words: [] }] };
+  const entry = getContentsEntry([book], ['book'], 'direct');
+  assert.equal(getFocusedContents(book, { book: 'part', ...entry.open }).current.id, 'book');
+});

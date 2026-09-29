@@ -1,4 +1,4 @@
-export type ContentsDay = { id: string; title: string; words: unknown[] };
+export type ContentsDay = { id: string; title: string; words: unknown[]; supplementTo?: string };
 export type ContentsFolder = {
   id: string;
   title: string;
@@ -34,12 +34,32 @@ export function toggleContentsChapter(open: Record<string, string>, parentId: st
   return { ...open, [parentId]: open[parentId] === id ? "" : id };
 }
 
+// Each level is a selector; Days on intermediate levels remain reachable too.
+export function getFocusedContents(book: ContentsFolder, open: Record<string, string>) {
+  const levels: { folder: ContentsFolder; selectedId: string }[] = [];
+  const folders = [book];
+  let current = book;
+  while (current.folders.length) {
+    const requested = open[current.id];
+    const selected = requested === current.id && current.days.length
+      ? undefined
+      : current.folders.find(folder => folder.id === requested) ?? (current.days.length ? undefined : current.folders[0]);
+    levels.push({ folder: current, selectedId: selected?.id ?? current.id });
+    if (!selected) break;
+    folders.push(selected);
+    current = selected;
+  }
+  return { levels, folders, current };
+}
+
 // Reopen the containing book and reveal the selected branch in place.
-export function getContentsEntry(books: ContentsFolder[], requested: string[]) {
+export function getContentsEntry(books: ContentsFolder[], requested: string[], selectedDayId?: string) {
   const chain = resolveContentsPath(books, requested);
   const bookIndex = Math.max(0, chain.findIndex(isBookFolder));
   const path = chain.slice(0, bookIndex + 1).map(folder => folder.id);
   const open: Record<string, string> = {};
   for (let i = bookIndex; i < chain.length - 1; i++) open[chain[i].id] = chain[i + 1].id;
+  const selectedFolder = chain.at(-1);
+  if (selectedFolder?.days.some(day => day.id === selectedDayId)) open[selectedFolder.id] = selectedFolder.id;
   return { path, open };
 }

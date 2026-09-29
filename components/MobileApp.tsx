@@ -6,6 +6,7 @@ import StudyPointFrame, { StudyPointVariants } from "./StudyPointFrame";
 
 import WordActionPopover from "./WordActionPopover";
 import { applyFolderAction, findFolderPath } from "@/lib/folderActions";
+import { detachDay, removeDayLinks } from "@/lib/dayLinks";
 import { useEffect, useRef, useState } from "react";
 import useNavigationHistory from "./useNavigationHistory";
 import { isNavigationEntry, mainScreen, type Screen } from "@/lib/navigationHistory";
@@ -94,6 +95,7 @@ type Day = {
   id: string;
   title: string;
   words: Word[];
+  supplementTo?: string;
 };
 
 type Folder = {
@@ -1607,7 +1609,7 @@ export default function MobileApp() {
         ? path.length === 1
           ? {
               ...folder,
-              days: folder.days.filter((day) => day.id !== targetDayId),
+              days: removeDayLinks(folder.days, targetDayId),
             }
           : {
               ...folder,
@@ -1823,13 +1825,9 @@ export default function MobileApp() {
 
     const removeDay = (list: Folder[]): Folder[] =>
       list.map((folder) => {
-        const nextDays = folder.days.filter((day) => {
-          if (day.id === movingDayId) {
-            movingDay = day;
-            return false;
-          }
-          return true;
-        });
+        const found = folder.days.find(day => day.id === movingDayId);
+        if (found) movingDay = detachDay(found);
+        const nextDays = removeDayLinks(folder.days, movingDayId);
 
         return {
           ...folder,

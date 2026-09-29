@@ -3,7 +3,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const ts = require('typescript');
 const mod = { exports: {} };
-new Function('exports', 'module', ts.transpileModule(fs.readFileSync('lib/folderActions.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText)(mod.exports, mod);
+const links = { exports: {} };
+new Function('exports', 'module', ts.transpileModule(fs.readFileSync('lib/dayLinks.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText)(links.exports, links);
+new Function('exports', 'module', 'require', ts.transpileModule(fs.readFileSync('lib/folderActions.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText)(mod.exports, mod, id => id === './dayLinks' ? links.exports : require(id));
 const { applyFolderAction: apply, findFolderPath } = mod.exports;
 const folder = (id, folders = []) => ({ id, title: id, folders, days: [{ id: `day-${id}`, words: [{ word: 'hello' }] }] });
 const source = [folder('a', [folder('child', [folder('grandchild')])]), folder('b'), folder('c')];
@@ -82,4 +84,40 @@ test('Day rename and reorder preserve words and unrelated folders', () => {
   assert.deepEqual(moved[0].folders, items[0].folders);
   assert.equal(items[0].days[0].title, 'Day 1');
   assert.equal(apply(items, { kind: 'move-day', id: 'parent', dayId: 'd1', relativeTo: 'missing', placement: 'after' }), items);
+});
+
+test('link, relink, rename and unlink preserve independent Days and their words across JSON storage', () => {
+  const days = ['a', 'b', 'extra'].map(id => ({ id, title: id, words: [{ word: id }] }));
+  const items = [{ ...folder('book'), days }];
+  const link = { kind: 'link-day', id: 'book', dayId: 'extra', supplementTo: 'a' };
+  const linked = JSON.parse(JSON.stringify(apply(items, link)));
+  assert.equal(linked[0].days[2].supplementTo, 'a');
+  assert.deepEqual(linked[0].days.map(d => d.words), days.map(d => d.words));
+  assert.equal(items[0].days[2].supplementTo, undefined);
+  const renamed = apply(linked, { kind: 'edit-day', id: 'book', dayId: 'a', title: 'New name' });
+  assert.equal(renamed[0].days[2].supplementTo, 'a');
+  const relinked = apply(renamed, { ...link, supplementTo: 'b' });
+  assert.equal(relinked[0].days[2].supplementTo, 'b');
+  const unlinked = apply(relinked, { ...link, supplementTo: null });
+  assert.equal(Object.hasOwn(unlinked[0].days[2], 'supplementTo'), false);
+  assert.deepEqual(unlinked[0].days[2], days[2]);
+});
+
+test('reject self links, missing or cross-folder targets, cycles and nested supplements', () => {
+  const items = [{ ...folder('book'), days: [{ id: 'a' }, { id: 'b' }, { id: 'extra', supplementTo: 'a' }] }, folder('other')];
+  for (const [dayId, supplementTo] of [['a', 'a'], ['a', 'b'], ['a', 'extra'], ['b', 'extra'], ['b', 'missing'], ['b', 'day-other'], ['missing', 'a']]) {
+    assert.equal(apply(items, { kind: 'link-day', id: 'book', dayId, supplementTo }), items);
+  }
+});
+
+test('reordering keeps parent groups intact and limits supplement reordering to siblings', () => {
+  const items = [{ ...folder('book'), days: [{ id: 'a' }, { id: 'x', supplementTo: 'a' }, { id: 'y', supplementTo: 'a' }, { id: 'b' }, { id: 'z', supplementTo: 'b' }] }];
+  const move = { kind: 'move-day', id: 'book', dayId: 'a', relativeTo: 'z', placement: 'after' };
+  const moved = apply(items, move);
+  assert.deepEqual(moved[0].days.map(d => d.id), ['b', 'z', 'a', 'x', 'y']);
+  const reordered = apply(moved, { ...move, dayId: 'y', relativeTo: 'x', placement: 'before' });
+  assert.deepEqual(reordered[0].days.map(d => d.id), ['b', 'z', 'a', 'y', 'x']);
+  assert.equal(apply(items, { ...move, dayId: 'x', relativeTo: 'b' }), items);
+  assert.equal(apply(items, { ...move, dayId: 'a', relativeTo: 'x' }), items);
+  assert.deepEqual(items[0].days.map(d => d.id), ['a', 'x', 'y', 'b', 'z']);
 });

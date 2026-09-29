@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import type { FolderAction } from "@/lib/folderActions";
 
 type Drop = { id: string; position: "before" | "after" | "inside"; destination: string };
-type Drag = { itemType: string; parentId: string; id: string; title: string; x: number; y: number; drop: Drop | null };
+type Drag = { itemType: string; parentId: string; id: string; title: string; supplementTo?: string; x: number; y: number; drop: Drop | null };
 
 export default function useFolderDrag(container: RefObject<HTMLDivElement | null>, enabled: boolean, onMove: (action: FolderAction) => void) {
   const [drag, setDrag] = useState<Drag | null>(null);
@@ -27,6 +27,8 @@ export default function useFolderDrag(container: RefObject<HTMLDivElement | null
       const isDay = row.dataset.folderKind === "day";
       if (active.itemType === "day") {
         if (!isDay || path.at(-1) !== active.parentId || row.dataset.folderRow === active.id) return null;
+        if (active.supplementTo && row.dataset.supplementTo !== active.supplementTo) return null;
+        if (!active.supplementTo && row.dataset.supplementTo === active.id) return null;
         const rect = row.getBoundingClientRect();
         return { id: row.dataset.folderRow!, position: y < rect.top + rect.height / 2 ? "before" : "after", destination: active.parentId };
       }
@@ -52,7 +54,7 @@ export default function useFolderDrag(container: RefObject<HTMLDivElement | null
       const row = target.closest<HTMLElement>("[data-folder-row]");
       if (!row) return;
       clearTimeout(clickReset); clear(); suppressClick = false;
-      pending = { itemType: row.dataset.folderKind ?? "folder", parentId: (JSON.parse(row.dataset.folderPath!) as string[]).at(-1) ?? "", id: row.dataset.folderRow!, title: row.dataset.folderTitle!, x, y };
+      pending = { itemType: row.dataset.folderKind ?? "folder", parentId: (JSON.parse(row.dataset.folderPath!) as string[]).at(-1) ?? "", id: row.dataset.folderRow!, title: row.dataset.folderTitle!, supplementTo: row.dataset.supplementTo, x, y };
       timer = setTimeout(() => {
         if (!pending) return;
         active = { ...pending, drop: null }; suppressClick = true;
