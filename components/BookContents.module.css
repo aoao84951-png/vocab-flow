@@ -1,0 +1,8 @@
+.contents :is(button, select):focus {
+  outline: none;
+}
+
+.contents :is(button, select):focus-visible {
+  outline: 1px solid #9bbbd2;
+  outline-offset: 2px;
+}

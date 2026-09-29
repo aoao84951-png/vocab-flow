@@ -1,6 +1,7 @@
 "use client";
 
 import DayInlineActions from "./DayInlineActions";
+import styles from "./BookContents.module.css";
 import ContentsAddForm from "./ContentsAddForm";
 import NoCover from "./NoCover";
 import Image from "next/image";
@@ -92,7 +93,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
         <div data-folder-row={day.id} data-folder-kind="day" data-folder-title={day.title} data-folder-path={JSON.stringify(location)} data-supplement-to={supplement ? day.supplementTo : undefined} className={`group flex items-center rounded-lg ${day.id === selectedDayId ? "bg-[#eff7fc]" : "hover:bg-[#f5f9fc]"} ${dropClass(day.id)} ${drag?.id === day.id ? "opacity-40" : ""}`}>
           <button type="button" data-folder-grab style={{ ...grabStyle, paddingLeft: inset + (supplement ? 22 : 10) }} onClick={() => onNavigate(location, day.id)} aria-current={day.id === selectedDayId ? "page" : undefined} className="flex min-h-8 min-w-0 flex-1 items-center gap-2 rounded-lg py-1.5 pr-2 text-left [@media(pointer:coarse)]:min-h-10">
             {supplement && <CornerDownRight aria-label="보충 Day" size={14} className="shrink-0 text-[#8b9aa7]" />}
-            <span className={`min-w-0 flex-1 break-words leading-snug ${supplement ? "text-[12px] text-[#788b9a]" : "text-[13px] text-[#505660]"}`}>{day.title}</span>
+            <span className={`min-w-0 break-words leading-snug ${supplement ? "text-[12px] text-[#788b9a]" : "text-[13px] text-[#505660]"}`}>{day.title}</span>
             <span className="shrink-0 text-[11px] tabular-nums text-[#8b9aa7]">{day.words.length}개</span>
           </button>
           <button type="button" aria-label={`${day.title} 관리`} aria-expanded={managing === day.id} onClick={() => setManaging(managing === day.id ? null : day.id)} className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#8b9cac] [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100 ${managing === day.id ? "!opacity-100" : ""}`}><MoreHorizontal size={16} strokeWidth={1.7} /></button>
@@ -148,7 +149,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
     setAdding(null);
   }} />;
 
-  if (!current) return <div>
+  if (!current) return <div className={styles.contents}>
     <h3 ref={headingRef} tabIndex={-1} className="sr-only">나의 단어장</h3>
     <p className="mb-1 text-[11px] text-[#8b9aa7]">{books.length}개 단어장</p>
     {books.map((folder, index) => <div key={folder.id} className={`${index < books.length - 1 ? "border-b border-[#edf2f6]" : ""} py-1 ${drag?.id === folder.id ? "opacity-40" : ""}`}>
@@ -168,7 +169,7 @@ export default function BookContents({ books, initialPath, selectedDayId, onNavi
     <div className="mt-3 flex justify-center"><button type="button" onClick={() => onAdd("folder", [])} className="min-h-10 rounded-xl bg-[#f5f9fc] px-6 text-xs text-[#68869e]">단어장 추가</button></div>
   </div>;
 
-  return <div>
+  return <div className={styles.contents}>
     <div className="mb-1 flex flex-wrap items-center justify-between gap-x-4">
       <button type="button" onClick={() => enter(path.slice(0, -1))} className="flex min-h-9 min-w-0 items-center gap-1 text-[11px] text-[#8196a7]"><span aria-hidden="true" className="folder-symbol inline-flex w-3 shrink-0 justify-start text-[13px]">◁</span><span className="min-w-0 break-words">{parent ? parent.title : "단어장 목록"}</span></button>
       {parent && <button type="button" onClick={() => enter([])} className="min-h-9 text-[11px] text-[#8b9aa7]">전체 단어장</button>}
