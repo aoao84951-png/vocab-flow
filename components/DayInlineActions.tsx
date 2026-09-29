@@ -27,20 +27,26 @@ export default function DayInlineActions({ title, first, last, onClose, onSave, 
     </form>}
     {moving && onTransfer && (destinations.length ? <form className="mt-2 flex flex-wrap items-center gap-2" onSubmit={event => { event.preventDefault(); if (destinations.some(option => option.id === destination)) onTransfer(destination); }}>
       <label className="w-full" htmlFor="day-destination">이동할 목차</label>
-      <select id="day-destination" autoFocus value={destination} onChange={event => setDestination(event.target.value)} className="h-11 min-w-0 flex-1 rounded-lg border border-[#e1e9ef] bg-white px-2 text-base sm:text-[13px]">
+      <div className="relative min-w-0 flex-1">
+      <select id="day-destination" autoFocus value={destination} onChange={event => setDestination(event.target.value)} className="h-8 w-full appearance-none rounded-lg border border-[#e1e9ef] bg-white pl-2.5 pr-8 text-[12px]">
         <option value="">목차 선택</option>
         {destinations.map(option => <option key={option.id} value={option.id}>{option.title}</option>)}
       </select>
-      <button disabled={!destinations.some(option => option.id === destination)} className="min-h-11 rounded-lg bg-[#e2eff8] px-3 text-[#527895] disabled:opacity-40">여기로 이동</button>
+      <span aria-hidden="true" className="folder-symbol pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[14px]">▽</span>
+      </div>
+      <button disabled={!destinations.some(option => option.id === destination)} className="h-8 shrink-0 rounded-lg bg-[#e2eff8] px-3 text-[#527895] disabled:opacity-40">여기로 이동</button>
       {destination && <p className="w-full break-words text-[11px] text-[#687887]">{destinations.find(option => option.id === destination)?.title}</p>}
     </form> : <p role="status" className="py-2">이동할 다른 목차가 없어요.</p>)}
     {linking && onLink && (linkOptions.length ? <form className="mt-2 flex flex-wrap items-center gap-2" onSubmit={event => { event.preventDefault(); if (linkOptions.some(option => option.id === target)) onLink(target); }}>
       <label className="w-full" htmlFor="supplement-day-target">연결할 Day</label>
-      <select id="supplement-day-target" autoFocus value={target} onChange={event => setTarget(event.target.value)} className="h-11 min-w-0 flex-1 rounded-lg border border-[#e1e9ef] bg-white px-2 text-base sm:text-[13px]">
+      <div className="relative min-w-0 flex-1">
+      <select id="supplement-day-target" autoFocus value={target} onChange={event => setTarget(event.target.value)} className="h-8 w-full appearance-none rounded-lg border border-[#e1e9ef] bg-white pl-2.5 pr-8 text-[12px]">
         <option value="">Day 선택</option>
         {linkOptions.map(option => <option key={option.id} value={option.id}>{option.title}</option>)}
       </select>
-      <button disabled={!linkOptions.some(option => option.id === target)} className="min-h-11 rounded-lg bg-[#e2eff8] px-3 text-[#527895] disabled:opacity-40">연결</button>
+      <span aria-hidden="true" className="folder-symbol pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[14px]">▽</span>
+      </div>
+      <button disabled={!linkOptions.some(option => option.id === target)} className="h-8 shrink-0 rounded-lg bg-[#e2eff8] px-3 text-[#527895] disabled:opacity-40">연결</button>
     </form> : <p role="status" className="py-2">연결 가능한 Day가 없어요. 같은 목차의 일반 Day에 연결할 수 있으며, 보충 Day가 있는 항목은 연결할 수 없어요.</p>)}
   </div>;
 }
