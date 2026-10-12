@@ -33,6 +33,11 @@ const fixture = () => [folder('toeic', 'TOEIC', [{ ...folder('ets', 'ETS 토익 
       const open = async () => { await page.getByRole('button', { name: '목차', exact: true }).click(); await expect(page.getByRole('dialog', { name: '목차' })).toBeVisible(); };
       await open();
       const dialog = page.getByRole('dialog', { name: '목차' });
+      const scrollbarGap = await dialog.locator('[data-bottom-panel-scroll]').evaluate(el => {
+        const content = el.firstElementChild.getBoundingClientRect();
+        return el.getBoundingClientRect().right - content.right;
+      });
+      assert.ok(scrollbarGap >= 12, `Scrollbar must stay clear of content: ${scrollbarGap}px`);
       await expect(dialog.getByRole('button', { name: 'LC', exact: true })).toHaveAttribute('aria-pressed', 'true');
       await expect(dialog.getByRole('button', { name: 'PART 1', exact: true })).toHaveAttribute('aria-pressed', 'true');
       const row = id => dialog.locator(`[data-folder-row="${id}"]`);
