@@ -41,28 +41,13 @@ export default function BookCoverInput({ value, onChange, onBusyChange, isBook, 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const request = useRef(0);
-  const fileInput = useRef<HTMLInputElement>(null);
   useEffect(() => () => { request.current++; }, []);
   return <div className="space-y-2 px-2 py-1">
     <p className="text-[11px] text-[#737b88]">책 표지 <span className="text-[10px] text-[#939ba5]">선택</span></p>
     <div className="flex items-center gap-3">
       {value ? <NextImage unoptimized width={44} height={64} src={value} alt="선택한 책 표지" className="h-16 w-11 shrink-0 rounded-md object-contain" /> : <NoCover preview />}
       <div className="grid min-w-0 justify-items-stretch gap-1">
-        <button type="button" disabled={busy} onClick={() => {
-          const input = fileInput.current;
-          if (!input) return;
-          setError("");
-          try {
-            // Open synchronously in the user gesture, including on Safari/iPad.
-            if (typeof input.showPicker === "function") input.showPicker();
-            else input.click();
-          } catch {
-            setError("파일 선택창을 열 수 없어요. Safari 또는 Chrome에서 다시 시도해 주세요.");
-          }
-        }} className="inline-flex min-h-8 items-center justify-center rounded-xl border border-[#dce8f0] bg-white px-3 text-[11px] text-[#587b96] outline-offset-2 focus-visible:outline-2 focus-visible:outline-[#a9cbe1] disabled:opacity-50">
-          {busy ? "이미지 준비 중…" : value ? "표지 바꾸기" : "표지 선택"}
-        </button>
-        <input ref={fileInput} aria-label="책 표지 선택" type="file" accept="image/*" disabled={busy} className="hidden" onChange={async event => {
+        <input aria-label="책 표지 선택" type="file" accept="image/*" disabled={busy} className="block min-h-8 w-[150px] cursor-pointer text-[0px] text-[#587b96] file:mr-0 file:min-h-8 file:cursor-pointer file:rounded-xl file:border file:border-[#dce8f0] file:bg-white file:px-3 file:text-[11px] file:text-[#587b96] focus-visible:outline-2 focus-visible:outline-[#a9cbe1] disabled:opacity-50" onChange={async event => {
           const file = event.target.files?.[0];
           event.target.value = "";
           if (!file) return;
